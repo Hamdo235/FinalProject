@@ -1,13 +1,15 @@
 import { Alert, Incident, AlertLabel, ModelMetrics, MapPoint, IncidentExplanation, SSEAlertEvent } from '@/types/api';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
 /**
  * Wrapper fetch avec gestion d’erreurs basique
  */
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
+  const isServer = typeof window === 'undefined';
   const res = await fetch(`${API_BASE}${url}`, {
     headers: { 'Content-Type': 'application/json', ...options?.headers },
+    ...(isServer ? { cache: 'no-store' as RequestCache } : {}),
     ...options,
   });
   if (!res.ok) {
@@ -22,6 +24,13 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
  */
 export async function fetchAlerts(): Promise<Alert[]> {
   return apiFetch<Alert[]>('/alerts');
+}
+
+/**
+ * Récupérer la liste des incidents
+ */
+export async function fetchIncidents(): Promise<Incident[]> {
+  return apiFetch<Incident[]>('/incidents');
 }
 
 /**

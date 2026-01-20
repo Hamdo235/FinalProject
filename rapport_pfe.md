@@ -33,7 +33,7 @@ Choix techniques (validés):
 - LLM local: Ollama (modèles 3B–7B quantisés) [6]
 - Frontend: Next.js + TailwindCSS + shadcn/ui [4]
 - Temps réel: Server-Sent Events (SSE) [7]
-- Carte: react-leaflet + OpenStreetMap (GeoIP basique)
+- Carte OSM (react-leaflet) avec points via `/map/points` (GeoIP basique)
 
 ### 1.5 Positionnement du projet
 Le projet se positionne comme une preuve de concept pédagogique d’IDS/IR conversationnel, centrée sur l’explicabilité et la validation humaine, sans outillage “enterprise” lourd. L’accent est mis sur la clarté de l’architecture, la reproductibilité locale et la démonstration fiable.
@@ -78,7 +78,7 @@ Architecture simple et pédagogique organisée en modules: Ingestion → Détect
 - Next.js opérationnel. Navbar simple (Accueil | Alerts | Demo).
 - Alerts (/alerts): liste des alertes (SSE côté backend prêt), sélection et création d’incident.
 - Incident (/incidents/{id}): détail + bouton “Demander explication LLM” (stub actif; Ollama activable) [6].
-- Demo (/demo): carte monde (react-leaflet + OSM) affichant les IP enrichies; boutons “Générer logs” et “Reset” pour scénariser la démo [15][16].
+- Demo (/demo): carte monde (react-leaflet + OSM) affichant les IP enrichies; boutons “Générer logs” et “Reset” pour scénariser la démo.
 - UI minimale, claire, orientée soutenance (statuts, scores, navigation).
 
 ### 4.4 Intégration du LLM (explication, aide à la décision)
@@ -92,6 +92,70 @@ Architecture simple et pédagogique organisée en modules: Ingestion → Détect
 - État réel: détection ML (IsolationForest/LOF) et inférence LLM réelle via Ollama planifiées à l’étape suivante; la version actuelle utilise une heuristique simple et un stub LLM pour garantir une démo fiable.
 
 Note: Cette section sera enrichie à chaque incrément (modèles IF/LOF, GeoIP, UI en temps réel, et évaluation).
+
+---
+
+## Guide de la plateforme (pages UI)
+
+Objectif: permettre à une personne externe de comprendre rapidement chaque page, ce qu’elle affiche, et quelles données l’alimentent.
+
+### Page Accueil (/)
+- But: page d’entrée et de navigation.
+- Contenu: présentation rapide + accès aux pages clés.
+
+### Page Dashboard (/dashboard)
+- But: vue d’ensemble “SOC-like” en temps réel.
+- Données (sources):
+  - Alertes: `GET /alerts`
+  - Incidents: `GET /incidents` (liste) et/ou agrégations côté UI
+  - Flux temps réel: `GET /stream/alerts` (SSE)
+  - Carte: `GET /map/points`
+  - Métriques modèle: `GET /metrics/model`
+- Contenu (interprétation):
+  - Cartes KPI: nombre d’alertes, alertes critiques, incidents ouverts, métriques de performance.
+  - Graphiques: tendances temporelles (timeline) et répartition par sévérité.
+  - Carte GeoIP: localisation approximative des IP (best-effort). Les filtres de sévérité permettent de ne visualiser qu’un sous-ensemble.
+
+### Page Alertes (/alerts)
+- But: liste opérationnelle des alertes détectées.
+- Données: `GET /alerts` + mises à jour `GET /stream/alerts`.
+- Actions: sélection d’alertes + création d’un incident (via `POST /incidents/from-alerts`).
+- Remarque: les alertes peuvent être labellisées (vrai/faux positif) afin d’alimenter les métriques de qualité sur la page Modèle.
+
+### Page Incidents (/incidents)
+- But: regrouper et suivre les incidents (traitement humain).
+- Données: `GET /incidents`.
+- Contenu: cartes/liste d’incidents, statut (open/closed), confiance.
+
+### Détail Incident (/incidents/{id})
+- But: comprendre un incident et demander une explication.
+- Données:
+  - Détail: `GET /incidents/{id}`
+  - Explication LLM: `POST /llm/incidents/{id}/explain`
+- Interprétation: le texte LLM est explicatif (jamais une action automatique), accompagné d’un score de confiance.
+
+### Page Démo (/demo)
+- But: scénariser une soutenance (générer des logs et voir l’impact).
+- Actions:
+  - Générer des événements: `POST /demo/generate`
+  - Reset de l’état: `POST /demo/reset`
+- Données: `GET /map/points` pour la carte, et `GET /alerts` pour la liste.
+
+### Page Modèle ML (/model)
+- But: page pédagogique montrant l’état du module de détection et de ses métriques.
+- Données: `GET /metrics/model`.
+- Pourquoi certaines valeurs peuvent être “N/A”:
+  - Les métriques (F1, précision, rappel) nécessitent des alertes labellisées (vrai/faux positif).
+  - Tant que l’utilisateur n’a pas réalisé ce labellisation, la plateforme ne peut pas calculer une performance supervisée → valeurs affichées en N/A.
+- Champs:
+  - Modèle actif: renseigné via variable d’environnement (ex.: iforest/lof/hybrid) ou “heuristique” par défaut.
+  - Seuil courant: valeur de seuil de score (si exposée par le backend).
+  - Échantillons: nombre d’exemples considérés.
+  - Labellisés: positifs + négatifs disponibles pour calculer des métriques.
+
+### Page Chat (/chat)
+- But: interface conversationnelle avec le LLM (aide à l’analyse).
+- Remarque: le chat n’exécute pas d’actions automatiquement; il sert à expliquer, résumer et guider l’analyste.
 
 ---
 

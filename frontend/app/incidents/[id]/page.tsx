@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { apiGet, apiPost } from "@/lib/api";
+import { fetchIncident, explainIncident } from "@/lib/api";
 
 type Incident = {
   id: number;
@@ -20,16 +20,16 @@ export default function IncidentPage({ params }: { params: { id: string } }) {
   const [msg, setMsg] = useState<string>("");
 
   useEffect(() => {
-    apiGet<Incident>(`/incidents/${id}`).then(setIncident).catch(console.error);
+    fetchIncident(id).then(setIncident).catch(console.error);
   }, [id]);
 
   const explain = async () => {
     setLoading(true);
     try {
-      const res = await apiPost<{ response: string; confidence: number }>(`/llm/incidents/${id}/explain`, {});
-      setLlm({ response: (res as any).response, confidence: (res as any).confidence });
+      const res = await explainIncident(id);
+      setLlm({ response: res.response, confidence: res.confidence });
       // refresh incident to get updated confidence
-      apiGet<Incident>(`/incidents/${id}`).then(setIncident).catch(() => {});
+      fetchIncident(id).then(setIncident).catch(() => {});
       setMsg("Explication générée.");
     } finally {
       setLoading(false);

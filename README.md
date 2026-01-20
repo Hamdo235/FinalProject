@@ -41,7 +41,7 @@ Ouvrir http://localhost:3000
 
 ### Démo
 - Page: http://localhost:3000/demo
-- Boutons: Générer logs, Reset, Rafraîchir carte
+- Boutons: Générer logs, Reset
 - Carte affiche les points depuis `/map/points` (GeoIP best-effort)
 
 ### Pages utiles

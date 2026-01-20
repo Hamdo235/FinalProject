@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { apiGet, apiPost } from "@/lib/api";
-import { connectSSE } from "@/lib/sse";
+import { fetchAlerts, labelAlert, createIncidentFromAlerts, createAlertsSSE } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 type Alert = {
@@ -22,18 +21,29 @@ export default function AlertsPage() {
   const [live, setLive] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string>("");
+  const [labelBusy, setLabelBusy] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    apiGet<Alert[]>("/alerts").then(setAlerts).catch(console.error);
-    const disconnect = connectSSE("/stream/alerts", (evt) => {
-      if (!live) setLive(true);
-      if (evt?.type === "alert.created") {
-        apiGet<Alert[]>("/alerts").then(setAlerts).catch(console.error);
-      }
+    fetchAlerts().then(setAlerts).catch(console.error);
+    const es = createAlertsSSE((newAlert) => {
+      setAlerts((prev) => [newAlert, ...prev]);
     });
-    return () => disconnect();
-  }, [live]);
+    return () => es.close();
+  }, []);
+
+  const doLabel = async (alertId: number, label: "true_attack" | "false_positive") => {
+    setLabelBusy(alertId);
+    setMsg("");
+    try {
+      await labelAlert(alertId, label);
+      setMsg(`Alerte #${alertId} labellisée: ${label}.`);
+    } catch (e) {
+      setMsg(`Erreur labellisation alerte #${alertId}.`);
+    } finally {
+      setLabelBusy(null);
+    }
+  };
 
   const toggle = (id: number) => {
     setSelected((prev) => {
@@ -49,10 +59,8 @@ export default function AlertsPage() {
     if (ids.length === 0) return;
     setBusy(true);
     try {
-      const res = await apiPost<{ id: number }>("/incidents/from-alerts", ids);
-    // Backend returns full Incident; but we only need id; try to infer
-    // @ts-ignore
-      const incId = (res?.id as number) || (res as any).id || (res as any)?.incident_id || 1;
+      const res = await createIncidentFromAlerts(ids);
+      const incId = (res as any).id || (res as any).incident_id || 1;
       setMsg(`Incident #${incId} créé.`);
       router.push(`/incidents/${incId}`);
     } finally {
@@ -88,6 +96,7 @@ export default function AlertsPage() {
             <th>Rule</th>
             <th>Severity</th>
             <th>Score</th>
+            <th>Label</th>
           </tr>
         </thead>
         <tbody>
@@ -102,6 +111,26 @@ export default function AlertsPage() {
               <td>{a.rule}</td>
               <td className="font-medium">{a.severity}</td>
               <td>{a.score.toFixed(2)}</td>
+              <td className="py-2">
+                <div className="flex gap-2">
+                  <button
+                    className="px-2 py-1 rounded border text-xs border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                    disabled={labelBusy === a.id}
+                    onClick={() => doLabel(a.id, "true_attack")}
+                    type="button"
+                  >
+                    Attaque
+                  </button>
+                  <button
+                    className="px-2 py-1 rounded border text-xs border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-50"
+                    disabled={labelBusy === a.id}
+                    onClick={() => doLabel(a.id, "false_positive")}
+                    type="button"
+                  >
+                    Faux positif
+                  </button>
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>

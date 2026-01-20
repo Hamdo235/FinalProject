@@ -54,7 +54,7 @@ export interface MapPoint {
 
 export interface IncidentExplanation {
   incident_id: number;
-  explanation: string;
+  response: string;
   confidence: number;
   sources?: string[];
 }

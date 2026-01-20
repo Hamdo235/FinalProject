@@ -19,11 +19,22 @@ fi
 
 # 2) Export backend env vars for LLM
 export OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://localhost:11434}
+export OLLAMA_URL=${OLLAMA_URL:-$OLLAMA_BASE_URL}
 export OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
 
 # 2b) Ensure the requested model is available (pull if missing)
 if command -v ollama >/dev/null 2>&1; then
-  if ! ollama list 2>/dev/null | awk '{print $1}' | grep -qx "$OLLAMA_MODEL"; then
+  # Wait briefly for ollama serve to accept requests
+  for i in {1..10}; do
+    if curl -sf "${OLLAMA_BASE_URL}/api/tags" >/dev/null 2>&1; then
+      break
+    fi
+    sleep 0.5
+  done
+  # Normalize model name (strip optional tag like :latest)
+  OLLAMA_MODEL_BASE=${OLLAMA_MODEL%%:*}
+  # List installed models, strip tags, compare names
+  if ! ollama list 2>/dev/null | tail -n +2 | awk '{print $1}' | sed 's/:.*//' | grep -qx "$OLLAMA_MODEL_BASE"; then
     echo "[start] Pulling Ollama model: $OLLAMA_MODEL ..."
     ollama pull "$OLLAMA_MODEL"
   fi
