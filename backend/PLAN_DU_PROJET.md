@@ -1,3 +1,5 @@
+NB : C'est pas le template que j'ai demandé. Tout de même, cherche un template de PFE de l'université de Sorbonne et tu le synchronise dans ton repositories. 
+
 # Plan du Projet
 ## CyberSentinel-LLM
 
