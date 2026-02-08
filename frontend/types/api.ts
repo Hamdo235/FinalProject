@@ -44,12 +44,11 @@ export interface ModelMetrics {
 }
 
 export interface MapPoint {
-  id: number;
-  lat?: number;
-  lon?: number;
-  ip?: string;
-  severity: string;
-  ts: string;
+  ip: string;
+  country?: string | null;
+  lat: number;
+  lon: number;
+  count: number;
 }
 
 export interface IncidentExplanation {
@@ -60,6 +59,9 @@ export interface IncidentExplanation {
 }
 
 export interface SSEAlertEvent {
-  type: 'alert_created';
-  data: Alert;
+  type: 'alert.created' | 'hello' | 'error' | string;
+  id?: number;
+  severity?: string;
+  time?: string;
+  data?: Alert;
 }

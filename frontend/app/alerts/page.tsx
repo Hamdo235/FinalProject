@@ -28,6 +28,7 @@ export default function AlertsPage() {
     fetchAlerts().then(setAlerts).catch(console.error);
     const es = createAlertsSSE((newAlert) => {
       setAlerts((prev) => [newAlert, ...prev]);
+      setLive(true);
     });
     return () => es.close();
   }, []);

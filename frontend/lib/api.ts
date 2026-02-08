@@ -85,12 +85,12 @@ export async function fetchMapPoints(): Promise<MapPoint[]> {
 /**
  * Démarrer/arrêter la génération de logs de démo
  */
-export async function demoGenerate(): Promise<{ ok: boolean }> {
-  return apiFetch<{ ok: boolean }>('/demo/generate', { method: 'POST' });
+export async function demoGenerate(): Promise<{ created: number }> {
+  return apiFetch<{ created: number }>('/demo/generate', { method: 'POST' });
 }
 
-export async function demoReset(): Promise<{ ok: boolean }> {
-  return apiFetch<{ ok: boolean }>('/demo/reset', { method: 'POST' });
+export async function demoReset(): Promise<{ reset: boolean }> {
+  return apiFetch<{ reset: boolean }>('/demo/reset', { method: 'POST' });
 }
 
 /**
@@ -101,8 +101,15 @@ export function createAlertsSSE(onAlert: (alert: Alert) => void): EventSource {
   es.onmessage = (e) => {
     try {
       const parsed = JSON.parse(e.data) as SSEAlertEvent;
-      if (parsed.type === 'alert_created') {
-        onAlert(parsed.data);
+      if ((parsed.type === 'alert.created' || parsed.type === 'alert_created') && (parsed as any).data) {
+        onAlert((parsed as any).data);
+      } else if (parsed.type === 'alert.created' && parsed.id) {
+        // Fallback if backend sends only id
+        fetchAlerts()
+          .then((alerts) => {
+            if (alerts.length > 0) onAlert(alerts[0]);
+          })
+          .catch(() => {});
       }
     } catch (err) {
       console.error('Erreur parsing SSE alert', err);

@@ -14,6 +14,13 @@ from ..services.sse import publish_alert_created
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 
+
+def _alert_payload(a: Alert) -> dict:
+    data = a.dict()
+    if isinstance(data.get("ts"), datetime):
+        data["ts"] = data["ts"].isoformat()
+    return data
+
 @router.post("/generate")
 async def demo_generate(db: Session = Depends(get_session)):
     # Generate a few SSH logs as alerts
@@ -24,6 +31,7 @@ async def demo_generate(db: Session = Depends(get_session)):
         {"ts": now, "source": "ssh", "ip": "203.0.113.5", "user": "user", "status": "success"},
     ]
     created = 0
+    created_alerts = []
     for rec in samples:
         rule = "ssh_failed_login" if rec.get("status") == "fail" else "ssh_login"
         severity = "high" if rec.get("status") == "fail" else "low"
@@ -39,16 +47,17 @@ async def demo_generate(db: Session = Depends(get_session)):
             score=score,
         )
         db.add(a)
+        created_alerts.append(a)
         created += 1
     db.commit()
+    for a in created_alerts:
+        db.refresh(a)
     # Refresh to ensure IDs are present
     try:
         # Reload last inserted alerts for SSE publish
-        for rec in samples:
-            rule = "ssh_failed_login" if rec.get("status") == "fail" else "ssh_login"
-            a = db.query(Alert).filter(Alert.rule == rule, Alert.ip == rec.get("ip")).order_by(Alert.id.desc()).first()
+        for a in created_alerts:
             if a and a.id:
-                asyncio.create_task(publish_alert_created(a.id, a.severity))
+                asyncio.create_task(publish_alert_created(_alert_payload(a)))
     except Exception:
         pass
     # Best-effort GeoIP enrichment for the IPs we just inserted

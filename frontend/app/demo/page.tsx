@@ -49,15 +49,8 @@ export default function DemoPage() {
   };
 
   const handleStop = async () => {
-    setLoading(true);
-    try {
-      await demoGenerate(); // backend toggle
-      setRunning(false);
-    } catch (e) {
-      setError("Impossible d’arrêter la génération.");
-    } finally {
-      setLoading(false);
-    }
+    // Backend demo is one-shot (/demo/generate). Stop only affects the UI state.
+    setRunning(false);
   };
 
   const handleReset = async () => {

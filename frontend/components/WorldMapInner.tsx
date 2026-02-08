@@ -25,17 +25,10 @@ interface WorldMapInnerProps {
   refreshInterval?: number;
 }
 
-const severities = ["high", "medium", "low"] as const;
-
 export default function WorldMapInner({ height = "400px", refreshInterval = 6000 }: WorldMapInnerProps) {
   const [points, setPoints] = useState<MapPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [levels, setLevels] = useState<{ high: boolean; medium: boolean; low: boolean }>({
-    high: true,
-    medium: true,
-    low: true,
-  });
 
   const load = async () => {
     try {
@@ -61,17 +54,8 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
       ? [points[0].lat, points[0].lon]
       : [48.8566, 2.3522];
 
-  const filtered = useMemo(() => {
-    return points.filter(
-      (p) =>
-        (p.severity === "high" && levels.high) ||
-        (p.severity === "medium" && levels.medium) ||
-        (p.severity === "low" && levels.low)
-    );
-  }, [points, levels]);
-
   const bounds = useMemo(() => {
-    const coords = filtered
+    const coords = points
       .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon))
       .map((p) => [p.lat as number, p.lon as number] as [number, number]);
     if (coords.length === 0) return null;
@@ -89,53 +73,25 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
       [minLat, minLon],
       [maxLat, maxLon],
     ] as [[number, number], [number, number]];
-  }, [filtered]);
-
-  const severityIcon = (sev: string) => {
-    const color = sev === "high" ? "#ef4444" : sev === "medium" ? "#f59e0b" : "#22c55e";
-    let html = "";
-    if (sev === "high") {
-      html = `<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:12px solid ${color};filter:drop-shadow(0 0 6px ${color});"></div>`;
-    } else if (sev === "medium") {
-      html = `<div style="width:12px;height:12px;background:${color};box-shadow:0 0 10px ${color};border:1px solid rgba(0,0,0,0.3);"></div>`;
-    } else {
-      html = `<div style="width:12px;height:12px;border-radius:50%;background:${color};box-shadow:0 0 10px ${color};border:1px solid rgba(0,0,0,0.3);"></div>`;
-    }
-    return L.divIcon({ html, className: "severity-marker", iconSize: [12, 12] });
-  };
-
-  const renderFilters = () => (
-    <div className="absolute top-2 right-2 z-[1000] bg-white/90 backdrop-blur rounded shadow p-2 text-xs space-x-3">
-      {severities.map((lvl) => (
-        <label key={lvl} className="inline-flex items-center gap-1 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={levels[lvl]}
-            onChange={(e) => setLevels((s) => ({ ...s, [lvl]: e.target.checked }))}
-          />
-          <span>{lvl}</span>
-        </label>
-      ))}
-    </div>
-  );
+  }, [points]);
 
   const renderMarkers = () =>
-    filtered.map((pt) =>
+    points.map((pt) =>
       pt.lat !== undefined && pt.lon !== undefined ? (
-        <Marker key={pt.id} position={[pt.lat, pt.lon]} icon={severityIcon(pt.severity)}>
+        <Marker key={pt.ip} position={[pt.lat, pt.lon]}>
           <Popup>
             <div className="text-xs space-y-1">
               <div>
                 <strong>IP:</strong> {pt.ip}
               </div>
-              <div>
-                <strong>Severite:</strong> {pt.severity}
-              </div>
-              {pt.ts && (
+              {pt.country && (
                 <div>
-                  <strong>Heure:</strong> {new Date(pt.ts).toLocaleString()}
+                  <strong>Pays:</strong> {pt.country}
                 </div>
               )}
+              <div>
+                <strong>Alertes:</strong> {pt.count}
+              </div>
               <div className="pt-1">
                 <a href="/alerts" className="text-blue-600 underline">
                   Voir les alertes
@@ -149,7 +105,6 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
 
   return (
     <div className="rounded-lg overflow-hidden border relative" style={{ height, width: "100%" }}>
-      {renderFilters()}
       {loading && points.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm bg-white/60 z-[500]">
           Chargement...
