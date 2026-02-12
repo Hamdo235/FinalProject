@@ -15,3 +15,6 @@ node_modules/
 
 # OS
 .DS_Store
+
+# Report PDF (local copies)
+Rapport_PFE_CyberSentinel version*.pdf
