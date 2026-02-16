@@ -8,23 +8,36 @@ from typing import Set
 router = APIRouter(prefix="/stream", tags=["stream"])
 
 _subscribers: Set[asyncio.Queue] = set()
+_QUEUE_MAXSIZE = 256
+
+
+def _safe_put(q: asyncio.Queue, event: dict) -> None:
+    try:
+        q.put_nowait(event)
+        return
+    except asyncio.QueueFull:
+        # Drop oldest item and retry once
+        try:
+            _ = q.get_nowait()
+        except Exception:
+            pass
+        try:
+            q.put_nowait(event)
+        except Exception:
+            pass
 
 async def publish(event: dict):
     # Fan-out to all active subscribers; drop if none connected.
     if not _subscribers:
         return
     for q in list(_subscribers):
-        try:
-            q.put_nowait(event)
-        except Exception:
-            # If a queue is full or closed, ignore it.
-            pass
+        _safe_put(q, event)
 
 async def _event_generator():
     # initial hello
     hello = json.dumps({"type": "hello", "time": datetime.utcnow().isoformat()})
     yield f"data: {hello}\n\n"
-    q: asyncio.Queue = asyncio.Queue()
+    q: asyncio.Queue = asyncio.Queue(maxsize=_QUEUE_MAXSIZE)
     _subscribers.add(q)
     try:
         while True:

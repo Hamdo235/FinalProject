@@ -2,5 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: light dark; }
-body { font-family: ui-sans-serif, system-ui, sans-serif; }
+:root { color-scheme: light; }
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  background:
+    radial-gradient(900px 600px at 10% -10%, #d7f3ee 0%, transparent 55%),
+    radial-gradient(900px 600px at 110% 0%, #ffe7c7 0%, transparent 55%),
+    linear-gradient(180deg, #f6f4ef 0%, #f1ede6 100%);
+  color: #0f172a;
+}

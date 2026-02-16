@@ -11,7 +11,7 @@ export default function HomePage() {
     <div className="space-y-8 animate-fade-in">
       {/* Hero */}
       <section className="text-center space-y-4 py-12">
-        <h1 className="text-4xl font-bold text-gray-900">CyberSentinel-LLM</h1>
+        <h1 className="text-4xl md:text-5xl font-bold font-display text-gray-900">CyberSentinel‑LLM</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Plateforme d’analyse de sécurité avec détection par apprentissage automatique et assistance
           explicative par LLM. Le système ne prend aucune décision automatique ; il aide l’analyste à
@@ -141,7 +141,7 @@ export default function HomePage() {
 
       {/* Cycle d’apprentissage */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Cycle d’apprentissage adaptatif (contrôlé)</h2>
+        <h2 className="text-xl font-semibold font-display">Cycle d’apprentissage adaptatif (contrôlé)</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <Card>
             <CardHeader>

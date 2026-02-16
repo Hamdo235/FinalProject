@@ -55,9 +55,15 @@ export default function IncidentsPage() {
       </div>
 
       {/* Actions rapides */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Link href="/alerts">
           <Button variant="outline">Créer un incident depuis les alertes</Button>
+        </Link>
+        <Link href="/dashboard#map">
+          <Button variant="outline">Voir la carte</Button>
+        </Link>
+        <Link href="/chat">
+          <Button variant="outline">Consulter le chatbot</Button>
         </Link>
         <Button variant="outline" onClick={load}>Rafraîchir</Button>
       </div>

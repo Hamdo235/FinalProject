@@ -22,6 +22,16 @@ export OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://localhost:11434}
 export OLLAMA_URL=${OLLAMA_URL:-$OLLAMA_BASE_URL}
 export OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
 
+# 2c) Optional GeoIP: GeoLite2 City DB (offline, local file)
+# If you place the mmdb at backend/data/GeoLite2-City.mmdb, it will be auto-detected.
+DEFAULT_GEOLITE_DB="$(pwd)/data/GeoLite2-City.mmdb"
+if [ -z "${GEOLITE2_CITY_DB:-}" ] && [ -f "$DEFAULT_GEOLITE_DB" ]; then
+  export GEOLITE2_CITY_DB="$DEFAULT_GEOLITE_DB"
+  echo "[start] GeoIP enabled (GeoLite2): $GEOLITE2_CITY_DB"
+elif [ -z "${GEOLITE2_CITY_DB:-}" ]; then
+  echo "[start] GeoIP disabled (missing GEOLITE2_CITY_DB). Map markers may be empty unless demo fallback applies."
+fi
+
 # 2b) Ensure the requested model is available (pull if missing)
 if command -v ollama >/dev/null 2>&1; then
   # Wait briefly for ollama serve to accept requests

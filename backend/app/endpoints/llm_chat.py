@@ -9,12 +9,13 @@ from sqlmodel import Session, select
 from ..db.session import get_session
 from ..models.alert import Alert
 from ..models.incident import Incident
+from ..core.settings import settings
 
 router = APIRouter(prefix="/llm", tags=["LLM"])
 
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
+OLLAMA_URL = settings.ollama_url
 MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
-OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "30"))
+OLLAMA_TIMEOUT = settings.ollama_timeout_seconds
 
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]

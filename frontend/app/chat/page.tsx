@@ -380,30 +380,30 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="h-full bg-gray-50 flex overflow-hidden">
+    <div className="h-full bg-transparent text-slate-900 flex overflow-hidden">
       {/* Sidebar conversations */}
-      <aside className="hidden md:flex md:w-64 bg-white border-r flex-col">
-        <div className="p-3 border-b flex items-center justify-between">
-          <span className="text-sm font-medium">Conversations</span>
+      <aside className="hidden md:flex md:w-72 bg-white/70 border-r border-slate-900/10 flex-col">
+        <div className="p-3 border-b border-slate-900/10 flex items-center justify-between">
+          <span className="text-xs uppercase tracking-widest text-slate-500">Conversations</span>
           <button
             onClick={() => createConversation().catch((e) => setError(e.message))}
-            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-gray-50"
+            className="inline-flex items-center gap-1 rounded-md border border-slate-900/20 px-2 py-1 text-xs hover:bg-slate-50 text-slate-700"
           >
             <Plus className="h-3 w-3" /> Nouvelle
           </button>
         </div>
         <div className="flex-1 overflow-auto">
           {convs.length === 0 && (
-            <div className="p-3 text-xs text-gray-500">Aucune conversation. Créez-en une.</div>
+            <div className="p-3 text-xs text-slate-500">Aucune conversation. Créez-en une.</div>
           )}
           <ul className="text-sm">
             {convs.map((c) => (
               <li key={c.id}>
-                <div className="flex items-center justify-between px-3 py-2 border-b gap-2">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-slate-900/10 gap-2">
                   <button
                     className={cn(
                       "flex-1 text-left truncate",
-                      activeId === c.id ? "text-primary-700" : "text-gray-800"
+                      activeId === c.id ? "text-slate-900" : "text-slate-600"
                     )}
                     onClick={() => setActiveId(c.id)}
                     title={c.title}
@@ -412,18 +412,18 @@ export default function ChatPage() {
                   </button>
                   <div className="flex items-center gap-1">
                     <button
-                      className="p-1 rounded hover:bg-gray-100"
+                      className="p-1 rounded hover:bg-slate-100"
                       title="Renommer"
                       onClick={() => renameConversation(c.id)}
                     >
-                      <Pencil className="h-3.5 w-3.5 text-gray-600" />
+                      <Pencil className="h-3.5 w-3.5 text-slate-500" />
                     </button>
                     <button
-                      className="p-1 rounded hover:bg-gray-100"
+                      className="p-1 rounded hover:bg-slate-100"
                       title="Supprimer"
                       onClick={() => deleteConversation(c.id)}
                     >
-                      <Trash2 className="h-3.5 w-3.5 text-gray-600" />
+                      <Trash2 className="h-3.5 w-3.5 text-slate-500" />
                     </button>
                   </div>
                 </div>
@@ -436,14 +436,14 @@ export default function ChatPage() {
       {/* Zone principale */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Header */}
-        <header className="bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm">
+        <header className="bg-white/80 border-b border-slate-900/10 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/" className="text-slate-500 hover:text-slate-900 transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div className="flex items-center gap-2">
-              <ShieldQuestion className="h-5 w-5 text-primary-500" />
-              <span className="font-medium">Assistant d’analyse – aucune action automatique</span>
+              <ShieldQuestion className="h-5 w-5 text-emerald-500" />
+              <span className="font-medium">Console SOC – aucune action automatique</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -470,53 +470,53 @@ export default function ChatPage() {
                 }
               }}
               disabled={loading || activeId == null}
-              className="inline-flex items-center gap-1 text-xs border px-2 py-1 rounded hover:bg-gray-50 disabled:opacity-50"
+              className="inline-flex items-center gap-1 text-xs border border-slate-900/20 px-2 py-1 rounded hover:bg-slate-50 disabled:opacity-50"
             >
               <Eye className="h-3 w-3" /> Vue d'ensemble
             </button>
-            <button onClick={copyLastAssistant} className="inline-flex items-center gap-1 text-xs border px-2 py-1 rounded hover:bg-gray-50">
+            <button onClick={copyLastAssistant} className="inline-flex items-center gap-1 text-xs border border-slate-900/20 px-2 py-1 rounded hover:bg-slate-50">
               <Copy className="h-3 w-3" /> Copier
             </button>
           </div>
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-auto p-4 space-y-4 min-h-0">
+        <div className="flex-1 overflow-auto p-6 space-y-4 min-h-0">
           {activeId == null && (
-            <div className="text-sm text-gray-500 text-center py-8">
+            <div className="text-sm text-slate-500 text-center py-8">
               Sélectionnez une conversation ou créez-en une nouvelle.
             </div>
           )}
           {activeId != null && messages.length === 0 && (
             <div className="py-8 max-w-3xl mx-auto w-full">
-              <div className="text-sm text-gray-600 text-center mb-4">
+              <div className="text-sm text-slate-500 text-center mb-4">
                 Démarrez la discussion. Je répondrai naturellement, sans action automatique.
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={() => sendQuick("Vue d'ensemble : quelles sont les alertes et incidents récents ?")}
-                  className="text-left border rounded p-3 bg-white hover:bg-gray-50"
+                  className="text-left border border-slate-900/10 rounded p-3 bg-white/70 hover:bg-white"
                   disabled={loading}
                 >
                   Vue d’ensemble des événements récents
                 </button>
                 <button
                   onClick={() => sendQuick("Explique l'incident le plus récent en termes simples.")}
-                  className="text-left border rounded p-3 bg-white hover:bg-gray-50"
+                  className="text-left border border-slate-900/10 rounded p-3 bg-white/70 hover:bg-white"
                   disabled={loading}
                 >
                   Expliquer l’incident le plus récent
                 </button>
                 <button
                   onClick={() => sendQuick("Fais-moi un bref récapitulatif des alertes aujourd’hui.")}
-                  className="text-left border rounded p-3 bg-white hover:bg-gray-50"
+                  className="text-left border border-slate-900/10 rounded p-3 bg-white/70 hover:bg-white"
                   disabled={loading}
                 >
                   Récapitulatif des alertes du jour
                 </button>
                 <button
                   onClick={() => sendQuick("Coucou, comment ça va ?")}
-                  className="text-left border rounded p-3 bg-white hover:bg-gray-50"
+                  className="text-left border border-slate-900/10 rounded p-3 bg-white/70 hover:bg-white"
                   disabled={loading}
                 >
                   Small talk
@@ -533,32 +533,34 @@ export default function ChatPage() {
               )}
             >
               {m.role === "assistant" && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-md bg-primary-50 flex items-center justify-center">
-                  <Bot className="h-4 w-4 text-primary-600" />
+                <div className="flex-shrink-0 w-8 h-8 rounded-md bg-emerald-100 flex items-center justify-center">
+                  <Bot className="h-4 w-4 text-emerald-700" />
                 </div>
               )}
               <div
                 className={cn(
                   "rounded-lg px-4 py-2 max-w-2xl break-words",
-                  m.role === "user" ? "bg-primary-500 text-white" : "bg-white border text-gray-900 shadow-sm"
+                  m.role === "user"
+                    ? "bg-slate-900 text-white"
+                    : "bg-white/80 border border-slate-900/10 text-slate-900 shadow-sm"
                 )}
               >
                 {renderMessage(m.content)}
-                <div className={cn("mt-1 text-[11px] opacity-70", m.role === "user" ? "text-white" : "text-gray-500")}>{formatRelative(m.created_at)}</div>
+                <div className={cn("mt-1 text-[11px] opacity-70", m.role === "user" ? "text-white/70" : "text-slate-500")}>{formatRelative(m.created_at)}</div>
               </div>
               {m.role === "user" && (
-                <div className="flex-shrink-0 h-8 rounded-md bg-gray-200 px-2 flex items-center justify-center">
-                  <span className="text-xs font-medium text-gray-700">moi</span>
+                <div className="flex-shrink-0 h-8 rounded-md bg-slate-200 px-2 flex items-center justify-center">
+                  <span className="text-xs font-medium text-slate-700">moi</span>
                 </div>
               )}
             </div>
           ))}
           {loading && (
             <div className="flex gap-3 text-sm justify-start max-w-3xl mx-auto">
-              <div className="flex-shrink-0 w-8 h-8 rounded-md bg-primary-50 flex items-center justify-center">
-                <Bot className="h-4 w-4 text-primary-600" />
+              <div className="flex-shrink-0 w-8 h-8 rounded-md bg-emerald-100 flex items-center justify-center">
+                <Bot className="h-4 w-4 text-emerald-700" />
               </div>
-              <div className="bg-white border rounded-lg px-4 py-2 text-gray-400 shadow-sm">
+              <div className="bg-white/80 border border-slate-900/10 rounded-lg px-4 py-2 text-slate-500 shadow-sm">
                 L’assistant réfléchit…
               </div>
             </div>
@@ -582,10 +584,10 @@ export default function ChatPage() {
         {/* Formulaire */}
         <form
           onSubmit={onSubmit}
-          className="shrink-0 bg-white border-t p-4 flex items-center gap-2 max-w-3xl mx-auto w-full shadow-sm"
+          className="shrink-0 bg-white/80 border-t border-slate-900/10 p-4 flex items-center gap-2 max-w-3xl mx-auto w-full"
         >
           <input
-            className="flex-1 rounded-md border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400"
+            className="flex-1 rounded-md border border-slate-900/20 bg-white text-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400 placeholder:text-slate-500"
             placeholder={activeId == null ? "Créez d’abord une conversation…" : "Discutez librement…"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -604,7 +606,7 @@ export default function ChatPage() {
             <button
               type="submit"
               disabled={!input.trim() || activeId == null}
-              className="inline-flex items-center gap-1 rounded-md bg-primary-500 text-white text-sm px-4 py-2 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-slate-900 text-white text-sm px-4 py-2 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="h-4 w-4" />
               Envoyer

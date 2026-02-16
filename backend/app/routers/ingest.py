@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from typing import Any, Dict, List, Union
 from sqlalchemy.orm import Session
 from ..db.session import get_session

@@ -93,10 +93,29 @@ export default function DashboardPage() {
     return "N/A";
   }, [metrics]);
 
+  const activity = React.useMemo(() => {
+    const a = alerts.slice(0, 10).map((al) => ({
+      type: "alert",
+      id: al.id,
+      ts: new Date(al.ts).getTime(),
+      label: `Alerte ${al.severity} • ${al.source}${al.ip ? ` • ${al.ip}` : ""}`,
+    }));
+    const i = incidents.slice(0, 10).map((inc) => ({
+      type: "incident",
+      id: inc.id,
+      ts: new Date(inc.created_at).getTime(),
+      label: `Incident #${inc.id} • ${inc.status} • ${inc.risk || "n/a"}`,
+    }));
+    return [...a, ...i]
+      .filter((x) => Number.isFinite(x.ts))
+      .sort((x, y) => y.ts - x.ts)
+      .slice(0, 10);
+  }, [alerts, incidents]);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <h1 className="text-2xl font-semibold font-display">Dashboard opérationnel</h1>
         <p className="text-sm text-gray-600 mt-1">
           Vue d’ensemble en temps réel des alertes, incidents et performance du modèle.
         </p>
@@ -134,8 +153,21 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Actions rapides */}
+      <div className="flex flex-wrap gap-2">
+        <a href="/alerts" className="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-50">
+          Ouvrir les alertes
+        </a>
+        <a href="/incidents" className="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-50">
+          Voir les incidents
+        </a>
+        <a href="/chat" className="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-50">
+          Poser une question
+        </a>
+      </div>
+
       {/* Timeline et Carte */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="map">
         <SimpleChart
           title="Timeline des alertes (24h)"
           data={timelineData}
@@ -146,7 +178,10 @@ export default function DashboardPage() {
         />
         <Card>
           <CardHeader>
-            <CardTitle>Carte GeoIP</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Carte GeoIP</span>
+              <span className="text-xs text-gray-500">Derniers points enrichis</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -200,6 +235,27 @@ export default function DashboardPage() {
                     {alert.ip && <span className="text-gray-500">{alert.ip}</span>}
                   </div>
                   <span className="text-gray-400">{new Date(alert.ts).toLocaleTimeString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Flux d’activité */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Flux d’activité</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {activity.length === 0 ? (
+            <div className="text-sm text-gray-500">Aucune activité récente.</div>
+          ) : (
+            <div className="space-y-2">
+              {activity.map((evt) => (
+                <div key={`${evt.type}-${evt.id}`} className="flex items-center justify-between text-sm">
+                  <div className="text-gray-800">{evt.label}</div>
+                  <div className="text-gray-400">{new Date(evt.ts).toLocaleTimeString()}</div>
                 </div>
               ))}
             </div>

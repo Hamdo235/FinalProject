@@ -21,6 +21,12 @@ def _alert_payload(a: Alert) -> dict:
         data["ts"] = data["ts"].isoformat()
     return data
 
+_DEMO_GEOIP_FALLBACK = {
+    "8.8.8.8": {"country": "US", "lat": 37.751, "lon": -97.822},
+    "1.1.1.1": {"country": "AU", "lat": -33.494, "lon": 143.2104},
+    "203.0.113.5": {"country": "JP", "lat": 35.6762, "lon": 139.6503},
+}
+
 @router.post("/generate")
 async def demo_generate(db: Session = Depends(get_session)):
     # Generate a few SSH logs as alerts
@@ -66,6 +72,11 @@ async def demo_generate(db: Session = Depends(get_session)):
         for ip in ips:
             existing = db.get(IPEnrichment, ip)
             country, lat, lon = lookup_ip(ip)
+            if (lat is None or lon is None) and ip in _DEMO_GEOIP_FALLBACK:
+                fb = _DEMO_GEOIP_FALLBACK[ip]
+                country = country or fb.get("country")
+                lat = lat if lat is not None else fb.get("lat")
+                lon = lon if lon is not None else fb.get("lon")
             if existing:
                 updated = False
                 if existing.country is None and country is not None:

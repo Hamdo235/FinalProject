@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlmodel import select
+from sqlalchemy import func
 from typing import List, Tuple
 import numpy as np
 from sklearn.metrics import roc_auc_score, precision_recall_fscore_support
@@ -23,18 +24,26 @@ def _load_threshold() -> float:
 
 @router.get("/model")
 def model_metrics(db: Session = Depends(get_session)):
-    # latest label per alert
-    stmt = select(AlertLabel.alert_id, AlertLabel.label).order_by(AlertLabel.alert_id, AlertLabel.noted_at.desc())
-    all_rows = db.exec(stmt).all()
-    latest = {}
-    for aid, lbl in all_rows:
-        if aid not in latest:
-            latest[aid] = lbl
-    if not latest:
+    # latest label per alert (stable)
+    subq = (
+        select(AlertLabel.alert_id, func.max(AlertLabel.noted_at).label("max_noted_at"))
+        .group_by(AlertLabel.alert_id)
+        .subquery()
+    )
+    stmt = (
+        select(AlertLabel.alert_id, AlertLabel.label)
+        .join(
+            subq,
+            (AlertLabel.alert_id == subq.c.alert_id)
+            & (AlertLabel.noted_at == subq.c.max_noted_at),
+        )
+    )
+    rows = db.exec(stmt).all()
+    if not rows:
         return {"samples": 0, "message": "No labeled alerts yet"}
 
     pairs: List[Tuple[float, int]] = []
-    for aid, lbl in latest.items():
+    for aid, lbl in rows:
         a = db.get(Alert, aid)
         if a is None:
             continue

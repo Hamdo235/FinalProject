@@ -5,7 +5,8 @@ from sqlmodel import Session, select
 from ..db.session import get_session
 from ..models.alert import Alert
 from ..models.incident import Incident
-from .llm_chat import OLLAMA_URL, MODEL, OLLAMA_TIMEOUT
+from .llm_chat import MODEL
+from ..core.settings import settings
 import httpx
 from datetime import datetime
 
@@ -106,10 +107,10 @@ async def assistant_query(body: AssistantQuery, db: Session = Depends(get_sessio
         {"role": "user", "content": body.question.strip()},
     ]
 
-    async with httpx.AsyncClient(timeout=OLLAMA_TIMEOUT) as client:
+    async with httpx.AsyncClient(timeout=settings.ollama_timeout_seconds) as client:
         try:
             resp = await client.post(
-                f"{OLLAMA_URL}/api/chat",
+                f"{settings.ollama_url}/api/chat",
                 json={
                     "model": MODEL,
                     "messages": messages_ollama,

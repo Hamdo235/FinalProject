@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { fetchMapPoints } from "@/lib/api";
 import { MapPoint } from "@/types/api";
+import { useSearchParams } from "next/navigation";
 
 // Fix icones Leaflet
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -25,10 +26,45 @@ interface WorldMapInnerProps {
   refreshInterval?: number;
 }
 
+function FitBounds({ bounds }: { bounds: [[number, number], [number, number]] | null }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!bounds) return;
+    map.fitBounds(bounds, { padding: [16, 16] });
+  }, [map, bounds]);
+
+  return null;
+}
+
 export default function WorldMapInner({ height = "400px", refreshInterval = 6000 }: WorldMapInnerProps) {
   const [points, setPoints] = useState<MapPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const search = useSearchParams();
+  const highlightIp = search?.get("ip") || "";
+
+  const WORLD_BOUNDS: [[number, number], [number, number]] = [
+    [-85, -180],
+    [85, 180],
+  ];
+
+  const graticule = useMemo(() => {
+    const lines: Array<[[number, number], [number, number]]> = [];
+    for (let lat = -60; lat <= 60; lat += 30) {
+      lines.push([
+        [lat, -180],
+        [lat, 180],
+      ]);
+    }
+    for (let lon = -150; lon <= 150; lon += 30) {
+      lines.push([
+        [-85, lon],
+        [85, lon],
+      ]);
+    }
+    return lines;
+  }, []);
 
   const load = async () => {
     try {
@@ -49,10 +85,12 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
     }
   }, [refreshInterval]);
 
-  const center: [number, number] =
-    points.length > 0 && points[0].lat !== undefined && points[0].lon !== undefined
-      ? [points[0].lat, points[0].lon]
-      : [48.8566, 2.3522];
+  const center = useMemo<[number, number]>(() => {
+    if (points.length > 0 && points[0].lat !== undefined && points[0].lon !== undefined) {
+      return [points[0].lat, points[0].lon];
+    }
+    return [48.8566, 2.3522];
+  }, [points]);
 
   const bounds = useMemo(() => {
     const coords = points
@@ -75,10 +113,20 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
     ] as [[number, number], [number, number]];
   }, [points]);
 
+  const highlightIcon = L.divIcon({
+    html: `<div style="width:18px;height:18px;border-radius:50%;background:#22c55e;box-shadow:0 0 12px rgba(34,197,94,0.9);border:2px solid white;"></div>`,
+    className: "highlight-marker",
+    iconSize: [18, 18],
+  });
+
   const renderMarkers = () =>
     points.map((pt) =>
       pt.lat !== undefined && pt.lon !== undefined ? (
-        <Marker key={pt.ip} position={[pt.lat, pt.lon]}>
+        <Marker
+          key={pt.ip}
+          position={[pt.lat, pt.lon]}
+          icon={highlightIp && pt.ip === highlightIp ? highlightIcon : undefined}
+        >
           <Popup>
             <div className="text-xs space-y-1">
               <div>
@@ -115,23 +163,14 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
           {error}
         </div>
       )}
-      {bounds ? (
-        <MapContainer bounds={bounds} scrollWheelZoom={false} style={{ height: "100%", width: "100%" }}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <MarkerClusterGroup chunkedLoading>{renderMarkers()}</MarkerClusterGroup>
-        </MapContainer>
-      ) : (
-        <MapContainer center={center} zoom={2} scrollWheelZoom={false} style={{ height: "100%", width: "100%" }}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <MarkerClusterGroup chunkedLoading>{renderMarkers()}</MarkerClusterGroup>
-        </MapContainer>
-      )}
+      <MapContainer center={center} zoom={2} scrollWheelZoom={false} style={{ height: "100%", width: "100%" }}>
+        <FitBounds bounds={bounds} />
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <MarkerClusterGroup chunkedLoading>{renderMarkers()}</MarkerClusterGroup>
+      </MapContainer>
     </div>
   );
 }

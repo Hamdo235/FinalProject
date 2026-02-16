@@ -22,6 +22,8 @@ export default function AlertsPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string>("");
   const [labelBusy, setLabelBusy] = useState<number | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkMsg, setBulkMsg] = useState<string>("");
   const router = useRouter();
 
   useEffect(() => {
@@ -69,6 +71,23 @@ export default function AlertsPage() {
     }
   };
 
+  const applyBulkDecision = async (label: "true_attack" | "false_positive") => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    setBulkBusy(true);
+    setBulkMsg("");
+    try {
+      for (const id of ids) {
+        await labelAlert(id, label);
+      }
+      setBulkMsg(label === "true_attack" ? "Décision appliquée: attaque confirmée." : "Décision appliquée: faux positif.");
+    } catch {
+      setBulkMsg("Erreur lors de la décision en masse.");
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
   return (
     <main className="p-6 space-y-4">
       <div className="flex items-center gap-3">
@@ -77,7 +96,7 @@ export default function AlertsPage() {
           {live ? "LIVE" : "OFF"}
         </span>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={createIncident}
           className="px-3 py-1.5 rounded bg-black text-white disabled:opacity-50"
@@ -85,8 +104,35 @@ export default function AlertsPage() {
         >
           {busy ? "..." : `Créer incident (${selected.size})`}
         </button>
+        <button
+          onClick={() => applyBulkDecision("true_attack")}
+          className="px-3 py-1.5 rounded border border-emerald-300 text-emerald-700 text-sm hover:bg-emerald-50 disabled:opacity-50"
+          disabled={selected.size === 0 || bulkBusy}
+        >
+          Confirmer attaque
+        </button>
+        <button
+          onClick={() => applyBulkDecision("false_positive")}
+          className="px-3 py-1.5 rounded border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 disabled:opacity-50"
+          disabled={selected.size === 0 || bulkBusy}
+        >
+          Faux positif
+        </button>
+        <a
+          href="/dashboard#map"
+          className="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+        >
+          Voir sur la carte
+        </a>
+        <a
+          href="/chat"
+          className="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+        >
+          Ouvrir le chatbot
+        </a>
       </div>
       {msg && <div className="text-sm text-green-700">{msg}</div>}
+      {bulkMsg && <div className="text-sm text-blue-700">{bulkMsg}</div>}
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left border-b">
@@ -113,7 +159,7 @@ export default function AlertsPage() {
               <td className="font-medium">{a.severity}</td>
               <td>{a.score.toFixed(2)}</td>
               <td className="py-2">
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <button
                     className="px-2 py-1 rounded border text-xs border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50"
                     disabled={labelBusy === a.id}
@@ -130,6 +176,14 @@ export default function AlertsPage() {
                   >
                     Faux positif
                   </button>
+                  {a.ip && (
+                    <a
+                      href={`/dashboard?ip=${encodeURIComponent(a.ip)}#map`}
+                      className="text-xs text-blue-700 underline"
+                    >
+                      Carte
+                    </a>
+                  )}
                 </div>
               </td>
             </tr>

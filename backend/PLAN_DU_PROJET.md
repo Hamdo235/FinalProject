@@ -85,3 +85,20 @@ Le projet se positionne comme une plateforme d’aide à la décision en cybers�
 - Apports de la plateforme
 - Limites actuelles
 - Perspectives d’amélioration (modèle supervisé, intégration de nouvelles sources de logs, enrichissement de la démo)
+
+
+## Annexe technique — État actuel (mise à jour 12/02/2026)
+
+### Améliorations récentes (alignées code)
+- SSE multi-clients (broadcast) : passage d’une queue unique à un fan-out par subscriber.
+- SSE payload enrichi : l’event `alert.created` transporte `data` (alerte complète) pour éviter un refetch lourd côté frontend.
+- Frontend SSE : support de `alert.created` + compatibilité `alert_created` si besoin.
+- Carte GeoIP : endpoint `/map/points` optimisé en une requête (`JOIN + GROUP BY`) pour éviter le N+1.
+- Démo : bouton “Stop” côté UI ne relance plus `/demo/generate` (la démo backend est one‑shot).
+- Types API frontend : alignement des retours `demoGenerate` et `demoReset`.
+- Badge LIVE sur `/alerts` : activation à la réception SSE.
+
+### Points d’attention (toujours vrais)
+- ML volontairement simple et orienté démo.
+- Dépendance Ollama (LLM local) et modèle installé.
+- GeoIP best‑effort (nécessite `GEOLITE2_CITY_DB`).

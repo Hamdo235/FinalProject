@@ -3,7 +3,7 @@ from datetime import datetime
 from ..db.session import get_session
 from sqlmodel import Session
 import httpx
-import os
+from ..core.settings import settings
 
 router = APIRouter(prefix="/health", tags=["health"]) 
 
@@ -22,7 +22,7 @@ async def health():
         status["status"] = "degraded"
 
     # Ollama check
-    base = os.getenv("OLLAMA_URL", os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
+    base = settings.ollama_url
     try:
         async with httpx.AsyncClient(timeout=3) as client:
             resp = await client.get(f"{base}/api/tags")

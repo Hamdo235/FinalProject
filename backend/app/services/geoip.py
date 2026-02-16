@@ -7,7 +7,6 @@ try:
 except Exception:
     geoip2 = None  # type: ignore
 
-_GEOIP_PATH = os.getenv("GEOLITE2_CITY_DB", str((settings.__dict__.get('_path', None) or '') ))
 # Note: Configure path via env GEOLITE2_CITY_DB. If missing, enrichment returns None.
 
 def lookup_ip(ip: str) -> Tuple[Optional[str], Optional[float], Optional[float]]:

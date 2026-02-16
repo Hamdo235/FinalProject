@@ -49,6 +49,10 @@ _RL_BUCKET = defaultdict(lambda: {"count": 0, "reset": 0.0})
 
 @app.middleware("http")
 async def rate_limit(request: Request, call_next):
+    # In dev, the frontend may poll several endpoints and keep SSE open.
+    # The simple bucket limiter can easily trigger false positives and break the UI.
+    if settings.debug or settings.rate_limit_per_minute <= 0:
+        return await call_next(request)
     ip = request.client.host if request.client else "unknown"
     key = f"{ip}"
     now = time.time()
