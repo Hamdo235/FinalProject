@@ -12,12 +12,18 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+Astuce: vous pouvez aussi activer rapidement la venv via:
+```bash
+source ./backend/venv.sh
+```
+
 2) (Option) GeoIP pour la carte
 - Télécharger GeoLite2-City.mmdb (compte MaxMind gratuit)
-- Placer le fichier dans `../data/external/geoip/GeoLite2-City_YYYYMMDD/GeoLite2-City.mmdb`
-- Exporter la variable (dans le terminal backend):
+- Placer le fichier dans `backend/data/GeoLite2-City.mmdb`
+- `backend/start.sh` l'auto-détecte et exporte `GEOLITE2_CITY_DB` automatiquement.
+- Sinon, vous pouvez exporter manuellement:
 ```bash
-export GEOLITE2_CITY_DB=/home/USER/Documents/MyProject/data/external/geoip/GeoLite2-City_YYYYMMDD/GeoLite2-City.mmdb
+export GEOLITE2_CITY_DB=/chemin/absolu/vers/GeoLite2-City.mmdb
 ```
 3) Lancer l’API (avec Ollama intégré automatiquement)
 ```bash
@@ -70,14 +76,17 @@ export OLLAMA_MODEL=llama3.2
 
 ## Dépannage
 - L’API ne démarre pas → utiliser le point d’entrée unique: `bash backend/start.sh` (gère env Python, Ollama et modèle).
-- GeoIP vide → vérifier `GEOLITE2_CITY_DB` (chemin absolu) dans le terminal backend.
+- GeoIP vide → vérifier le message de démarrage (`GeoIP enabled`) et le fichier `backend/data/GeoLite2-City.mmdb`.
 - Erreur “window is not defined” → le composant carte est chargé dynamiquement; relancer `npm run dev` si nécessaire.
-- LLM stub → installer/activer Ollama ou définir `OLLAMA_BASE_URL` et `OLLAMA_MODEL` avant `bash backend/start.sh`.
+- LLM indisponible → installer/activer Ollama ou définir `OLLAMA_BASE_URL` et `OLLAMA_MODEL` avant `bash backend/start.sh`.
 
 ## État actuel
 - Détection: heuristique simple (IF/LOF planifié)
-- LLM: stub côté backend (Ollama activable)
+- LLM: local via Ollama (avec fallback si indisponible)
 - UI: Alerts/Incident/Demo fonctionnelles, carte OSM
+
+## Structure documentaire
+- Les documents de planification ont été regroupés dans `docs/planning/`.
 
 ## Cycle d’apprentissage adaptatif (contrôlé)
 
@@ -116,4 +125,3 @@ Objectif: démontrer un apprentissage progressif et contrôlé, pas une IA auton
 ### Sélection du détecteur
 - `DETECTOR`: `iforest` | `lof` | `hybrid`
 - `SCORE_THRESHOLD`: float 0–1 (défaut 0.6)
-# FinalProject
