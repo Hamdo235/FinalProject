@@ -12,13 +12,15 @@ from .routers.demo import router as demo_router
 from .services.sse import router as sse_router
 from .routers.validation import router as validation_router
 from .routers.metrics import router as metrics_router
+from .routers.defense import router as defense_router
 from .endpoints.chat_store import router as chat_store_router
 from .endpoints.assistant import router as assistant_router
 from .db.session import engine
 from .core.settings import settings
+from .services.defense import defense_enforce_api, is_ip_blocked, expire_actions
 import time
 from collections import defaultdict
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, Session as SQLModelSession
 # runtime metrics removed for simplicity
 
 # Application FastAPI principale
@@ -78,6 +80,23 @@ async def security_headers(request: Request, call_next):
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=()"
     return response
 
+
+@app.middleware("http")
+async def defense_enforcement(request: Request, call_next):
+    if not defense_enforce_api():
+        return await call_next(request)
+    client_ip = request.client.host if request.client else None
+    if not client_ip:
+        return await call_next(request)
+    try:
+        with SQLModelSession(engine) as db:
+            expire_actions(db)
+            if is_ip_blocked(db, client_ip):
+                return JSONResponse({"detail": "IP temporairement bloquee par defense applicative"}, status_code=403)
+    except Exception:
+        pass
+    return await call_next(request)
+
 # runtime metrics middleware removed for minimal backend
 
 # Démarrage – création des tables (SQLModel + SQLite)
@@ -90,6 +109,7 @@ def on_startup():
     from .models import ip_enrichment as _e
     from .models import label as _lbl
     from .models import chat as _chat
+    from .models import defense_action as _def
     SQLModel.metadata.create_all(bind=engine)
 
 # Page racine – lien rapide vers endpoints utiles
@@ -111,3 +131,4 @@ app.include_router(sse_router)             # /stream/alerts (SSE)
 app.include_router(validation_router)      # /validation/alerts/{id}
 app.include_router(metrics_router)         # /metrics/model (indicateurs ML)
 app.include_router(assistant_router)       # /llm/assistant/query (vue d'ensemble)
+app.include_router(defense_router)         # /defense/* (actions de defense applicative)

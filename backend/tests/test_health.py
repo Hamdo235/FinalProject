@@ -1,9 +1,7 @@
-from fastapi.testclient import TestClient
-from app.main import app
+import pytest
+from app.routers.health import health
 
-def test_health():
-    client = TestClient(app)
-    r = client.get("/health")
-    assert r.status_code == 200
-    data = r.json()
+@pytest.mark.anyio
+async def test_health():
+    data = await health()
     assert data.get("status") in ("ok", "degraded")

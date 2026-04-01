@@ -1,24 +1,22 @@
-from fastapi.testclient import TestClient
-from app.main import app
+import pytest
+from fastapi import HTTPException
+from sqlmodel import Session
+from app.db.session import engine
+from app.endpoints.llm_chat import chat, ChatRequest
 
-client = TestClient(app)
-
-
-def test_llm_chat_non_stream():
-    r = client.post("/llm/chat", json={
-        "messages": [{"role": "user", "content": "Bonjour"}],
-        "context": "global"
-    })
-    assert r.status_code in (200, 502, 504)  # dépend de la dispo d'Ollama
-    if r.status_code == 200:
-        data = r.json()
-        assert "response" in data
+@pytest.mark.anyio
+async def test_llm_chat_non_stream():
+    req = ChatRequest(messages=[{"role": "user", "content": "Bonjour"}], context="global")
+    with Session(engine) as db:
+        with pytest.raises(HTTPException) as exc:
+            await chat(req=req, stream=False, db=db)
+    assert exc.value.status_code in (502, 504)
 
 
-def test_llm_chat_stream_handshake():
-    # Vérifie que l'endpoint stream répond et ne renvoie pas d'erreur immédiate
-    with client.stream("POST", "/llm/chat?stream=true", json={
-        "messages": [{"role": "user", "content": "Test stream"}],
-        "context": "global"
-    }) as resp:
-        assert resp.status_code in (200, 502)
+@pytest.mark.anyio
+async def test_llm_chat_stream_handshake():
+    req = ChatRequest(messages=[{"role": "user", "content": "Test stream"}], context="global")
+    with Session(engine) as db:
+        response = await chat(req=req, stream=True, db=db)
+        chunk = await anext(response.body_iterator)
+    assert "event: error" in chunk

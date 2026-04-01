@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict
 from sqlmodel import Session, select
 from ..db.session import get_session
 from ..models.alert import Alert
@@ -16,6 +16,58 @@ class AssistantQuery(BaseModel):
     question: str
     max_alerts: int = 20
     max_incidents: int = 10
+
+
+def _is_overview_question(text: str) -> bool:
+    low = text.lower()
+    keywords = [
+        "attaque", "attaques", "alertes", "incidents", "récap", "resume", "résumé",
+        "vue d'ensemble", "overview", "statut", "dernières", "récentes", "bilan",
+    ]
+    return any(k in low for k in keywords)
+
+
+def _is_attack_alert(a: Alert) -> bool:
+    sev = str(a.severity or "").lower()
+    rule = str(a.rule or "").lower()
+    if sev == "high":
+        return True
+    if rule.startswith("ml_") or "anomaly" in rule:
+        return True
+    if "failed" in rule or "bruteforce" in rule or "attack" in rule:
+        return True
+    return False
+
+
+def _attack_explanation(a: Alert) -> str:
+    rule = str(a.rule or "unknown")
+    rule_low = rule.lower()
+    if "failed" in rule_low:
+        return "Multiples échecs d’authentification détectés, probable tentative d’accès non autorisé."
+    if "anomaly" in rule_low or rule_low.startswith("ml_"):
+        return "Comportement anormal détecté par le moteur ML par rapport au trafic habituel."
+    if str(a.severity or "").lower() == "high":
+        return "Événement classé critique selon les règles de corrélation et le score de risque."
+    return "Activité suspecte récente à surveiller et à valider manuellement."
+
+
+def _latest_attacks(db: Session, limit: int = 5) -> List[Dict[str, str]]:
+    stmt = select(Alert).order_by(Alert.ts.desc()).limit(200)
+    rows = db.exec(stmt).all()
+    picked: List[Dict[str, str]] = []
+    for a in rows:
+        if not _is_attack_alert(a):
+            continue
+        picked.append({
+            "ts": a.ts.isoformat() if a.ts else "",
+            "ip": a.ip or "unknown",
+            "rule": a.rule or "unknown",
+            "severity": a.severity or "unknown",
+            "explanation": _attack_explanation(a),
+        })
+        if len(picked) >= max(1, min(limit, 5)):
+            break
+    return picked
 
 
 def _summarize_alerts(db: Session, limit: int) -> dict:
@@ -75,6 +127,32 @@ async def assistant_query(body: AssistantQuery, db: Session = Depends(get_sessio
 
     alerts_summary = _summarize_alerts(db, max(1, min(body.max_alerts, 100)))
     incidents_summary = _summarize_incidents(db, max(1, min(body.max_incidents, 100)))
+    latest_attacks = _latest_attacks(db, limit=5)
+
+    if _is_overview_question(body.question):
+        if not latest_attacks:
+            return {
+                "response": "Aucune attaque récente détectée pour le moment.",
+                "context_used": {
+                    "alerts": alerts_summary,
+                    "incidents": incidents_summary,
+                    "latest_attacks": latest_attacks,
+                },
+            }
+
+        lines = ["Top 5 des dernières attaques détectées :"]
+        for idx, a in enumerate(latest_attacks, start=1):
+            lines.append(
+                f"{idx}. IP: {a['ip']} | Règle: {a['rule']} | Sévérité: {a['severity']} | Explication: {a['explanation']}"
+            )
+        return {
+            "response": "\n".join(lines),
+            "context_used": {
+                "alerts": alerts_summary,
+                "incidents": incidents_summary,
+                "latest_attacks": latest_attacks,
+            },
+        }
 
     now = datetime.utcnow().isoformat()
     context = (
@@ -99,6 +177,7 @@ async def assistant_query(body: AssistantQuery, db: Session = Depends(get_sessio
         "Tu n’exécutes jamais d’actions. \n"
         "Tu utilises le contexte fourni (alertes/incidents) pour répondre précisément à la question.\n"
         "Si une information n’est pas présente dans le contexte, dis-le poliment.\n"
+        "Pour les demandes de vue d’ensemble, réponds en liste numérotée concise.\n"
     )
 
     messages_ollama = [

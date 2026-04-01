@@ -10,6 +10,7 @@ import asyncio
 from ..services.sse import publish_alert_created
 from ..services.geoip import lookup_ip
 from ..services.detection import score_with_isolation_forest
+from ..services.defense import decide_defense_action, create_defense_action, action_to_dict
 
 router = APIRouter(prefix="/ingest", tags=["ingest"])
 
@@ -32,7 +33,7 @@ def _to_alert(rec: LogRecord, db: Session) -> Alert:
 
 
 def _alert_payload(a: Alert) -> Dict[str, Any]:
-    data = a.dict()
+    data = a.model_dump()
     if isinstance(data.get("ts"), datetime):
         data["ts"] = data["ts"].isoformat()
     return data
@@ -42,11 +43,16 @@ def _alert_payload(a: Alert) -> Dict[str, Any]:
 async def ingest_logs(payload: Union[LogRecord, List[LogRecord]], db: Session = Depends(get_session)):
     items: List[LogRecord] = payload if isinstance(payload, list) else [payload]
     alerts: List[Alert] = [_to_alert(rec, db) for rec in items]
+    action_map: Dict[int, Dict[str, Any]] = {}
     for a in alerts:
         db.add(a)
     db.commit()
     for a in alerts:
         db.refresh(a)
+        decision = decide_defense_action(a)
+        action = create_defense_action(db, a, decision)
+        if a.id is not None:
+            action_map[a.id] = action_to_dict(action)
     # GeoIP enrichment (best effort)
     try:
         ips = {a.ip for a in alerts if a.ip}
@@ -71,5 +77,7 @@ async def ingest_logs(payload: Union[LogRecord, List[LogRecord]], db: Session = 
     # publish SSE events asynchronously
     for a in alerts:
         if a.id is not None:
-            asyncio.create_task(publish_alert_created(_alert_payload(a)))
+            payload = _alert_payload(a)
+            payload["defense"] = action_map.get(a.id)
+            asyncio.create_task(publish_alert_created(payload))
     return {"ingested": len(alerts)}

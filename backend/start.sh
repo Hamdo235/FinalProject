@@ -8,7 +8,13 @@ set -euo pipefail
 if ! pgrep -fl ollama >/dev/null 2>&1; then
   if command -v ollama >/dev/null 2>&1; then
     echo "[start] Starting ollama serve in background..."
-    nohup ollama serve > "$HOME/.ollama.log" 2>&1 &
+    OLLAMA_LOG="${OLLAMA_LOG:-$(pwd)/data/ollama.log}"
+    mkdir -p "$(dirname "$OLLAMA_LOG")" 2>/dev/null || true
+    if ! touch "$OLLAMA_LOG" 2>/dev/null; then
+      OLLAMA_LOG="/tmp/ollama.log"
+      touch "$OLLAMA_LOG" 2>/dev/null || true
+    fi
+    nohup ollama serve > "$OLLAMA_LOG" 2>&1 &
     sleep 2
   else
     echo "[error] Ollama not found. Install it: https://ollama.com/download" >&2
@@ -21,6 +27,19 @@ fi
 export OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://localhost:11434}
 export OLLAMA_URL=${OLLAMA_URL:-$OLLAMA_BASE_URL}
 export OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+
+# 2a) Runtime mode (dev/demo vs final)
+# - APP_ENV=dev (default): DEBUG=1 and auto-reload enabled
+# - APP_ENV=final: DEBUG=0 and reload disabled
+APP_ENV=${APP_ENV:-dev}
+if [ "$APP_ENV" = "final" ]; then
+  export DEBUG=${DEBUG:-0}
+  UVICORN_RELOAD=${UVICORN_RELOAD:-0}
+else
+  export DEBUG=${DEBUG:-1}
+  UVICORN_RELOAD=${UVICORN_RELOAD:-1}
+fi
+echo "[start] Runtime mode: $APP_ENV (DEBUG=$DEBUG, RELOAD=$UVICORN_RELOAD)"
 
 # 2c) Optional GeoIP: GeoLite2 City DB (offline, local file)
 # If you place the mmdb at backend/data/GeoLite2-City.mmdb, it will be auto-detected.
@@ -78,4 +97,10 @@ if ! "$PYTHON_BIN" -c "import uvicorn" >/dev/null 2>&1; then
     pip install uvicorn fastapi sqlmodel scikit-learn numpy sqlalchemy
   fi
 fi
-exec "$PYTHON_BIN" -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+UVICORN_ARGS=(app.main:app --host 0.0.0.0 --port 8000)
+if [ "$UVICORN_RELOAD" = "1" ]; then
+  UVICORN_ARGS+=(--reload)
+fi
+
+exec "$PYTHON_BIN" -m uvicorn "${UVICORN_ARGS[@]}"

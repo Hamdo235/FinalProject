@@ -6,17 +6,19 @@ from ..models.alert import Alert
 from ..models.incident import Incident
 from ..models.llm_trace import LLMTrace
 from ..models.ip_enrichment import IPEnrichment
+from ..models.defense_action import DefenseAction
 from datetime import datetime
 import json
 from ..services.geoip import lookup_ip
 import asyncio
 from ..services.sse import publish_alert_created
+from ..services.defense import decide_defense_action, create_defense_action, action_to_dict
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 
 
 def _alert_payload(a: Alert) -> dict:
-    data = a.dict()
+    data = a.model_dump()
     if isinstance(data.get("ts"), datetime):
         data["ts"] = data["ts"].isoformat()
     return data
@@ -38,6 +40,7 @@ async def demo_generate(db: Session = Depends(get_session)):
     ]
     created = 0
     created_alerts = []
+    action_map = {}
     for rec in samples:
         rule = "ssh_failed_login" if rec.get("status") == "fail" else "ssh_login"
         severity = "high" if rec.get("status") == "fail" else "low"
@@ -58,12 +61,18 @@ async def demo_generate(db: Session = Depends(get_session)):
     db.commit()
     for a in created_alerts:
         db.refresh(a)
+        decision = decide_defense_action(a)
+        action = create_defense_action(db, a, decision)
+        if a.id is not None:
+            action_map[a.id] = action_to_dict(action)
     # Refresh to ensure IDs are present
     try:
         # Reload last inserted alerts for SSE publish
         for a in created_alerts:
             if a and a.id:
-                asyncio.create_task(publish_alert_created(_alert_payload(a)))
+                payload = _alert_payload(a)
+                payload["defense"] = action_map.get(a.id)
+                asyncio.create_task(publish_alert_created(payload))
     except Exception:
         pass
     # Best-effort GeoIP enrichment for the IPs we just inserted
@@ -97,6 +106,10 @@ def demo_reset(db: Session = Depends(get_session)):
     # wipe incidents and alerts and llm traces and enrichment
     db.exec(delete(LLMTrace))
     db.exec(delete(Incident))
+    try:
+        db.exec(delete(DefenseAction))
+    except Exception:
+        pass
     db.exec(delete(Alert))
     db.exec(delete(IPEnrichment))
     db.commit()

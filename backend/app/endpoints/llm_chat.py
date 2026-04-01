@@ -2,7 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Literal
 import httpx
+import asyncio
 import os
+import socket
+from urllib.parse import urlparse
 from fastapi.responses import StreamingResponse
 import json
 from sqlmodel import Session, select
@@ -87,6 +90,17 @@ def _summarize_incidents(db: Session, limit: int = 5) -> dict:
     }
 
 
+def _is_ollama_reachable(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname or "localhost"
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        with socket.create_connection((host, port), timeout=1.0):
+            return True
+    except Exception:
+        return False
+
+
 @router.post("/chat")
 async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get_session)):
     """
@@ -125,7 +139,10 @@ async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get
     messages_ollama.extend([{"role": m.role, "content": m.content} for m in req.messages])
 
     if not stream:
-        async with httpx.AsyncClient(timeout=OLLAMA_TIMEOUT) as client:
+        if not _is_ollama_reachable(OLLAMA_URL):
+            raise HTTPException(502, {"code": "ollama_unavailable", "message": "Ollama indisponible"})
+        timeout = httpx.Timeout(connect=3.0, read=OLLAMA_TIMEOUT, write=10.0, pool=5.0)
+        async with httpx.AsyncClient(timeout=timeout) as client:
             try:
                 resp = await client.post(
                     f"{OLLAMA_URL}/api/chat",
@@ -139,6 +156,10 @@ async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get
                     raise HTTPException(502, {"code": "ollama_unavailable", "message": "Ollama indisponible"})
                 data = resp.json()
                 return {"response": data.get("message", {}).get("content", "")}
+            except httpx.ConnectError:
+                raise HTTPException(502, {"code": "ollama_unavailable", "message": "Ollama indisponible"})
+            except httpx.ConnectTimeout:
+                raise HTTPException(504, {"code": "timeout", "message": "Connexion au LLM expirée"})
             except httpx.ReadTimeout:
                 raise HTTPException(504, {"code": "timeout", "message": "Délai dépassé lors de l'appel LLM"})
             except Exception as e:
@@ -147,7 +168,12 @@ async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get
     # Streaming SSE
     async def event_generator():
         try:
-            async with httpx.AsyncClient(timeout=None) as client:
+            if not _is_ollama_reachable(OLLAMA_URL):
+                yield "event: error\n"
+                yield "data: Ollama indisponible\n\n"
+                return
+            timeout = httpx.Timeout(connect=3.0, read=60.0, write=10.0, pool=5.0)
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 async with client.stream(
                     "POST",
                     f"{OLLAMA_URL}/api/chat",
@@ -172,6 +198,12 @@ async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get
                             yield "event: done\n"
                             yield "data: end\n\n"
                             return
+        except (asyncio.TimeoutError, httpx.TimeoutException):
+            yield "event: error\n"
+            yield "data: timeout\n\n"
+        except httpx.ConnectError:
+            yield "event: error\n"
+            yield "data: Ollama indisponible\n\n"
         except Exception as e:
             yield "event: error\n"
             yield f"data: {str(e)}\n\n"
