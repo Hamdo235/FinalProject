@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { MessageCircle, Send, ShieldQuestion, ArrowLeft, Plus, Bot, Pencil, Trash2, Copy, Square, Eye } from "lucide-react";
+import { MessageCircle, Send, ArrowLeft, Plus, Bot, Pencil, Trash2, Copy, Square, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -442,7 +442,9 @@ export default function ChatPage() {
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div className="flex items-center gap-2">
-              <ShieldQuestion className="h-5 w-5 text-emerald-500" />
+              <span className="w-6 h-6 rounded-md bg-emerald-100 flex items-center justify-center">
+                <Bot className="h-4 w-4 text-emerald-700" />
+              </span>
               <span className="font-medium">Console SOC – aucune action automatique</span>
             </div>
           </div>
@@ -450,7 +452,7 @@ export default function ChatPage() {
             <button
               onClick={async () => {
                 if (activeId == null) return;
-                const question = "Vue d'ensemble : quelles sont les alertes et incidents récents ?";
+                const question = "Vue d'ensemble : donne les 5 dernières attaques avec IP, règle, sévérité et une courte explication.";
                 setLoading(true);
                 setError(null);
                 try {
@@ -494,7 +496,7 @@ export default function ChatPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
-                  onClick={() => sendQuick("Vue d'ensemble : quelles sont les alertes et incidents récents ?")}
+                  onClick={() => sendQuick("Vue d'ensemble : donne les 5 dernières attaques avec IP, règle, sévérité et une courte explication.")}
                   className="text-left border border-slate-900/10 rounded p-3 bg-white/70 hover:bg-white"
                   disabled={loading}
                 >

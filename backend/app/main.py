@@ -19,9 +19,15 @@ from .db.session import engine
 from .core.settings import settings
 from .services.defense import defense_enforce_api, is_ip_blocked, expire_actions
 import time
+import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from collections import defaultdict
 from sqlmodel import SQLModel, Session as SQLModelSession
 # runtime metrics removed for simplicity
+
+logger = logging.getLogger(__name__)
+_rag_executor: ThreadPoolExecutor | None = None
 
 # Application FastAPI principale
 app = FastAPI(title="CyberSentinel-LLM", version="0.1.0")
@@ -99,11 +105,11 @@ async def defense_enforcement(request: Request, call_next):
 
 # runtime metrics middleware removed for minimal backend
 
-# Démarrage – création des tables (SQLModel + SQLite)
+# Démarrage – création des tables (SQLModel + SQLite) + initialisation RAG différée
 @app.on_event("startup")
-def on_startup():
-    # Create tables
-    from .models import alert as _a  # ensure models imported
+async def on_startup():
+    # Créer les tables SQLite (rapide, synchrone)
+    from .models import alert as _a
     from .models import incident as _i
     from .models import llm_trace as _l
     from .models import ip_enrichment as _e
@@ -111,6 +117,41 @@ def on_startup():
     from .models import chat as _chat
     from .models import defense_action as _def
     SQLModel.metadata.create_all(bind=engine)
+
+    # Initialisation RAG configurable pour réduire la pression CPU/RAM en dev.
+    from .services import rag_service
+    global _rag_executor
+
+    if not settings.rag_enabled:
+        logger.info("[RAG] Désactivé (RAG_ENABLED=false)")
+        return
+
+    rag_mode = settings.rag_init_mode.strip().lower()
+    if rag_mode in {"off", "disabled"}:
+        logger.info("[RAG] Désactivé (RAG_INIT_MODE=%s)", rag_mode)
+        return
+    if rag_mode == "lazy":
+        logger.info("[RAG] Mode lazy actif: initialisation au premier appel")
+        return
+
+    if rag_mode != "background":
+        logger.warning("[RAG] Mode inconnu '%s', fallback en background", rag_mode)
+
+    def _init_rag():
+        rag_service.initialize()
+
+    worker_count = max(1, settings.rag_init_max_workers)
+    _rag_executor = ThreadPoolExecutor(max_workers=worker_count, thread_name_prefix="rag-init")
+    loop = asyncio.get_running_loop()
+    loop.run_in_executor(_rag_executor, _init_rag)
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    global _rag_executor
+    if _rag_executor is not None:
+        _rag_executor.shutdown(wait=False, cancel_futures=True)
+        _rag_executor = None
 
 # Page racine – lien rapide vers endpoints utiles
 @app.get("/", response_class=HTMLResponse)

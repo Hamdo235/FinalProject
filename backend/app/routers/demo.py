@@ -7,7 +7,7 @@ from ..models.incident import Incident
 from ..models.llm_trace import LLMTrace
 from ..models.ip_enrichment import IPEnrichment
 from ..models.defense_action import DefenseAction
-from datetime import datetime
+from datetime import datetime, UTC
 import json
 from ..services.geoip import lookup_ip
 import asyncio
@@ -32,7 +32,7 @@ _DEMO_GEOIP_FALLBACK = {
 @router.post("/generate")
 async def demo_generate(db: Session = Depends(get_session)):
     # Generate a few SSH logs as alerts
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(UTC).isoformat()
     samples = [
         {"ts": now, "source": "ssh", "ip": "8.8.8.8", "user": "root", "status": "fail"},
         {"ts": now, "source": "ssh", "ip": "1.1.1.1", "user": "admin", "status": "fail"},

@@ -23,5 +23,8 @@ class Settings(BaseModel):
     rate_limit_per_minute: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
     max_body_size_bytes: int = int(os.getenv("MAX_BODY_SIZE_BYTES", "1048576"))  # 1 MiB par défaut
     ollama_timeout_seconds: float = float(os.getenv("OLLAMA_TIMEOUT", "30"))
+    rag_enabled: bool = _env_bool("RAG_ENABLED", True)
+    rag_init_mode: str = os.getenv("RAG_INIT_MODE", "lazy")  # off | background | lazy
+    rag_init_max_workers: int = int(os.getenv("RAG_INIT_MAX_WORKERS", "1"))
 
 settings = Settings()

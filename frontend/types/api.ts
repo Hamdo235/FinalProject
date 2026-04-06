@@ -13,6 +13,28 @@ export interface Alert {
   score: number;
   status: string;
   features_json?: string;
+  defense?: DefenseAction;
+}
+
+export interface DefenseAction {
+  id: number;
+  alert_id?: number | null;
+  ip?: string | null;
+  action: 'allow' | 'monitor' | 'review' | 'block_temp' | string;
+  reason?: string | null;
+  confidence: number;
+  mode: 'off' | 'monitor' | 'assist' | 'auto' | string;
+  expires_at?: string | null;
+  active: boolean;
+  created_at?: string;
+  created_by?: 'system' | 'human' | string;
+}
+
+export interface DefenseStatus {
+  ip: string;
+  mode: string;
+  blocked: boolean;
+  block?: DefenseAction | null;
 }
 
 export interface Incident {

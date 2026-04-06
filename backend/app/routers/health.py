@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from datetime import datetime
+from datetime import datetime, UTC
 from ..db.session import get_session
 from sqlmodel import Session
 import httpx
@@ -18,13 +18,13 @@ def _is_reachable(url: str) -> bool:
         port = parsed.port or (443 if parsed.scheme == "https" else 80)
         with socket.create_connection((host, port), timeout=1.0):
             return True
-    except Exception:
+    except OSError:
         return False
 
 
 @router.get("")
 async def health():
-    status = {"status": "ok", "time": datetime.utcnow().isoformat()}
+    status = {"status": "ok", "time": datetime.now(UTC).isoformat()}
     # DB check
     try:
         from ..models.alert import Alert  # noqa: F401

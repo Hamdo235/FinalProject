@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -13,6 +13,10 @@ from ..services.defense import (
     expire_actions,
     get_active_block_for_ip,
 )
+
+
+def _utcnow_naive() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
 
 router = APIRouter(prefix="/defense", tags=["defense"])
 
@@ -56,7 +60,7 @@ def approve_action(action_id: int, db: Session = Depends(get_session)):
     item.active = True
     item.created_by = "human"
     if item.expires_at is None:
-        item.expires_at = datetime.utcnow() + timedelta(minutes=30)
+        item.expires_at = _utcnow_naive() + timedelta(minutes=30)
     db.add(item)
     db.commit()
     db.refresh(item)

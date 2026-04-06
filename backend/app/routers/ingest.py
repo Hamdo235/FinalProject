@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from ..db.session import get_session
 from ..models.alert import Alert
 from ..models.ip_enrichment import IPEnrichment
-from datetime import datetime
+from datetime import datetime, UTC
 import json
 import asyncio
 from ..services.sse import publish_alert_created
@@ -17,6 +17,10 @@ router = APIRouter(prefix="/ingest", tags=["ingest"])
 LogRecord = Dict[str, Any]
 
 
+def _utcnow_naive() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
 def _to_alert(rec: LogRecord, db: Session) -> Alert:
     source = str(rec.get("source", "unknown"))
     ip = rec.get("ip")
@@ -25,9 +29,9 @@ def _to_alert(rec: LogRecord, db: Session) -> Alert:
     score, rule, severity = score_with_isolation_forest(rec, db)
     ts = rec.get("ts")
     try:
-        ts_dt = datetime.fromisoformat(ts) if ts else datetime.utcnow()
-    except Exception:
-        ts_dt = datetime.utcnow()
+        ts_dt = datetime.fromisoformat(ts) if ts else _utcnow_naive()
+    except (TypeError, ValueError):
+        ts_dt = _utcnow_naive()
     features_json = json.dumps(rec)
     return Alert(ts=ts_dt, source=source, ip=ip, user=user, rule=rule, severity=severity, features_json=features_json, score=score)
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Any, Dict, Optional
 import os
 
@@ -9,6 +9,10 @@ from sqlalchemy.orm import Session
 
 from ..models.alert import Alert
 from ..models.defense_action import DefenseAction
+
+
+def _utcnow_naive() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -135,7 +139,7 @@ def create_defense_action(db: Session, alert: Alert, decision: Dict[str, Any], c
     expires_at = None
     ttl = int(decision.get("ttl_minutes") or 0)
     if ttl > 0 and decision.get("action") == "block_temp":
-        expires_at = datetime.utcnow() + timedelta(minutes=ttl)
+        expires_at = _utcnow_naive() + timedelta(minutes=ttl)
 
     item = DefenseAction(
         alert_id=alert.id,
@@ -164,7 +168,7 @@ def create_defense_action(db: Session, alert: Alert, decision: Dict[str, Any], c
 
 
 def expire_actions(db: Session) -> int:
-    now = datetime.utcnow()
+    now = _utcnow_naive()
     stmt = select(DefenseAction).where(DefenseAction.active == True).where(DefenseAction.expires_at.is_not(None))
     try:
         rows = db.exec(stmt).all()

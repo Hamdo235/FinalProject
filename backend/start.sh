@@ -71,6 +71,12 @@ fi
 
 # 3) Launch backend API
 cd "$(dirname "$0")"
+APP_DIR="$(pwd)"
+# Ensure local backend package resolution is deterministic for reload subprocesses
+export PYTHONPATH="$APP_DIR${PYTHONPATH:+:$PYTHONPATH}"
+
+# Reduce noisy Chroma telemetry warnings by default
+export ANONYMIZED_TELEMETRY=${ANONYMIZED_TELEMETRY:-false}
 # 3a) Activate local virtualenv if present
 if [ -d .venv ] && [ -f .venv/bin/activate ]; then
   echo "[start] Activating virtualenv .venv"
@@ -98,9 +104,11 @@ if ! "$PYTHON_BIN" -c "import uvicorn" >/dev/null 2>&1; then
   fi
 fi
 
-UVICORN_ARGS=(app.main:app --host 0.0.0.0 --port 8000)
+export GEOLITE2_CITY_DB="${GEOLITE2_CITY_DB:-/home/hamdo/Documents/MyProject/backend/data/GeoLite2-City.mmdb}"
+
+UVICORN_ARGS=(app.main:app --host 0.0.0.0 --port 8000 --app-dir "$APP_DIR")
 if [ "$UVICORN_RELOAD" = "1" ]; then
-  UVICORN_ARGS+=(--reload)
+  UVICORN_ARGS+=(--reload --reload-dir "$APP_DIR")
 fi
 
 exec "$PYTHON_BIN" -m uvicorn "${UVICORN_ARGS[@]}"

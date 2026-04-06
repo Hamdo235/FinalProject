@@ -8,7 +8,7 @@ from ..models.incident import Incident
 from .llm_chat import MODEL
 from ..core.settings import settings
 import httpx
-from datetime import datetime
+from datetime import datetime, UTC
 
 router = APIRouter(prefix="/llm/assistant", tags=["LLM Assistant"]) 
 
@@ -154,7 +154,7 @@ async def assistant_query(body: AssistantQuery, db: Session = Depends(get_sessio
             },
         }
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(UTC).isoformat()
     context = (
         "Contexte plateforme (temps UTC: {now}).\n"
         "Récapitulatif alertes (dernières {na}): total={ta}, par sévérité={sa}.\nExemples: {ea}.\n"

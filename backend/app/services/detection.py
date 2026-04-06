@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Dict, Any, List, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import json
 import math
 import os
@@ -17,7 +17,7 @@ from ..models.alert import Alert
 # Features: [is_ssh, is_fail, hour_sin, hour_cos, ip_fail_count_60m]
 
 def _features_from_record(rec: Dict[str, Any], db: Session) -> Tuple[np.ndarray, Dict[str, Any]]:
-    now = datetime.utcnow()
+    now = datetime.now(UTC).replace(tzinfo=None)
     source = str(rec.get("source", "unknown")).lower()
     is_ssh = 1.0 if source == "ssh" else 0.0
     status = str(rec.get("status", "")).lower()
@@ -25,7 +25,7 @@ def _features_from_record(rec: Dict[str, Any], db: Session) -> Tuple[np.ndarray,
     ts = rec.get("ts")
     try:
         ts_dt = datetime.fromisoformat(ts) if ts else now
-    except Exception:
+    except (TypeError, ValueError):
         ts_dt = now
     hour = ts_dt.hour + ts_dt.minute/60.0
     hour_sin = math.sin(2*math.pi*hour/24.0)
@@ -42,7 +42,7 @@ def _features_from_record(rec: Dict[str, Any], db: Session) -> Tuple[np.ndarray,
                 f = json.loads(a.features_json or "{}")
                 if str(f.get("status", "")).lower() == "fail":
                     ip_fail_count += 1.0
-            except Exception:
+            except (TypeError, json.JSONDecodeError):
                 pass
 
     x = np.array([is_ssh, is_fail, hour_sin, hour_cos, ip_fail_count], dtype=float)
@@ -63,7 +63,7 @@ def _build_training_matrix(db: Session, limit: int = 200) -> np.ndarray:
     for a in rows:
         try:
             rec = json.loads(a.features_json or "{}")
-        except Exception:
+        except (TypeError, json.JSONDecodeError):
             rec = {}
         x, _ = _features_from_record(rec, db)
         X.append(x)

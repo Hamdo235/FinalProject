@@ -31,6 +31,8 @@ bash backend/start.sh
 ```
 Notes:
 - Le script démarre Ollama s’il n’est pas lancé et télécharge le modèle si nécessaire.
+- Mode demo/dev (défaut): `APP_ENV=dev bash backend/start.sh` (DEBUG=1, reload activé).
+- Mode final: `APP_ENV=final bash backend/start.sh` (DEBUG=0, reload désactivé).
 - Variables optionnelles avant lancement: `export OLLAMA_MODEL=llama3.2` et `export OLLAMA_BASE_URL=http://localhost:11434`.
 4) Vérifier
 ```bash
@@ -79,6 +81,24 @@ export OLLAMA_MODEL=llama3.2
 - GeoIP vide → vérifier le message de démarrage (`GeoIP enabled`) et le fichier `backend/data/GeoLite2-City.mmdb`.
 - Erreur “window is not defined” → le composant carte est chargé dynamiquement; relancer `npm run dev` si nécessaire.
 - LLM indisponible → installer/activer Ollama ou définir `OLLAMA_BASE_URL` et `OLLAMA_MODEL` avant `bash backend/start.sh`.
+
+## Validation finale (avant commit/push)
+- Backend tests:
+```bash
+cd backend && ./.venv/bin/python -m pytest -q
+```
+- Frontend lint:
+```bash
+cd frontend && npm run lint
+```
+- Frontend build production:
+```bash
+cd frontend && npm run build
+```
+- Vérifier Git (pas d’artefact runtime à committer):
+```bash
+git status -sb
+```
 
 ## État actuel
 - Détection: heuristique simple (IF/LOF planifié)

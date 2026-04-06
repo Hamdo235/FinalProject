@@ -2,12 +2,202 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: light; }
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ===== VARIABLES DARK MODE ===== */
+:root {
+  color-scheme: dark;
+
+  --color-bg:           #0a0e1a;
+  --color-bg-card:      #0f1629;
+  --color-bg-nav:       #080c18;
+  --color-cyan:         #00d4ff;
+  --color-green:        #00ff88;
+  --color-danger:       #ff4757;
+  --color-warning:      #ffa502;
+  --color-info:         #3742fa;
+  --color-text:         #e2e8f0;
+  --color-text-muted:   #64748b;
+  --color-border:       rgba(0, 212, 255, 0.15);
+  --font-mono:          'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ===== RESET GLOBAL ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  background:
-    radial-gradient(900px 600px at 10% -10%, #d7f3ee 0%, transparent 55%),
-    radial-gradient(900px 600px at 110% 0%, #ffe7c7 0%, transparent 55%),
-    linear-gradient(180deg, #f6f4ef 0%, #f1ede6 100%);
-  color: #0f172a;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+/* ===== CLASSES UTILITAIRES CYBER ===== */
+
+/* Card sombre avec bordure cyan subtile */
+.cyber-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(0, 212, 255, 0.05);
+}
+
+/* Badge sévérité */
+.cyber-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cyber-badge-high {
+  background: rgba(255, 71, 87, 0.15);
+  color: var(--color-danger);
+  border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+.cyber-badge-medium {
+  background: rgba(255, 165, 2, 0.15);
+  color: var(--color-warning);
+  border: 1px solid rgba(255, 165, 2, 0.3);
+}
+
+.cyber-badge-low {
+  background: rgba(0, 255, 136, 0.12);
+  color: var(--color-green);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+}
+
+/* Effet glow cyan */
+.glow-cyan {
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.35), 0 0 24px rgba(0, 212, 255, 0.15);
+}
+
+/* Effet glow vert */
+.glow-green {
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.35), 0 0 24px rgba(0, 255, 136, 0.15);
+}
+
+/* Texte monospace technique */
+.font-mono-cyber {
+  font-family: var(--font-mono);
+}
+
+/* Fond terminal pour les logs */
+.terminal-bg {
+  background: var(--color-bg-nav);
+  font-family: var(--font-mono);
+  color: var(--color-green);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+/* ===== ANIMATIONS ===== */
+
+/* Slide-in pour nouvelles alertes */
+@keyframes alertSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-alert-in {
+  animation: alertSlideIn 0.35s ease-out forwards;
+}
+
+/* Fade-in général */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out both;
+}
+
+/* Pulse badge LIVE — cyan */
+@keyframes pulseLive {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.5); }
+  50%       { opacity: 0.8; box-shadow: 0 0 0 6px rgba(0, 212, 255, 0); }
+}
+
+.animate-pulse-badge {
+  animation: pulseLive 1.8s ease-in-out infinite;
+}
+
+/* Pulse danger — rouge */
+@keyframes pulseDanger {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.5); }
+  50%       { opacity: 0.8; box-shadow: 0 0 0 6px rgba(255, 71, 87, 0); }
+}
+
+.animate-pulse-danger {
+  animation: pulseDanger 1.8s ease-in-out infinite;
+}
+
+/* Scan line progressive pour la démo */
+@keyframes scanLine {
+  0%   { width: 0%; }
+  100% { width: 100%; }
+}
+
+.animate-scan {
+  animation: scanLine linear forwards;
+}
+
+/* Clignotement texte terminal */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Log entry apparition */
+@keyframes logAppear {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-log-in {
+  animation: logAppear 0.2s ease-out both;
+}
+
+/* ===== SCROLLBAR DARK ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-nav);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.4);
+}
+
+/* ===== SELECTION ===== */
+::selection {
+  background: rgba(0, 212, 255, 0.25);
+  color: var(--color-text);
 }

@@ -1,27 +1,33 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-/**
- * Carte conteneur générique pour sections/KPIs
- */
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "rounded-2xl border border-slate-900/10 bg-white/70 backdrop-blur shadow-[0_12px_40px_rgba(2,6,23,0.08)]",
-        className
-      )}
+      className={cn("cyber-card", className)}
       {...props}
     />
   );
 }
 
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("p-4 border-b border-slate-900/10", className)} {...props} />;
+  return (
+    <div
+      className={cn("p-4 border-b", className)}
+      style={{ borderColor: "rgba(0, 212, 255, 0.12)" }}
+      {...props}
+    />
+  );
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("text-sm font-semibold text-slate-900", className)} {...props} />;
+  return (
+    <h3
+      className={cn("text-sm font-semibold", className)}
+      style={{ color: "#e2e8f0" }}
+      {...props}
+    />
+  );
 }
 
 export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -29,5 +35,11 @@ export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDi
 }
 
 export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("p-4 border-t", className)} {...props} />;
+  return (
+    <div
+      className={cn("p-4 border-t", className)}
+      style={{ borderColor: "rgba(0, 212, 255, 0.12)" }}
+      {...props}
+    />
+  );
 }

@@ -2,7 +2,7 @@ import asyncio
 import json
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Set
 
 router = APIRouter(prefix="/stream", tags=["stream"])
@@ -19,11 +19,11 @@ def _safe_put(q: asyncio.Queue, event: dict) -> None:
         # Drop oldest item and retry once
         try:
             _ = q.get_nowait()
-        except Exception:
+        except asyncio.QueueEmpty:
             pass
         try:
             q.put_nowait(event)
-        except Exception:
+        except asyncio.QueueFull:
             pass
 
 async def publish(event: dict):
@@ -35,7 +35,7 @@ async def publish(event: dict):
 
 async def _event_generator():
     # initial hello
-    hello = json.dumps({"type": "hello", "time": datetime.utcnow().isoformat()})
+    hello = json.dumps({"type": "hello", "time": datetime.now(UTC).isoformat()})
     yield f"data: {hello}\n\n"
     q: asyncio.Queue = asyncio.Queue(maxsize=_QUEUE_MAXSIZE)
     _subscribers.add(q)
@@ -44,7 +44,7 @@ async def _event_generator():
             item = await q.get()
             try:
                 payload = json.dumps(item)
-            except Exception:
+            except (TypeError, ValueError):
                 payload = json.dumps({"type":"error","detail":"unserializable"})
             yield f"data: {payload}\n\n"
     finally:
@@ -58,5 +58,5 @@ async def publish_alert_created(alert: dict):
     await publish({
         "type": "alert.created",
         "data": alert,
-        "time": datetime.utcnow().isoformat(),
+        "time": datetime.now(UTC).isoformat(),
     })

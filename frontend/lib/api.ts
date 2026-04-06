@@ -1,4 +1,14 @@
-import { Alert, Incident, AlertLabel, ModelMetrics, MapPoint, IncidentExplanation, SSEAlertEvent } from '@/types/api';
+import {
+  Alert,
+  Incident,
+  AlertLabel,
+  ModelMetrics,
+  MapPoint,
+  IncidentExplanation,
+  SSEAlertEvent,
+  DefenseAction,
+  DefenseStatus,
+} from '@/types/api';
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
@@ -91,6 +101,31 @@ export async function demoGenerate(): Promise<{ created: number }> {
 
 export async function demoReset(): Promise<{ reset: boolean }> {
   return apiFetch<{ reset: boolean }>('/demo/reset', { method: 'POST' });
+}
+
+export async function fetchDefenseActions(params?: { limit?: number; active?: boolean; ip?: string }): Promise<DefenseAction[]> {
+  const qp = new URLSearchParams();
+  if (params?.limit !== undefined) qp.set('limit', String(params.limit));
+  if (params?.active !== undefined) qp.set('active', String(params.active));
+  if (params?.ip) qp.set('ip', params.ip);
+  const suffix = qp.toString() ? `?${qp.toString()}` : '';
+  return apiFetch<DefenseAction[]>(`/defense/actions${suffix}`);
+}
+
+export async function fetchDefenseStatus(ip: string): Promise<DefenseStatus> {
+  return apiFetch<DefenseStatus>(`/defense/status/${encodeURIComponent(ip)}`);
+}
+
+export async function approveDefenseAction(actionId: number): Promise<{ ok: boolean; action: DefenseAction }> {
+  return apiFetch<{ ok: boolean; action: DefenseAction }>(`/defense/actions/${actionId}/approve`, {
+    method: 'POST',
+  });
+}
+
+export async function revokeDefenseAction(actionId: number): Promise<{ ok: boolean; action: DefenseAction }> {
+  return apiFetch<{ ok: boolean; action: DefenseAction }>(`/defense/actions/${actionId}/revoke`, {
+    method: 'POST',
+  });
 }
 
 /**

@@ -30,7 +30,7 @@ export default function IncidentsPage() {
 
   React.useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   if (loading) {
     return (
