@@ -13,20 +13,38 @@ import {
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
 /**
- * Wrapper fetch avec gestion d’erreurs basique
+ * Wrapper fetch avec gestion d'erreurs et timeout via AbortController.
+ * @param timeoutMs  30 000 ms par défaut — passer 120 000 pour les appels LLM.
  */
-async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
+async function apiFetch<T>(
+  url: string,
+  options?: RequestInit & { timeoutMs?: number },
+): Promise<T> {
+  const { timeoutMs = 30_000, ...fetchOptions } = options ?? {};
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   const isServer = typeof window === 'undefined';
-  const res = await fetch(`${API_BASE}${url}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    ...(isServer ? { cache: 'no-store' as RequestCache } : {}),
-    ...options,
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`API error ${res.status}: ${err}`);
+  try {
+    const res = await fetch(`${API_BASE}${url}`, {
+      headers: { 'Content-Type': 'application/json', ...fetchOptions.headers },
+      ...(isServer ? { cache: 'no-store' as RequestCache } : {}),
+      ...fetchOptions,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`API error ${res.status}: ${err}`);
+    }
+    return res.json() as Promise<T>;
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(`Delai depasse (${timeoutMs / 1000}s) - le serveur n'a pas repondu.`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-  return res.json() as Promise<T>;
 }
 
 /**
@@ -51,7 +69,7 @@ export async function fetchIncident(id: number): Promise<Incident> {
 }
 
 /**
- * Créer un incident à partir d’alertes
+ * Créer un incident à partir d'alertes
  */
 export async function createIncidentFromAlerts(alertIds: number[]): Promise<Incident> {
   return apiFetch<Incident>('/incidents/from-alerts', {
@@ -64,8 +82,10 @@ export async function createIncidentFromAlerts(alertIds: number[]): Promise<Inci
  * Demander une explication LLM pour un incident
  */
 export async function explainIncident(id: number): Promise<IncidentExplanation> {
+  // LLM local (Ollama) peut prendre 30–180 s selon le matériel.
   return apiFetch<IncidentExplanation>(`/llm/incidents/${id}/explain`, {
     method: 'POST',
+    timeoutMs: 180_000,
   });
 }
 
@@ -133,7 +153,11 @@ export async function revokeDefenseAction(actionId: number): Promise<{ ok: boole
  */
 export function createAlertsSSE(onAlert: (alert: Alert) => void): EventSource {
   const es = new EventSource(`${API_BASE}/stream/alerts`);
+  let errorCount = 0;
+  const MAX_ERRORS = 5;
+
   es.onmessage = (e) => {
+    errorCount = 0;
     try {
       const parsed = JSON.parse(e.data) as SSEAlertEvent;
       if ((parsed.type === 'alert.created' || parsed.type === 'alert_created') && (parsed as any).data) {
@@ -147,11 +171,15 @@ export function createAlertsSSE(onAlert: (alert: Alert) => void): EventSource {
           .catch(() => {});
       }
     } catch (err) {
-      console.error('Erreur parsing SSE alert', err);
+      console.warn('[SSE] Erreur parsing alerte:', err);
     }
   };
-  es.onerror = (err) => {
-    console.error('SSE error', err);
+  es.onerror = () => {
+    errorCount += 1;
+    if (errorCount >= MAX_ERRORS) {
+      console.warn(`[SSE] Backend inaccessible après ${MAX_ERRORS} tentatives — flux fermé.`);
+      es.close();
+    }
   };
   return es;
 }

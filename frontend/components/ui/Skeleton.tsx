@@ -1,12 +1,11 @@
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
-/**
- * Skeleton de chargement pour les cartes et lignes de tableau
- */
-export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function Skeleton({ className, style, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-gray-200", className)}
+      className={cn("animate-pulse rounded-xl", className)}
+      style={{ background: "rgba(34,211,238,0.06)", ...style }}
       {...props}
     />
   );

@@ -12,12 +12,14 @@ const space = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
+  preload: true,
 });
 
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
   weight: ["400", "500", "600"],
+  preload: true,
 });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -25,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr" style={{ colorScheme: "dark" }}>
       <body
         className={`${space.variable} ${jetbrains.variable} h-screen overflow-hidden antialiased`}
-        style={{ background: "#0a0e1a", color: "#e2e8f0" }}
+        style={{ background: "#080f1a", color: "#e2e8f0" }}
       >
         <div className="flex h-screen min-h-0">
           <Sidebar />

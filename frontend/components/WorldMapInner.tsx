@@ -1,46 +1,117 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
-import { CircleMarker, MapContainer, Popup, TileLayer, useMap } from "react-leaflet";
+import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { fetchMapPoints } from "@/lib/api";
 import { MapPoint } from "@/types/api";
 import { useSearchParams } from "next/navigation";
+import type { Map as LeafletMap, CircleMarker } from "leaflet";
 
 interface WorldMapInnerProps {
   height?: string;
   refreshInterval?: number;
 }
 
-function FitBounds({ bounds }: { bounds: [[number, number], [number, number]] | null }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!bounds) return;
-    map.fitBounds(bounds, { padding: [16, 16] });
-  }, [map, bounds]);
-
-  return null;
-}
-
 export default function WorldMapInner({ height = "400px", refreshInterval = 6000 }: WorldMapInnerProps) {
   const [points, setPoints] = useState<MapPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
+  const markersRef = useRef<CircleMarker[]>([]);
   const search = useSearchParams();
   const highlightIp = search?.get("ip") || "";
 
-  const load = async () => {
-    try {
-      const data = await fetchMapPoints();
-      setPoints(data);
-    } catch (e) {
-      setError("Impossible de charger les points GeoIP.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Initialize Leaflet map manually — avoids react-leaflet's MapContainer lifecycle issues
+  // (double-init in Strict Mode). The `cancelled` flag ensures the async import
+  // is a no-op if cleanup already fired before the promise resolved.
   useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    let cancelled = false;
+
+    import("leaflet").then((L) => {
+      if (cancelled || !containerRef.current || mapRef.current) return;
+
+      const map = L.map(containerRef.current, {
+        center: [20, 0],
+        zoom: 2,
+        scrollWheelZoom: false,
+      });
+
+      L.tileLayer(
+        "https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png",
+        { attribution: "&copy; OpenStreetMap &copy; CARTO" }
+      ).addTo(map);
+
+      mapRef.current = map;
+    });
+
+    return () => {
+      cancelled = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      markersRef.current = [];
+    };
+  }, []);
+
+  // Sync markers whenever points or highlight changes
+  useEffect(() => {
+    if (!mapRef.current || points.length === 0) return;
+
+    import("leaflet").then((L) => {
+      if (!mapRef.current) return;
+
+      // Remove old markers
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+
+      const bounds: [number, number][] = [];
+
+      for (const pt of points) {
+        if (pt.lat == null || pt.lon == null) continue;
+        const isHighlighted = !!highlightIp && pt.ip === highlightIp;
+        const marker = L.circleMarker([pt.lat, pt.lon], {
+          color: isHighlighted ? "#10b981" : "#22d3ee",
+          weight: 2,
+          fillColor: isHighlighted ? "#10b981" : "#3b82f6",
+          fillOpacity: 0.85,
+          radius: isHighlighted ? 9 : 6,
+        })
+          .bindPopup(
+            `<div style="background:#0c1628;color:#e2e8f0;padding:6px 8px;border-radius:8px;font-size:12px">
+              <div><strong style="color:#22d3ee">IP:</strong> ${pt.ip}</div>
+              ${pt.country ? `<div><strong style="color:#22d3ee">Pays:</strong> ${pt.country}</div>` : ""}
+              <div><strong style="color:#22d3ee">Alertes:</strong> ${pt.count}</div>
+              <a href="/alerts" style="color:#67e8f9">Voir les alertes</a>
+            </div>`
+          )
+          .addTo(mapRef.current!);
+
+        markersRef.current.push(marker);
+        bounds.push([pt.lat, pt.lon]);
+      }
+
+      if (bounds.length > 0) {
+        try {
+          mapRef.current.fitBounds(bounds as any, { padding: [20, 20], maxZoom: 6 });
+        } catch (_) {}
+      }
+    });
+  }, [points, highlightIp]);
+
+  // Fetch points on mount and on interval
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setPoints(await fetchMapPoints());
+      } catch {
+        setError("Impossible de charger les points GeoIP.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     load();
     if (refreshInterval > 0) {
       const iv = setInterval(load, refreshInterval);
@@ -48,92 +119,29 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
     }
   }, [refreshInterval]);
 
-  const center = useMemo<[number, number]>(() => {
-    if (points.length > 0 && points[0].lat !== undefined && points[0].lon !== undefined) {
-      return [points[0].lat, points[0].lon];
-    }
-    return [48.8566, 2.3522];
-  }, [points]);
-
-  const bounds = useMemo(() => {
-    const coords = points
-      .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon))
-      .map((p) => [p.lat as number, p.lon as number] as [number, number]);
-    if (coords.length === 0) return null;
-    let minLat = coords[0][0],
-      maxLat = coords[0][0],
-      minLon = coords[0][1],
-      maxLon = coords[0][1];
-    for (const [lat, lon] of coords) {
-      if (lat < minLat) minLat = lat;
-      if (lat > maxLat) maxLat = lat;
-      if (lon < minLon) minLon = lon;
-      if (lon > maxLon) maxLon = lon;
-    }
-    return [
-      [minLat, minLon],
-      [maxLat, maxLon],
-    ] as [[number, number], [number, number]];
-  }, [points]);
-
-  const renderMarkers = () =>
-    points.map((pt) =>
-      pt.lat !== undefined && pt.lon !== undefined ? (
-        <CircleMarker
-          key={pt.ip}
-          center={[pt.lat, pt.lon]}
-          radius={highlightIp && pt.ip === highlightIp ? 9 : 6}
-          pathOptions={{
-            color: highlightIp && pt.ip === highlightIp ? "#16a34a" : "#2563eb",
-            weight: 2,
-            fillColor: highlightIp && pt.ip === highlightIp ? "#22c55e" : "#60a5fa",
-            fillOpacity: 0.9,
-          }}
-        >
-          <Popup>
-            <div className="text-xs space-y-1">
-              <div>
-                <strong>IP:</strong> {pt.ip}
-              </div>
-              {pt.country && (
-                <div>
-                  <strong>Pays:</strong> {pt.country}
-                </div>
-              )}
-              <div>
-                <strong>Alertes:</strong> {pt.count}
-              </div>
-              <div className="pt-1">
-                <a href="/alerts" className="text-blue-600 underline">
-                  Voir les alertes
-                </a>
-              </div>
-            </div>
-          </Popup>
-        </CircleMarker>
-      ) : null
-    );
-
   return (
-    <div className="rounded-lg overflow-hidden border relative" style={{ height, width: "100%" }}>
+    <div
+      className="rounded-xl overflow-hidden relative"
+      style={{ height, width: "100%", border: "1px solid rgba(34,211,238,0.2)" }}
+    >
       {loading && points.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm bg-white/60 z-[500]">
-          Chargement...
+        <div
+          className="absolute inset-0 flex items-center justify-center text-sm z-[500] font-mono-cyber"
+          style={{ background: "rgba(8,15,26,0.85)", color: "#64748b" }}
+        >
+          Chargement…
         </div>
       )}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center text-red-600 text-sm bg-white/60 z-[500]">
+        <div
+          className="absolute inset-0 flex items-center justify-center text-sm z-[500]"
+          style={{ background: "rgba(8,15,26,0.85)", color: "#ef4444" }}
+        >
           {error}
         </div>
       )}
-      <MapContainer center={center} zoom={2} scrollWheelZoom={false} style={{ height: "100%", width: "100%" }}>
-        <FitBounds bounds={bounds} />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {renderMarkers()}
-      </MapContainer>
+      {/* Plain div — Leaflet initializes directly on this node */}
+      <div ref={containerRef} style={{ height: "100%", width: "100%" }} />
     </div>
   );
 }

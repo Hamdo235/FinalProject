@@ -4,36 +4,59 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40',
   {
     variants: {
       variant: {
-        default:
-          'bg-cyan-500 text-black font-semibold hover:bg-cyan-400 hover:shadow-[0_0_16px_rgba(0,212,255,0.5)] focus-visible:ring-cyan-500',
-        destructive:
-          'bg-[#ff4757]/20 text-[#ff4757] border border-[#ff4757]/40 hover:bg-[#ff4757]/30 focus-visible:ring-[#ff4757]',
-        outline:
-          'border border-[rgba(0,212,255,0.25)] bg-transparent text-[#e2e8f0] hover:bg-[rgba(0,212,255,0.08)] hover:border-[rgba(0,212,255,0.5)] focus-visible:ring-cyan-500',
-        secondary:
-          'bg-[#0f1629] text-[#e2e8f0] border border-[rgba(0,212,255,0.15)] hover:bg-[rgba(0,212,255,0.06)] focus-visible:ring-cyan-500',
-        ghost:
-          'text-[#e2e8f0] hover:bg-[rgba(0,212,255,0.08)] hover:text-[#00d4ff] focus-visible:ring-cyan-500',
-        link:
-          'text-[#00d4ff] underline-offset-4 hover:underline focus-visible:ring-cyan-500',
+        default:     'text-white focus-visible:ring-cyan-400',
+        destructive: 'focus-visible:ring-red-500',
+        outline:     'focus-visible:ring-cyan-400',
+        secondary:   'focus-visible:ring-cyan-400',
+        ghost:       'focus-visible:ring-cyan-400',
+        link:        'underline-offset-4 hover:underline focus-visible:ring-cyan-400',
       },
       size: {
         default: 'h-10 px-4 py-2',
-        sm:      'h-8 rounded-md px-3 text-xs',
-        lg:      'h-11 rounded-md px-8',
+        sm:      'h-8 px-3 text-xs',
+        lg:      'h-11 px-8',
         icon:    'h-10 w-10',
       },
     },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
+    defaultVariants: { variant: 'default', size: 'default' },
   }
 );
+
+const variantStyles: Record<string, React.CSSProperties> = {
+  default: {
+    background: 'linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%)',
+    boxShadow: '0 0 18px rgba(34,211,238,0.3)',
+    color: '#fff',
+  },
+  destructive: {
+    background: 'rgba(239,68,68,0.12)',
+    border: '1px solid rgba(239,68,68,0.3)',
+    color: '#ef4444',
+  },
+  outline: {
+    background: 'transparent',
+    border: '1px solid rgba(34,211,238,0.25)',
+    color: '#67e8f9',
+  },
+  secondary: {
+    background: 'rgba(34,211,238,0.08)',
+    border: '1px solid rgba(34,211,238,0.15)',
+    color: '#22d3ee',
+  },
+  ghost: {
+    background: 'transparent',
+    color: '#67e8f9',
+  },
+  link: {
+    background: 'transparent',
+    color: '#22d3ee',
+    padding: 0,
+  },
+};
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -42,11 +65,13 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant = 'default', size, asChild = false, style, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
+    const vs = variantStyles[variant ?? 'default'] ?? {};
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
+        style={{ ...vs, ...style }}
         ref={ref}
         {...props}
       />

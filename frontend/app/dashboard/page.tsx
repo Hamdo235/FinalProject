@@ -3,63 +3,54 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Activity, AlertTriangle, Shield, TrendingUp } from "lucide-react";
+import {
+  Activity, AlertTriangle, Shield, TrendingUp, Zap,
+  Clock, MapPin, ChevronRight,
+} from "lucide-react";
 import MetricCard from "@/components/MetricCard";
 import SimpleChart from "@/components/SimpleChart";
 import WorldMap from "@/components/WorldMap";
-import { fetchAlerts, fetchIncidents, fetchModelMetrics, fetchDefenseActions, createAlertsSSE } from "@/lib/api";
+import {
+  fetchAlerts, fetchIncidents, fetchModelMetrics,
+  fetchDefenseActions, createAlertsSSE,
+} from "@/lib/api";
 import { Alert, Incident, ModelMetrics, DefenseAction } from "@/types/api";
+import Link from "next/link";
 
 const SEV_BADGE: Record<string, "destructive" | "warning" | "success"> = {
-  high: "destructive",
-  medium: "warning",
-  low: "success",
+  high: "destructive", medium: "warning", low: "success",
 };
 
 export default function DashboardPage() {
-  const [alerts, setAlerts] = React.useState<Alert[]>([]);
-  const [incidents, setIncidents] = React.useState<Incident[]>([]);
-  const [metrics, setMetrics] = React.useState<ModelMetrics | null>(null);
+  const [alerts, setAlerts]           = React.useState<Alert[]>([]);
+  const [incidents, setIncidents]     = React.useState<Incident[]>([]);
+  const [metrics, setMetrics]         = React.useState<ModelMetrics | null>(null);
   const [defenseActions, setDefenseActions] = React.useState<DefenseAction[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [live, setLive] = React.useState(false);
+  const [loading, setLoading]         = React.useState(true);
+  const [error, setError]             = React.useState<string | null>(null);
+  const [live, setLive]               = React.useState(false);
 
   React.useEffect(() => {
-    const load = async () => {
+    (async () => {
       try {
-        const [alertsRes, incidentsRes, metricsRes] = await Promise.all([
-          fetchAlerts(),
-          fetchIncidents(),
-          fetchModelMetrics(),
-        ]);
-        const defenseRes = await fetchDefenseActions({ limit: 100 });
-        setAlerts(alertsRes);
-        setIncidents(incidentsRes);
-        setMetrics(metricsRes);
-        setDefenseActions(defenseRes);
-      } catch (e) {
-        setError("Impossible de charger les données du backend.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+        const [a, i, m] = await Promise.all([fetchAlerts(), fetchIncidents(), fetchModelMetrics()]);
+        const d = await fetchDefenseActions({ limit: 100 });
+        setAlerts(a); setIncidents(i); setMetrics(m); setDefenseActions(d);
+      } catch { setError("Impossible de charger les données du backend."); }
+      finally { setLoading(false); }
+    })();
   }, []);
 
   React.useEffect(() => {
-    const es = createAlertsSSE((newAlert) => {
-      setAlerts((prev) => [newAlert, ...prev]);
-      setLive(true);
-    });
+    const es = createAlertsSSE((a) => { setAlerts((p) => [a, ...p]); setLive(true); });
     return () => es.close();
   }, []);
 
   const alerts24h = React.useMemo(() => {
-    const from24h = Date.now() - 24 * 60 * 60 * 1000;
+    const from = Date.now() - 86400000;
     return alerts.filter((a) => {
       const t = new Date(a.ts).getTime();
-      return Number.isFinite(t) && t >= from24h;
+      return Number.isFinite(t) && t >= from;
     });
   }, [alerts]);
 
@@ -68,52 +59,48 @@ export default function DashboardPage() {
   const openIncidents  = incidents.filter((i) => i.status === "open").length;
   const activeBlocks   = defenseActions.filter((a) => a.active && a.action === "block_temp").length;
 
+  const f1Display = React.useMemo(() => {
+    if (!metrics || (metrics as any).samples === 0) return "N/A";
+    return typeof metrics.f1 === "number" ? metrics.f1.toFixed(3) : "N/A";
+  }, [metrics]);
+
   const timelineData = React.useMemo(() => {
     const now = Date.now();
-    const buckets = Array.from({ length: 24 }).map((_, idx) => {
-      const start = new Date(now - (23 - idx) * 60 * 60 * 1000);
-      start.setMinutes(0, 0, 0);
-      const label = start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      return { time: label, startMs: start.getTime(), count: 0 };
+    const buckets = Array.from({ length: 24 }).map((_, i) => {
+      const s = new Date(now - (23 - i) * 3600000);
+      s.setMinutes(0, 0, 0);
+      return {
+        time: s.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        startMs: s.getTime(),
+        count: 0,
+      };
     });
     for (const a of alerts24h) {
       const t = new Date(a.ts).getTime();
       if (!Number.isFinite(t)) continue;
-      const diffH = Math.floor((t - buckets[0].startMs) / (60 * 60 * 1000));
-      if (diffH >= 0 && diffH < buckets.length) buckets[diffH].count += 1;
+      const d = Math.floor((t - buckets[0].startMs) / 3600000);
+      if (d >= 0 && d < buckets.length) buckets[d].count++;
     }
     return buckets.map(({ time, count }) => ({ time, count }));
   }, [alerts24h]);
 
-  const severityData = React.useMemo(
-    () => [
-      { name: "Critique", value: alerts24h.filter((a) => a.severity === "high").length },
-      { name: "Moyenne",  value: alerts24h.filter((a) => a.severity === "medium").length },
-      { name: "Faible",   value: alerts24h.filter((a) => a.severity === "low").length },
-    ],
-    [alerts24h]
-  );
-
-  const f1Display = React.useMemo(() => {
-    if (!metrics) return "N/A";
-    if ((metrics as any).samples === 0) return "N/A";
-    if (typeof metrics.f1 === "number") return metrics.f1.toFixed(3);
-    return "N/A";
-  }, [metrics]);
+  const severityData = React.useMemo(() => [
+    { name: "Critique", value: alerts24h.filter((a) => a.severity === "high").length },
+    { name: "Moyenne",  value: alerts24h.filter((a) => a.severity === "medium").length },
+    { name: "Faible",   value: alerts24h.filter((a) => a.severity === "low").length },
+  ], [alerts24h]);
 
   const activity = React.useMemo(() => {
     const a = alerts.slice(0, 10).map((al) => ({
-      type: "alert",
-      id: al.id,
+      type: "alert", id: al.id,
       ts: new Date(al.ts).getTime(),
-      label: `Alerte ${al.severity} • ${al.source}${al.ip ? ` • ${al.ip}` : ""}`,
+      label: `Alerte ${al.severity} — ${al.source}${al.ip ? ` — ${al.ip}` : ""}`,
       severity: al.severity,
     }));
     const i = incidents.slice(0, 10).map((inc) => ({
-      type: "incident",
-      id: inc.id,
+      type: "incident", id: inc.id,
       ts: new Date(inc.created_at).getTime(),
-      label: `Incident #${inc.id} • ${inc.status} • ${inc.risk || "n/a"}`,
+      label: `Incident #${inc.id} — ${inc.status} — risque ${inc.risk || "n/a"}`,
       severity: inc.risk || "low",
     }));
     return [...a, ...i]
@@ -123,108 +110,111 @@ export default function DashboardPage() {
   }, [alerts, incidents]);
 
   return (
-    <div className="space-y-6 animate-fade-in p-6">
-      {/* Header */}
+    <div className="space-y-6 animate-fade-in">
+
+      {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1
-            className="text-2xl font-semibold"
-            style={{ color: "#e2e8f0", letterSpacing: "-0.01em" }}
-          >
-            Dashboard opérationnel
+          <h1 className="text-xl font-bold" style={{ color: "#e2e8f0" }}>
+            Vue opérationnelle
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#64748b" }}>
-            Vue d'ensemble en temps réel des alertes, incidents et performance du modèle.
+          <p className="text-sm mt-0.5" style={{ color: "#64748b" }}>
+            Alertes, incidents et ML en temps réel.
           </p>
         </div>
         {live && (
-          <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full animate-pulse-badge text-xs font-semibold font-mono-cyber"
+          <span
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono-cyber animate-pulse-badge"
             style={{
-              background: "rgba(0, 212, 255, 0.1)",
-              border: "1px solid rgba(0, 212, 255, 0.35)",
-              color: "#00d4ff",
+              background: "rgba(16,185,129,0.08)",
+              border: "1px solid rgba(16,185,129,0.25)",
+              color: "#10b981",
             }}
           >
-            <span
-              className="h-2 w-2 rounded-full"
-              style={{ background: "#00d4ff" }}
-            />
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#10b981" }} />
             LIVE
-          </div>
+          </span>
         )}
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* ── KPIs ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <MetricCard
-          title="Total alertes"
-          value={loading ? "..." : totalAlerts}
-          subtitle="24 dernières heures"
+          title="Alertes 24h"
+          value={loading ? "…" : totalAlerts}
+          subtitle="Toutes sévérités"
           loading={loading}
-          icon={<Activity className="h-4 w-4" style={{ color: "#00d4ff" }} />}
+          accent="cyan"
+          icon={<Activity className="h-4 w-4" style={{ color: "#22d3ee" }} />}
         />
         <MetricCard
-          title="Alertes critiques"
-          value={loading ? "..." : criticalAlerts}
+          title="Critiques"
+          value={loading ? "…" : criticalAlerts}
           subtitle="Sévérité haute"
           loading={loading}
-          icon={<AlertTriangle className="h-4 w-4" style={{ color: "#ff4757" }} />}
+          accent="red"
+          icon={<AlertTriangle className="h-4 w-4" style={{ color: "#ef4444" }} />}
         />
         <MetricCard
           title="Incidents ouverts"
-          value={loading ? "..." : openIncidents}
-          subtitle="En cours de traitement"
+          value={loading ? "…" : openIncidents}
+          subtitle="En cours"
           loading={loading}
-          icon={<Shield className="h-4 w-4" style={{ color: "#ffa502" }} />}
+          accent="amber"
+          icon={<Shield className="h-4 w-4" style={{ color: "#f59e0b" }} />}
         />
         <MetricCard
           title="F1-score"
-          value={loading ? "..." : f1Display}
-          subtitle="Modèle actuel"
+          value={loading ? "…" : f1Display}
+          subtitle="Modèle ML"
           loading={loading}
-          icon={<TrendingUp className="h-4 w-4" style={{ color: "#00ff88" }} />}
+          accent="green"
+          icon={<TrendingUp className="h-4 w-4" style={{ color: "#10b981" }} />}
         />
         <MetricCard
           title="Blocages actifs"
-          value={loading ? "..." : activeBlocks}
-          subtitle="Défense applicative"
+          value={loading ? "…" : activeBlocks}
+          subtitle="Défense"
           loading={loading}
-          icon={<Shield className="h-4 w-4" style={{ color: "#ff4757" }} />}
+          accent="blue"
+          icon={<Zap className="h-4 w-4" style={{ color: "#3b82f6" }} />}
         />
       </div>
 
-      {/* Actions rapides */}
+      {/* ── Quick actions ── */}
       <div className="flex flex-wrap gap-2">
         {[
-          { href: "/alerts",    label: "Ouvrir les alertes",  color: "#00d4ff" },
-          { href: "/incidents", label: "Voir les incidents",  color: "#00d4ff" },
-          { href: "/chat",      label: "Poser une question",  color: "#00d4ff" },
-          { href: "/alerts",    label: "Voir la défense",     color: "#ff4757" },
+          { href: "/alerts",    label: "Voir les alertes",    color: "#22d3ee" },
+          { href: "/incidents", label: "Voir les incidents",   color: "#22d3ee" },
+          { href: "/chat",      label: "Interroger le SOC IA", color: "#f59e0b" },
+          { href: "/demo",      label: "Lancer une démo",      color: "#22d3ee" },
         ].map(({ href, label, color }) => (
-          <a
+          <Link
             key={label}
             href={href}
-            className="px-3 py-1.5 rounded text-sm transition-all"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
             style={{
-              border: `1px solid ${color}33`,
+              border: `1px solid ${color}30`,
               color,
               background: `${color}0a`,
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.background = `${color}18`;
+              (e.currentTarget as HTMLElement).style.borderColor = `${color}55`;
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLElement).style.background = `${color}0a`;
+              (e.currentTarget as HTMLElement).style.borderColor = `${color}30`;
             }}
           >
             {label}
-          </a>
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
         ))}
       </div>
 
-      {/* Timeline et Carte */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="map">
+      {/* ── Timeline + Map ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5" id="map">
         <SimpleChart
           title="Timeline des alertes (24h)"
           data={timelineData}
@@ -236,8 +226,13 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Carte GeoIP</span>
-              <span className="text-xs" style={{ color: "#64748b" }}>Derniers points enrichis</span>
+              <span className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" style={{ color: "#22d3ee" }} />
+                Carte GeoIP
+              </span>
+              <span className="text-xs font-mono-cyber" style={{ color: "#334155" }}>
+                Points enrichis
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -248,7 +243,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Répartition sévérité */}
+      {/* ── Severity chart ── */}
       <SimpleChart
         title="Répartition par sévérité"
         data={severityData}
@@ -258,82 +253,112 @@ export default function DashboardPage() {
         loading={loading}
       />
 
-      {/* Dernières alertes */}
+      {/* ── Latest alerts ── */}
       <Card>
         <CardHeader>
-          <CardTitle>Dernières alertes</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Dernières alertes</span>
+            <Link
+              href="/alerts"
+              className="text-xs font-medium flex items-center gap-1 transition-all"
+              style={{ color: "#22d3ee" }}
+            >
+              Voir tout <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0 py-0">
           {loading ? (
-            <div className="space-y-2">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-8 w-full" style={{ background: "rgba(255,255,255,0.04)" }} />
-              ))}
+            <div className="p-5 space-y-2">
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
           ) : alerts.length === 0 ? (
-            <div className="text-center py-4 text-sm" style={{ color: "#64748b" }}>Aucune alerte récente.</div>
-          ) : (
-            <div className="space-y-2">
-              {alerts.slice(0, 5).map((alert) => (
-                <div
-                  key={alert.id}
-                  className="flex items-center justify-between text-sm py-2 px-2 rounded-lg transition-all"
-                  style={{ borderBottom: "1px solid rgba(0,212,255,0.06)" }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Badge variant={SEV_BADGE[alert.severity] ?? "default"}>
-                      {alert.severity}
-                    </Badge>
-                    <span style={{ color: "#e2e8f0" }}>{alert.source}</span>
-                    {alert.ip && (
-                      <span className="font-mono-cyber text-xs" style={{ color: "#64748b" }}>
-                        {alert.ip}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs font-mono-cyber" style={{ color: "#64748b" }}>
-                    {new Date(alert.ts).toLocaleTimeString()}
-                  </span>
-                </div>
-              ))}
+            <div className="text-center py-10 text-sm" style={{ color: "#64748b" }}>
+              Aucune alerte récente.
             </div>
+          ) : (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Sévérité</th>
+                  <th>Source</th>
+                  <th>IP</th>
+                  <th>Score</th>
+                  <th className="text-right">Heure</th>
+                </tr>
+              </thead>
+              <tbody>
+                {alerts.slice(0, 6).map((a) => (
+                  <tr key={a.id}>
+                    <td className="px-4 py-3">
+                      <Badge variant={SEV_BADGE[a.severity] ?? "default"}>{a.severity}</Badge>
+                    </td>
+                    <td className="px-4 py-3 font-medium text-sm" style={{ color: "#e2e8f0" }}>
+                      {a.source}
+                    </td>
+                    <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#22d3ee" }}>
+                      {a.ip || "—"}
+                    </td>
+                    <td className="px-4 py-3 font-mono-cyber text-xs font-semibold" style={{ color: "#10b981" }}>
+                      {a.score.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono-cyber text-xs" style={{ color: "#64748b" }}>
+                      {new Date(a.ts).toLocaleTimeString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </CardContent>
       </Card>
 
-      {/* Flux d'activité */}
+      {/* ── Activity feed ── */}
       <Card>
         <CardHeader>
-          <CardTitle>Flux d'activité</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-4 w-4" style={{ color: "#64748b" }} />
+            Flux d&apos;activité
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="py-2">
           {activity.length === 0 ? (
-            <div className="text-sm" style={{ color: "#64748b" }}>Aucune activité récente.</div>
+            <div className="text-sm py-4" style={{ color: "#64748b" }}>
+              Aucune activité récente.
+            </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-0">
               {activity.map((evt) => (
                 <div
                   key={`${evt.type}-${evt.id}`}
-                  className="flex items-center justify-between text-sm py-2 px-2 rounded"
-                  style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+                  className="flex items-center justify-between py-2.5 px-1 rounded-lg"
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <span
-                      className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                      className="h-2 w-2 rounded-full shrink-0"
                       style={{
                         background:
                           evt.severity === "high"
-                            ? "#ff4757"
+                            ? "#ef4444"
                             : evt.severity === "medium"
-                            ? "#ffa502"
-                            : "#00ff88",
+                            ? "#f59e0b"
+                            : "#10b981",
+                        boxShadow:
+                          evt.severity === "high"
+                            ? "0 0 6px rgba(239,68,68,0.5)"
+                            : evt.severity === "medium"
+                            ? "0 0 6px rgba(245,158,11,0.5)"
+                            : "0 0 6px rgba(16,185,129,0.5)",
                       }}
                     />
-                    <span style={{ color: "#e2e8f0" }}>{evt.label}</span>
+                    <span className="text-sm" style={{ color: "#94a3b8" }}>
+                      {evt.label}
+                    </span>
                   </div>
-                  <div className="text-xs font-mono-cyber" style={{ color: "#64748b" }}>
+                  <span className="text-xs font-mono-cyber shrink-0" style={{ color: "#334155" }}>
                     {new Date(evt.ts).toLocaleTimeString()}
-                  </div>
+                  </span>
                 </div>
               ))}
             </div>
@@ -343,7 +368,9 @@ export default function DashboardPage() {
 
       {error && (
         <Card>
-          <CardContent className="text-sm" style={{ color: "#ff4757" }}>{error}</CardContent>
+          <CardContent className="text-sm" style={{ color: "#ef4444" }}>
+            {error}
+          </CardContent>
         </Card>
       )}
     </div>

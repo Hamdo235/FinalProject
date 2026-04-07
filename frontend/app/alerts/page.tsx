@@ -1,58 +1,45 @@
 "use client";
 import { useEffect, useState } from "react";
 import {
-  fetchAlerts,
-  labelAlert,
-  createIncidentFromAlerts,
-  createAlertsSSE,
-  approveDefenseAction,
-  revokeDefenseAction,
+  fetchAlerts, labelAlert, createIncidentFromAlerts,
+  createAlertsSSE, approveDefenseAction, revokeDefenseAction,
 } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { Alert } from "@/types/api";
+import { Card, CardContent } from "@/components/ui/Card";
+import { CheckSquare, MapPin, MessageCircle, ShieldCheck, ShieldOff, AlertTriangle } from "lucide-react";
+import Link from "next/link";
 
-const SEV_STYLE: Record<string, { color: string; bg: string; border: string }> = {
-  high:   { color: "#ff4757", bg: "rgba(255,71,87,0.12)",  border: "rgba(255,71,87,0.3)"  },
-  medium: { color: "#ffa502", bg: "rgba(255,165,2,0.12)",  border: "rgba(255,165,2,0.3)"  },
-  low:    { color: "#00ff88", bg: "rgba(0,255,136,0.10)",  border: "rgba(0,255,136,0.25)" },
+const SEV: Record<string, { color: string; bg: string; border: string }> = {
+  high:   { color: "#ef4444", bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.25)"  },
+  medium: { color: "#f59e0b", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.25)" },
+  low:    { color: "#10b981", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.2)"  },
 };
 
-function SevBadge({ severity }: { severity: string }) {
-  const s = SEV_STYLE[severity] ?? { color: "#64748b", bg: "rgba(100,116,139,0.1)", border: "rgba(100,116,139,0.2)" };
+function SevBadge({ s }: { s: string }) {
+  const c = SEV[s] ?? { color: "#64748b", bg: "rgba(100,116,139,0.08)", border: "rgba(100,116,139,0.2)" };
   return (
     <span
       className="cyber-badge font-mono-cyber"
-      style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}` }}
+      style={{ background: c.bg, color: c.color, border: `1px solid ${c.border}` }}
     >
-      {severity}
+      {s}
     </span>
   );
 }
 
 function ActionBtn({
-  label,
-  color,
-  onClick,
-  disabled,
-}: {
-  label: string;
-  color: string;
-  onClick: () => void;
-  disabled?: boolean;
-}) {
+  label, color, onClick, disabled,
+}: { label: string; color: string; onClick: () => void; disabled?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="px-2 py-0.5 rounded text-xs transition-all disabled:opacity-40"
-      style={{
-        border: `1px solid ${color}50`,
-        color,
-        background: `${color}0d`,
-      }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `${color}20`; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = `${color}0d`; }}
+      className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all disabled:opacity-40"
+      style={{ border: `1px solid ${color}35`, color, background: `${color}0a` }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `${color}18`; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = `${color}0a`; }}
     >
       {label}
     </button>
@@ -60,301 +47,271 @@ function ActionBtn({
 }
 
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [live, setLive] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string>("");
-  const [labelBusy, setLabelBusy] = useState<number | null>(null);
-  const [bulkBusy, setBulkBusy] = useState(false);
-  const [bulkMsg, setBulkMsg] = useState<string>("");
+  const [alerts, setAlerts]           = useState<Alert[]>([]);
+  const [selected, setSelected]       = useState<Set<number>>(new Set());
+  const [live, setLive]               = useState(false);
+  const [busy, setBusy]               = useState(false);
+  const [msg, setMsg]                 = useState("");
+  const [labelBusy, setLabelBusy]     = useState<number | null>(null);
+  const [bulkBusy, setBulkBusy]       = useState(false);
+  const [bulkMsg, setBulkMsg]         = useState("");
   const [defenseBusyId, setDefenseBusyId] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     fetchAlerts().then(setAlerts).catch(console.error);
-    const es = createAlertsSSE((newAlert) => {
-      setAlerts((prev) => [newAlert, ...prev]);
-      setLive(true);
-    });
+    const es = createAlertsSSE((a) => { setAlerts((p) => [a, ...p]); setLive(true); });
     return () => es.close();
   }, []);
 
-  const doLabel = async (alertId: number, label: "true_attack" | "false_positive") => {
-    setLabelBusy(alertId);
-    setMsg("");
-    try {
-      await labelAlert(alertId, label);
-      setMsg(`Alerte #${alertId} labellisée : ${label}.`);
-    } catch (e) {
-      setMsg(`Erreur labellisation alerte #${alertId}.`);
-    } finally {
-      setLabelBusy(null);
-    }
+  const doLabel = async (id: number, label: "true_attack" | "false_positive") => {
+    setLabelBusy(id); setMsg("");
+    try { await labelAlert(id, label); setMsg(`Alerte #${id} labellisée : ${label}.`); }
+    catch { setMsg(`Erreur labellisation #${id}.`); }
+    finally { setLabelBusy(null); }
   };
 
-  const updateDefenseOnAlert = (actionId: number, nextDefense: Alert["defense"]) => {
-    setAlerts((prev) =>
-      prev.map((a) => (a.defense?.id === actionId ? { ...a, defense: nextDefense } : a))
-    );
+  const updateDefense = (actionId: number, next: Alert["defense"]) =>
+    setAlerts((p) => p.map((a) => (a.defense?.id === actionId ? { ...a, defense: next } : a)));
+
+  const onApprove = async (id: number) => {
+    setDefenseBusyId(id);
+    try { const r = await approveDefenseAction(id); updateDefense(id, r.action); setMsg(`Défense #${id} approuvée.`); }
+    catch { setMsg(`Erreur approbation #${id}.`); }
+    finally { setDefenseBusyId(null); }
   };
 
-  const onApproveDefense = async (actionId: number) => {
-    setDefenseBusyId(actionId);
-    try {
-      const res = await approveDefenseAction(actionId);
-      updateDefenseOnAlert(actionId, res.action);
-      setMsg(`Action défense #${actionId} approuvée.`);
-    } catch {
-      setMsg(`Erreur approbation action défense #${actionId}.`);
-    } finally {
-      setDefenseBusyId(null);
-    }
+  const onRevoke = async (id: number) => {
+    setDefenseBusyId(id);
+    try { const r = await revokeDefenseAction(id); updateDefense(id, r.action); setMsg(`Défense #${id} révoquée.`); }
+    catch { setMsg(`Erreur révocation #${id}.`); }
+    finally { setDefenseBusyId(null); }
   };
 
-  const onRevokeDefense = async (actionId: number) => {
-    setDefenseBusyId(actionId);
-    try {
-      const res = await revokeDefenseAction(actionId);
-      updateDefenseOnAlert(actionId, res.action);
-      setMsg(`Action défense #${actionId} révoquée.`);
-    } catch {
-      setMsg(`Erreur révocation action défense #${actionId}.`);
-    } finally {
-      setDefenseBusyId(null);
-    }
-  };
+  const toggle = (id: number) =>
+    setSelected((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
-  const toggle = (id: number) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
+  const toggleAll = () =>
+    setSelected((p) => p.size === alerts.length ? new Set() : new Set(alerts.map((a) => a.id)));
 
   const createIncident = async () => {
-    const ids = Array.from(selected);
-    if (ids.length === 0) return;
+    if (!selected.size) return;
     setBusy(true);
     try {
-      const res = await createIncidentFromAlerts(ids);
-      const incId = (res as any).id || (res as any).incident_id || 1;
-      setMsg(`Incident #${incId} créé.`);
-      router.push(`/incidents/${incId}`);
-    } finally {
-      setBusy(false);
-    }
+      const r = await createIncidentFromAlerts(Array.from(selected));
+      const id = (r as any).id || (r as any).incident_id || 1;
+      setMsg(`Incident #${id} créé.`);
+      router.push(`/incidents/${id}`);
+    } finally { setBusy(false); }
   };
 
-  const applyBulkDecision = async (label: "true_attack" | "false_positive") => {
-    const ids = Array.from(selected);
-    if (ids.length === 0) return;
-    setBulkBusy(true);
-    setBulkMsg("");
+  const bulkDecision = async (label: "true_attack" | "false_positive") => {
+    if (!selected.size) return;
+    setBulkBusy(true); setBulkMsg("");
     try {
-      for (const id of ids) await labelAlert(id, label);
-      setBulkMsg(label === "true_attack" ? "Décision : attaque confirmée." : "Décision : faux positif.");
-    } catch {
-      setBulkMsg("Erreur lors de la décision en masse.");
-    } finally {
-      setBulkBusy(false);
-    }
+      for (const id of Array.from(selected)) await labelAlert(id, label);
+      setBulkMsg(label === "true_attack" ? "Attaques confirmées." : "Faux positifs appliqués.");
+    } catch { setBulkMsg("Erreur décision en masse."); }
+    finally { setBulkBusy(false); }
   };
+
+  const criticalCount = alerts.filter((a) => a.severity === "high").length;
 
   return (
-    <main className="p-6 space-y-5 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-semibold" style={{ color: "#e2e8f0" }}>
-          Alertes
-        </h1>
+    <main className="space-y-5 animate-fade-in">
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-xl font-bold" style={{ color: "#e2e8f0" }}>Alertes</h1>
+          <p className="text-sm mt-0.5" style={{ color: "#64748b" }}>
+            {alerts.length} alerte{alerts.length !== 1 ? "s" : ""} —{" "}
+            <span style={{ color: "#ef4444" }}>{criticalCount} critique{criticalCount !== 1 ? "s" : ""}</span>
+          </p>
+        </div>
         <span
-          className="text-xs px-2.5 py-0.5 rounded-full font-semibold font-mono-cyber"
+          className="inline-flex items-center gap-1.5 cyber-badge font-mono-cyber"
           style={
             live
-              ? { background: "rgba(0,212,255,0.1)", color: "#00d4ff", border: "1px solid rgba(0,212,255,0.35)" }
-              : { background: "rgba(100,116,139,0.1)", color: "#64748b", border: "1px solid rgba(100,116,139,0.25)" }
+              ? { background: "rgba(16,185,129,0.08)", color: "#10b981", border: "1px solid rgba(16,185,129,0.25)" }
+              : { background: "rgba(100,116,139,0.08)", color: "#64748b", border: "1px solid rgba(100,116,139,0.15)" }
           }
         >
-          {live ? "● LIVE" : "○ OFF"}
+          <span
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ background: live ? "#10b981" : "#64748b" }}
+          />
+          {live ? "LIVE" : "OFF"}
         </span>
       </div>
 
-      {/* Barre d'actions */}
+      {/* ── Toolbar ── */}
       <div className="flex flex-wrap gap-2">
         <button
           onClick={createIncident}
-          disabled={selected.size === 0 || busy}
-          className="px-3 py-1.5 rounded text-sm font-medium transition-all disabled:opacity-40"
-          style={{
-            background: selected.size > 0 ? "rgba(0,212,255,0.15)" : "rgba(100,116,139,0.1)",
-            color: selected.size > 0 ? "#00d4ff" : "#64748b",
-            border: `1px solid ${selected.size > 0 ? "rgba(0,212,255,0.35)" : "rgba(100,116,139,0.2)"}`,
-          }}
+          disabled={!selected.size || busy}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
+          style={{ border: "1px solid rgba(34,211,238,0.25)", color: "#22d3ee", background: "rgba(34,211,238,0.07)" }}
         >
-          {busy ? "..." : `Créer incident (${selected.size})`}
+          <CheckSquare className="h-3.5 w-3.5" />
+          Créer incident ({selected.size})
         </button>
         <button
-          onClick={() => applyBulkDecision("true_attack")}
-          disabled={selected.size === 0 || bulkBusy}
-          className="px-3 py-1.5 rounded text-sm transition-all disabled:opacity-40"
-          style={{ border: "1px solid rgba(255,71,87,0.3)", color: "#ff4757", background: "rgba(255,71,87,0.08)" }}
+          onClick={() => bulkDecision("true_attack")}
+          disabled={!selected.size || bulkBusy}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
+          style={{ border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", background: "rgba(239,68,68,0.07)" }}
         >
+          <AlertTriangle className="h-3.5 w-3.5" />
           Confirmer attaque
         </button>
         <button
-          onClick={() => applyBulkDecision("false_positive")}
-          disabled={selected.size === 0 || bulkBusy}
-          className="px-3 py-1.5 rounded text-sm transition-all disabled:opacity-40"
-          style={{ border: "1px solid rgba(100,116,139,0.3)", color: "#64748b", background: "rgba(100,116,139,0.08)" }}
+          onClick={() => bulkDecision("false_positive")}
+          disabled={!selected.size || bulkBusy}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
+          style={{ border: "1px solid rgba(100,116,139,0.2)", color: "#64748b", background: "rgba(100,116,139,0.06)" }}
         >
           Faux positif
         </button>
-        <a
+        <Link
           href="/dashboard#map"
-          className="px-3 py-1.5 rounded text-sm transition-all"
-          style={{ border: "1px solid rgba(0,212,255,0.2)", color: "#00d4ff", background: "rgba(0,212,255,0.06)" }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
+          style={{ border: "1px solid rgba(34,211,238,0.15)", color: "#67e8f9", background: "rgba(34,211,238,0.05)" }}
         >
-          Voir sur la carte
-        </a>
-        <a
+          <MapPin className="h-3.5 w-3.5" />
+          Carte
+        </Link>
+        <Link
           href="/chat"
-          className="px-3 py-1.5 rounded text-sm transition-all"
-          style={{ border: "1px solid rgba(0,212,255,0.2)", color: "#00d4ff", background: "rgba(0,212,255,0.06)" }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
+          style={{ border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b", background: "rgba(245,158,11,0.06)" }}
         >
-          Ouvrir le chatbot
-        </a>
+          <MessageCircle className="h-3.5 w-3.5" />
+          Chat SOC
+        </Link>
       </div>
 
-      {/* Messages */}
-      {msg     && <div className="text-sm" style={{ color: "#00ff88" }}>{msg}</div>}
-      {bulkMsg && <div className="text-sm" style={{ color: "#00d4ff" }}>{bulkMsg}</div>}
+      {msg     && <div className="text-sm font-medium" style={{ color: "#10b981" }}>{msg}</div>}
+      {bulkMsg && <div className="text-sm font-medium" style={{ color: "#22d3ee" }}>{bulkMsg}</div>}
 
-      {/* Tableau */}
+      {/* ── Table ── */}
       <div
-        className="rounded-xl overflow-hidden"
-        style={{ border: "1px solid rgba(0,212,255,0.12)", background: "#0f1629" }}
+        className="rounded-2xl overflow-hidden"
+        style={{ border: "1px solid rgba(34,211,238,0.08)", background: "#0c1628" }}
       >
-        <table className="w-full text-sm">
+        <table className="data-table">
           <thead>
-            <tr style={{ borderBottom: "1px solid rgba(0,212,255,0.12)", background: "rgba(0,212,255,0.04)" }}>
-              {["Sel", "Time", "Source", "IP", "Rule", "Severity", "Score", "Défense", "Label"].map((h) => (
-                <th
-                  key={h}
-                  className="py-3 px-3 text-left text-xs font-semibold uppercase tracking-wider font-mono-cyber"
-                  style={{ color: "#64748b" }}
-                >
-                  {h}
-                </th>
-              ))}
+            <tr>
+              <th>
+                <input
+                  type="checkbox"
+                  checked={alerts.length > 0 && selected.size === alerts.length}
+                  onChange={toggleAll}
+                  style={{ accentColor: "#22d3ee" }}
+                />
+              </th>
+              <th>Time</th>
+              <th>Source</th>
+              <th>IP</th>
+              <th>Règle</th>
+              <th>Sévérité</th>
+              <th>Score</th>
+              <th>Défense</th>
+              <th>Label</th>
             </tr>
           </thead>
           <tbody>
-            {alerts.map((a, idx) => (
-              <tr
-                key={a.id}
-                className="transition-all"
-                style={{
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
-                  background: idx % 2 === 0 ? "transparent" : "rgba(0,212,255,0.02)",
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(0,212,255,0.05)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = idx % 2 === 0 ? "transparent" : "rgba(0,212,255,0.02)"; }}
-              >
-                <td className="py-3 px-3">
+            {alerts.map((a) => (
+              <tr key={a.id}>
+                <td className="px-4 py-3">
                   <input
                     type="checkbox"
                     checked={selected.has(a.id)}
                     onChange={() => toggle(a.id)}
-                    className="rounded"
-                    style={{ accentColor: "#00d4ff" }}
+                    style={{ accentColor: "#22d3ee" }}
                   />
                 </td>
-                <td className="py-3 px-3 font-mono-cyber text-xs" style={{ color: "#64748b" }}>
+                <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#64748b" }}>
                   {new Date(a.ts).toLocaleString()}
                 </td>
-                <td className="py-3 px-3" style={{ color: "#e2e8f0" }}>{a.source}</td>
-                <td className="py-3 px-3 font-mono-cyber text-xs" style={{ color: "#00d4ff" }}>{a.ip}</td>
-                <td className="py-3 px-3 text-xs" style={{ color: "#64748b" }}>{a.rule}</td>
-                <td className="py-3 px-3">
-                  <SevBadge severity={a.severity} />
+                <td className="px-4 py-3 font-medium text-sm" style={{ color: "#e2e8f0" }}>
+                  {a.source}
                 </td>
-                <td className="py-3 px-3 font-mono-cyber text-xs" style={{ color: "#00ff88" }}>
+                <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#22d3ee" }}>
+                  {a.ip || "—"}
+                </td>
+                <td className="px-4 py-3 text-xs" style={{ color: "#64748b" }}>
+                  {a.rule || "—"}
+                </td>
+                <td className="px-4 py-3">
+                  <SevBadge s={a.severity} />
+                </td>
+                <td className="px-4 py-3 font-mono-cyber text-xs font-bold" style={{ color: "#10b981" }}>
                   {a.score.toFixed(2)}
                 </td>
-                <td className="py-3 px-3">
+                <td className="px-4 py-3">
                   {a.defense ? (
-                    <div className="space-y-1">
-                      <div className="text-xs">
-                        <span
-                          className="px-2 py-0.5 rounded font-mono-cyber"
-                          style={
-                            a.defense.action === "block_temp"
-                              ? a.defense.active
-                                ? { background: "rgba(255,71,87,0.15)", color: "#ff4757", border: "1px solid rgba(255,71,87,0.3)" }
-                                : { background: "rgba(255,165,2,0.15)", color: "#ffa502", border: "1px solid rgba(255,165,2,0.3)" }
-                              : a.defense.action === "review"
-                              ? { background: "rgba(255,165,2,0.15)", color: "#ffa502", border: "1px solid rgba(255,165,2,0.3)" }
-                              : { background: "rgba(100,116,139,0.1)", color: "#64748b", border: "1px solid rgba(100,116,139,0.2)" }
-                          }
-                        >
-                          {a.defense.action}
-                        </span>
-                      </div>
-                      {a.defense.reason && (
-                        <div className="text-[11px]" style={{ color: "#64748b" }}>{a.defense.reason}</div>
-                      )}
+                    <div className="space-y-1.5">
+                      <span
+                        className="cyber-badge font-mono-cyber text-[10px]"
+                        style={
+                          a.defense.action === "block_temp"
+                            ? { background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)" }
+                            : { background: "rgba(245,158,11,0.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.25)" }
+                        }
+                      >
+                        {a.defense.action}
+                      </span>
                       {a.defense.expires_at && (
-                        <div className="text-[11px] font-mono-cyber" style={{ color: "#64748b" }}>
-                          jusqu'à {new Date(a.defense.expires_at).toLocaleTimeString()}
+                        <div className="text-[10px] font-mono-cyber" style={{ color: "#334155" }}>
+                          exp. {new Date(a.defense.expires_at).toLocaleTimeString()}
                         </div>
                       )}
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 mt-1">
                         {a.defense.action === "review" && (
                           <ActionBtn
-                            label="Approve"
-                            color="#00ff88"
+                            label="Approuver"
+                            color="#10b981"
                             disabled={defenseBusyId === a.defense.id}
-                            onClick={() => onApproveDefense(a.defense!.id)}
+                            onClick={() => onApprove(a.defense!.id)}
                           />
                         )}
                         {a.defense.active && (
                           <ActionBtn
-                            label="Revoke"
+                            label="Révoquer"
                             color="#64748b"
                             disabled={defenseBusyId === a.defense.id}
-                            onClick={() => onRevokeDefense(a.defense!.id)}
+                            onClick={() => onRevoke(a.defense!.id)}
                           />
                         )}
                       </div>
                     </div>
                   ) : (
-                    <span className="text-xs" style={{ color: "#64748b" }}>n/a</span>
+                    <span className="text-xs" style={{ color: "#334155" }}>n/a</span>
                   )}
                 </td>
-                <td className="py-3 px-3">
-                  <div className="flex gap-1.5 items-center flex-wrap">
+                <td className="px-4 py-3">
+                  <div className="flex gap-1.5 flex-wrap items-center">
                     <ActionBtn
                       label="Attaque"
-                      color="#ff4757"
+                      color="#ef4444"
                       disabled={labelBusy === a.id}
                       onClick={() => doLabel(a.id, "true_attack")}
                     />
                     <ActionBtn
-                      label="Faux positif"
-                      color="#00ff88"
+                      label="Faux pos."
+                      color="#10b981"
                       disabled={labelBusy === a.id}
                       onClick={() => doLabel(a.id, "false_positive")}
                     />
                     {a.ip && (
-                      <a
+                      <Link
                         href={`/dashboard?ip=${encodeURIComponent(a.ip)}#map`}
-                        className="text-xs underline"
-                        style={{ color: "#00d4ff" }}
+                        className="text-xs underline font-mono-cyber"
+                        style={{ color: "#22d3ee" }}
                       >
                         Carte
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </td>
@@ -362,9 +319,9 @@ export default function AlertsPage() {
             ))}
           </tbody>
         </table>
-        {alerts.length === 0 && (
-          <div className="text-center py-12 text-sm" style={{ color: "#64748b" }}>
-            Aucune alerte pour l'instant.
+        {!alerts.length && (
+          <div className="text-center py-16 text-sm" style={{ color: "#64748b" }}>
+            Aucune alerte pour l&apos;instant.
           </div>
         )}
       </div>

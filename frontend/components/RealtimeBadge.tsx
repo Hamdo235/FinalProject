@@ -1,25 +1,24 @@
 "use client";
 import React from "react";
-import { Badge } from "@/components/ui/Badge";
 import { Radio } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface RealtimeBadgeProps {
   live?: boolean;
   className?: string;
 }
 
-/**
- * Badge animé “LIVE” pour indiquer un flux SSE actif
- */
-export default function RealtimeBadge({ live = false, className }: RealtimeBadgeProps) {
+export default function RealtimeBadge({ live = false }: RealtimeBadgeProps) {
   return (
-    <Badge
-      variant={live ? "success" : "outline"}
-      className={cn("flex items-center gap-2", live && "animate-pulse-badge", className)}
+    <span
+      className={`inline-flex items-center gap-1.5 cyber-badge font-mono-cyber ${live ? "animate-pulse-badge" : ""}`}
+      style={
+        live
+          ? { background: "rgba(16,185,129,0.1)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }
+          : { background: "rgba(100,116,139,0.08)", color: "#64748b", border: "1px solid rgba(100,116,139,0.2)" }
+      }
     >
-      <Radio className="h-3.5 w-3.5" />
-      <span>{live ? "LIVE" : "OFF"}</span>
-    </Badge>
+      <Radio className="h-3 w-3" />
+      {live ? "LIVE" : "OFF"}
+    </span>
   );
 }
