@@ -19,3 +19,6 @@ class DefenseAction(SQLModel, table=True):
     active: bool = Field(default=False, index=True)
     created_at: datetime = Field(default_factory=_utcnow_naive, index=True)
     created_by: str = Field(default="system", index=True)  # system | human
+    approved_by: Optional[str] = Field(default=None, index=False)
+    approved_at: Optional[datetime] = Field(default=None, index=False)
+    revoked_at: Optional[datetime] = Field(default=None, index=False)

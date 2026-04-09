@@ -11,3 +11,7 @@ pytest==8.3.3
 chromadb==0.6.3
 sentence-transformers==3.1.1
 posthog<4
+faster-whisper>=1.0.3
+soundfile>=0.12.1
+python-multipart>=0.0.9
+piper-tts>=1.4.0

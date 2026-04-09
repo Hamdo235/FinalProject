@@ -15,9 +15,12 @@ from .routers.metrics import router as metrics_router
 from .routers.defense import router as defense_router
 from .endpoints.chat_store import router as chat_store_router
 from .endpoints.assistant import router as assistant_router
+from .endpoints.transcribe import router as transcribe_router
+from .endpoints.tts import router as tts_router
 from .db.session import engine
 from .core.settings import settings
-from .services.defense import defense_enforce_api, is_ip_blocked, expire_actions
+from .services.defense import defense_enforce_api, expire_actions
+from .services import ip_blacklist
 import time
 import logging
 import asyncio
@@ -44,6 +47,8 @@ app.add_middleware(
 # Sécurité – limite simple sur la taille des requêtes
 @app.middleware("http")
 async def limit_body_size(request: Request, call_next):
+    if request.url.path == "/llm/transcribe":
+        return await call_next(request)
     cl = request.headers.get("content-length")
     try:
         if cl is not None and int(cl) > settings.max_body_size_bytes:
@@ -94,13 +99,18 @@ async def defense_enforcement(request: Request, call_next):
     client_ip = request.client.host if request.client else None
     if not client_ip:
         return await call_next(request)
-    try:
-        with SQLModelSession(engine) as db:
-            expire_actions(db)
-            if is_ip_blocked(db, client_ip):
-                return JSONResponse({"detail": "IP temporairement bloquee par defense applicative"}, status_code=403)
-    except Exception:
-        pass
+    if ip_blacklist.is_blocked(client_ip):
+        entry = ip_blacklist.get_blocked_entry(client_ip)
+        return JSONResponse(
+            {
+                "error": "IP temporairement bloqu\u00e9e",
+                "ip": client_ip,
+                "expires_at": entry["expires_at"] if entry else None,
+                "reason": entry["reason"] if entry else "Blocage applicatif actif",
+                "iptables_command": f"iptables -A INPUT -s {client_ip} -j DROP",
+            },
+            status_code=403,
+        )
     return await call_next(request)
 
 # runtime metrics middleware removed for minimal backend
@@ -117,6 +127,77 @@ async def on_startup():
     from .models import chat as _chat
     from .models import defense_action as _def
     SQLModel.metadata.create_all(bind=engine)
+
+    # Migration SQLite : ajouter les colonnes absentes sur defenseaction
+    _new_cols = [
+        ("approved_by",  "VARCHAR"),
+        ("approved_at",  "DATETIME"),
+        ("revoked_at",   "DATETIME"),
+    ]
+    try:
+        with engine.connect() as conn:
+            for col, typ in _new_cols:
+                try:
+                    conn.execute(
+                        __import__("sqlalchemy").text(
+                            f"ALTER TABLE defenseaction ADD COLUMN {col} {typ}"
+                        )
+                    )
+                    conn.commit()
+                    logger.info("[Migration] Colonne ajoutée : defenseaction.%s", col)
+                except Exception:
+                    pass  # colonne déjà présente
+    except Exception as exc:
+        logger.warning("[Migration] Impossible de migrer defenseaction : %s", exc)
+
+    # Migration SQLite : llmtrace (colonnes ajoutées après création initiale)
+    _llm_cols = [
+        ("response_json",     "TEXT"),
+        ("mitre_technique",   "VARCHAR"),
+        ("rag_context_used",  "TEXT"),
+        ("confidence_method", "VARCHAR"),
+    ]
+    try:
+        with engine.connect() as conn:
+            for col, typ in _llm_cols:
+                try:
+                    conn.execute(
+                        __import__("sqlalchemy").text(
+                            f"ALTER TABLE llmtrace ADD COLUMN {col} {typ}"
+                        )
+                    )
+                    conn.commit()
+                    logger.info("[Migration] Colonne ajoutée : llmtrace.%s", col)
+                except Exception:
+                    pass
+    except Exception as exc:
+        logger.warning("[Migration] Impossible de migrer llmtrace : %s", exc)
+
+    # Synchroniser la liste noire depuis la DB (blocages actifs persistés)
+    try:
+        with SQLModelSession(engine) as db:
+            ip_blacklist.sync_from_db(db)
+    except Exception as exc:
+        logger.warning("[Startup] Blacklist sync failed: %s", exc)
+
+    # Lancer la boucle d'expiration automatique (asyncio, toutes les 60s)
+    asyncio.create_task(ip_blacklist.expire_loop(60))
+
+    # Warm-up TTS (piper) + STT (whisper) en arrière-plan pour éviter la latence au premier appel
+    def _warmup_models():
+        try:
+            from .services.tts_service import _get_piper_voice
+            _get_piper_voice()
+        except Exception as exc:
+            logger.warning("[Warmup] TTS: %s", exc)
+        try:
+            from .services.whisper_service import _get_model
+            _get_model()
+        except Exception as exc:
+            logger.warning("[Warmup] Whisper: %s", exc)
+
+    warmup_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="warmup")
+    asyncio.get_running_loop().run_in_executor(warmup_executor, _warmup_models)
 
     # Initialisation RAG configurable pour réduire la pression CPU/RAM en dev.
     from .services import rag_service
@@ -172,4 +253,6 @@ app.include_router(sse_router)             # /stream/alerts (SSE)
 app.include_router(validation_router)      # /validation/alerts/{id}
 app.include_router(metrics_router)         # /metrics/model (indicateurs ML)
 app.include_router(assistant_router)       # /llm/assistant/query (vue d'ensemble)
+app.include_router(transcribe_router)      # /llm/transcribe (Whisper STT local)
+app.include_router(tts_router)             # /llm/tts (espeak-ng TTS local)
 app.include_router(defense_router)         # /defense/* (actions de defense applicative)

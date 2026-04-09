@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter
 from datetime import datetime, UTC
 from ..db.session import get_session
@@ -7,8 +9,10 @@ import asyncio
 import socket
 from urllib.parse import urlparse
 from ..core.settings import settings
+from ..services import ip_blacklist
+from ..services.defense import defense_mode
 
-router = APIRouter(prefix="/health", tags=["health"]) 
+router = APIRouter(prefix="/health", tags=["health"])
 
 
 def _is_reachable(url: str) -> bool:
@@ -25,16 +29,37 @@ def _is_reachable(url: str) -> bool:
 @router.get("")
 async def health():
     status = {"status": "ok", "time": datetime.now(UTC).isoformat()}
+
     # DB check
     try:
         from ..models.alert import Alert  # noqa: F401
-        # open/close session
         for _ in get_session():
             break
         status["db"] = "ok"
     except Exception as e:
         status["db"] = f"error: {e}"
         status["status"] = "degraded"
+
+    # RAG / ChromaDB
+    try:
+        import chromadb  # noqa: F401  — vérifie juste que le paquet est installé
+        from ..services.rag_service import _is_initialized
+        status["rag_initialized"] = bool(_is_initialized)
+        status["rag_status"] = "ready" if _is_initialized else "pending"
+    except ImportError:
+        status["rag_initialized"] = False
+        status["rag_status"] = "unavailable"
+    except Exception:
+        status["rag_initialized"] = False
+        status["rag_status"] = "pending"
+
+    # GeoLite2 DB
+    geolite_path = os.getenv("GEOLITE2_CITY_DB", "")
+    status["geolite2_present"] = bool(geolite_path and os.path.exists(geolite_path))
+
+    # Defense
+    status["defense_mode"] = defense_mode()
+    status["blocked_ips_count"] = ip_blacklist.count()
 
     # Ollama check
     base = settings.ollama_url

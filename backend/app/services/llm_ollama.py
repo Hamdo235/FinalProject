@@ -9,7 +9,7 @@ from . import rag_service
 logger = logging.getLogger(__name__)
 
 OLLAMA_BASE = settings.ollama_base_url
-MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
+MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
 
 PROMPT_TEMPLATE = """Tu es un expert SOC (Security Operations Center) spécialisé en cybersécurité.
 

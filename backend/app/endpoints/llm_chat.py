@@ -17,7 +17,7 @@ from ..core.settings import settings
 router = APIRouter(prefix="/llm", tags=["LLM"])
 
 OLLAMA_URL = settings.ollama_url
-MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
+MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
 OLLAMA_TIMEOUT = settings.ollama_timeout_seconds
 
 class ChatMessage(BaseModel):
@@ -30,6 +30,7 @@ class ChatRequest(BaseModel):
     # Active le mode hybride: si la question concerne la plateforme,
     # on ajoute un contexte (alertes/incidents) au prompt système
     auto_tool: bool = True
+    voice_mode: bool = False  # When True: short prompt + capped tokens for voice
 
 def _is_overview_question(text: str) -> bool:
     low = text.lower()
@@ -107,13 +108,21 @@ async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get
     Endpoint de chat global (conversation libre) avec un prompt système explicatif.
     """
     # Prompt système pour cadrer le LLM
-    system_prompt = (
-        "Tu es l’assistant d’analyse de CyberSentinel. "
-        "Tu peux répondre de manière conversationnelle aux salutations et questions générales. "
-        "Ta mission principale reste l’explication des alertes, incidents et métriques de sécurité. "
-        "Tu ne dois jamais proposer ni exécuter d’actions automatiques. "
-        "Sois poli, clair et concis."
-    )
+    if req.voice_mode:
+        system_prompt = (
+            "Tu es l'assistant vocal de CyberSentinel. "
+            "Réponds en 1 à 2 phrases courtes, en français, de façon naturelle et conversationnelle. "
+            "Pas de listes, pas de markdown, pas de code."
+        )
+    else:
+        system_prompt = (
+            "Tu es l'assistant d'analyse de CyberSentinel. "
+            "Tu peux répondre de manière conversationnelle aux salutations et questions générales. "
+            "Ta mission principale reste l'explication des alertes, incidents et métriques de sécurité. "
+            "Tu ne dois jamais proposer ni exécuter d'actions automatiques. "
+            "Sois poli, clair et concis."
+        )
+    ollama_options = {"num_thread": 8} if not req.voice_mode else {"num_predict": 100, "num_thread": 8, "temperature": 0.7}
     # Construire le payload pour Ollama
     messages_ollama = [{"role": "system", "content": system_prompt}]
 
@@ -150,6 +159,7 @@ async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get
                         "model": MODEL,
                         "messages": messages_ollama,
                         "stream": False,
+                        "options": ollama_options,
                     },
                 )
                 if resp.status_code != 200:
@@ -177,7 +187,7 @@ async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get
                 async with client.stream(
                     "POST",
                     f"{OLLAMA_URL}/api/chat",
-                    json={"model": MODEL, "messages": messages_ollama, "stream": True},
+                    json={"model": MODEL, "messages": messages_ollama, "stream": True, "options": ollama_options},
                 ) as resp:
                     if resp.status_code != 200:
                         yield "event: error\n"

@@ -26,7 +26,7 @@ fi
 # 2) Export backend env vars for LLM
 export OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://localhost:11434}
 export OLLAMA_URL=${OLLAMA_URL:-$OLLAMA_BASE_URL}
-export OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+export OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:1.5b}
 
 # 2a) Runtime mode (dev/demo vs final)
 # - APP_ENV=dev (default): DEBUG=1 and auto-reload enabled

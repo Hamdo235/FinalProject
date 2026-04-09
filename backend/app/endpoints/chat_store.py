@@ -119,7 +119,7 @@ async def add_message(conv_id: int, body: MessageCreate, session: Session = Depe
 
 
 @router.get("/conversations/{conv_id}/stream")
-async def stream_reply(conv_id: int, session: Session = Depends(get_session)):
+async def stream_reply(conv_id: int, voice_mode: bool = False, session: Session = Depends(get_session)):
     """
     SSE: génère une réponse assistant en streaming à partir de l’historique de la conversation.
     À la fin, stocke le message assistant complet.
@@ -128,13 +128,22 @@ async def stream_reply(conv_id: int, session: Session = Depends(get_session)):
     if not conv:
         raise HTTPException(404, "Conversation inconnue")
 
-    system_prompt = (
-        "Tu es l’assistant d’analyse de CyberSentinel. "
-        "Tu peux répondre de manière conversationnelle aux salutations et questions générales. "
-        "Ta mission principale reste l’explication des alertes, incidents et métriques de sécurité. "
-        "Tu ne dois jamais proposer ni exécuter d’actions automatiques. "
-        "Sois poli, clair et concis."
-    )
+    if voice_mode:
+        system_prompt = (
+            "Tu es l'assistant vocal de CyberSentinel. "
+            "Réponds en 1 à 2 phrases courtes, en français, de façon naturelle et conversationnelle. "
+            "Pas de listes, pas de markdown, pas de code."
+        )
+        ollama_opts = {"num_predict": 100, "num_thread": 8, "temperature": 0.7}
+    else:
+        system_prompt = (
+            "Tu es l'assistant d'analyse de CyberSentinel. "
+            "Tu peux répondre de manière conversationnelle aux salutations et questions générales. "
+            "Ta mission principale reste l'explication des alertes, incidents et métriques de sécurité. "
+            "Tu ne dois jamais proposer ni exécuter d'actions automatiques. "
+            "Sois poli, clair et concis."
+        )
+        ollama_opts = {"num_thread": 8}
     history = session.exec(
         select(ChatMessage).where(ChatMessage.conversation_id == conv_id).order_by(ChatMessage.created_at)
     ).all()
@@ -149,7 +158,7 @@ async def stream_reply(conv_id: int, session: Session = Depends(get_session)):
                 async with client.stream(
                     "POST",
                     f"{OLLAMA_URL}/api/chat",
-                    json={"model": MODEL, "messages": messages_ollama, "stream": True},
+                    json={"model": MODEL, "messages": messages_ollama, "stream": True, "options": ollama_opts},
                 ) as resp:
                     if resp.status_code != 200:
                         yield f"event: error\ndata: Ollama indisponible\n\n"

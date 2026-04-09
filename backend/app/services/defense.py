@@ -225,10 +225,11 @@ def is_ip_blocked(db: Session, ip: Optional[str]) -> bool:
 
 
 def action_to_dict(item: DefenseAction) -> Dict[str, Any]:
+    ip = item.ip
     return {
         "id": item.id,
         "alert_id": item.alert_id,
-        "ip": item.ip,
+        "ip": ip,
         "action": item.action,
         "reason": item.reason,
         "confidence": item.confidence,
@@ -237,4 +238,9 @@ def action_to_dict(item: DefenseAction) -> Dict[str, Any]:
         "active": item.active,
         "created_at": item.created_at.isoformat() if item.created_at else None,
         "created_by": item.created_by,
+        "approved_by": getattr(item, "approved_by", None),
+        "approved_at": item.approved_at.isoformat() if getattr(item, "approved_at", None) else None,
+        "revoked_at": item.revoked_at.isoformat() if getattr(item, "revoked_at", None) else None,
+        "iptables_command": f"iptables -A INPUT -s {ip} -j DROP" if ip else None,
+        "iptables_unblock": f"iptables -D INPUT -s {ip} -j DROP" if ip else None,
     }

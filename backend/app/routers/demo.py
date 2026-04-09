@@ -13,6 +13,7 @@ from ..services.geoip import lookup_ip
 import asyncio
 from ..services.sse import publish_alert_created
 from ..services.defense import decide_defense_action, create_defense_action, action_to_dict
+from ..services import ip_blacklist
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 
@@ -113,4 +114,7 @@ def demo_reset(db: Session = Depends(get_session)):
     db.exec(delete(Alert))
     db.exec(delete(IPEnrichment))
     db.commit()
+    # Vider aussi le blacklist en mémoire
+    for entry in ip_blacklist.get_all():
+        ip_blacklist.remove_ip(entry["ip"])
     return {"reset": True}
