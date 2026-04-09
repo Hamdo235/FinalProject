@@ -1,11 +1,12 @@
 import { fetchModelMetrics } from "@/lib/api";
+import type { ModelMetrics } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Cpu, Target, RefreshCw, BarChart2, Database, Tag, AlertCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function ModelPage() {
-  let metrics: any = null;
+  let metrics: ModelMetrics | null = null;
   try {
     metrics = await fetchModelMetrics();
   } catch {}

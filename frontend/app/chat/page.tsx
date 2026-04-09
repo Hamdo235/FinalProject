@@ -1263,122 +1263,299 @@ export default function ChatPage() {
       {isVoiceMode && (
         <>
           <style>{`
-            @keyframes pulseOrb {
-              0%, 100% { transform: scale(1);    box-shadow: var(--orb-shadow); }
-              50%       { transform: scale(1.07); box-shadow: var(--orb-shadow-wide); }
+            @keyframes voiceOrbBreath {
+              0%, 100% { transform: scale(1); }
+              50%       { transform: scale(1.055); }
+            }
+            @keyframes voiceRing1 {
+              0%   { transform: scale(1);   opacity: 0.55; }
+              100% { transform: scale(1.9); opacity: 0; }
+            }
+            @keyframes voiceRing2 {
+              0%   { transform: scale(1);   opacity: 0.35; }
+              100% { transform: scale(2.5); opacity: 0; }
+            }
+            @keyframes voiceRing3 {
+              0%   { transform: scale(1);   opacity: 0.2; }
+              100% { transform: scale(3.2); opacity: 0; }
+            }
+            @keyframes voiceSpinCW  { to { transform: rotate(360deg);  } }
+            @keyframes voiceSpinCCW { to { transform: rotate(-360deg); } }
+            @keyframes voiceWave {
+              0%, 100% { transform: scaleY(0.15); }
+              50%       { transform: scaleY(1); }
+            }
+            @keyframes voiceIdleFloat {
+              0%, 100% { transform: translateY(0px); }
+              50%       { transform: translateY(-6px); }
+            }
+            @keyframes voiceSpotlight {
+              0%, 100% { opacity: 0.5; }
+              50%       { opacity: 0.85; }
+            }
+            @keyframes voiceTranscriptIn {
+              from { opacity: 0; transform: translateY(10px); }
+              to   { opacity: 1; transform: translateY(0); }
             }
           `}</style>
+
+          {/* ── Full-screen overlay ── */}
           <div
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none"
-            style={{ background: "rgba(5,10,20,0.97)", backdropFilter: "blur(28px)" }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none overflow-hidden"
+            style={{ background: "#020810" }}
           >
-            {/* Close */}
-            <button
-              onClick={exitVoiceMode}
-              className="absolute top-6 right-6 h-11 w-11 rounded-full flex items-center justify-center transition-all"
-              style={{
-                background: "rgba(100,116,139,0.08)",
-                border: "1px solid rgba(100,116,139,0.18)",
-                color: "#475569",
-              }}
-            >
-              <X className="h-5 w-5" />
-            </button>
+            {/* ── Background layers ── */}
+            {/* Deep radial spotlight that changes color with state */}
+            <div style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              background:
+                voiceStatus === "listening"
+                  ? "radial-gradient(ellipse 55% 45% at 50% 52%, rgba(239,68,68,0.09) 0%, transparent 70%)"
+                  : voiceStatus === "speaking"
+                  ? "radial-gradient(ellipse 55% 45% at 50% 52%, rgba(34,211,238,0.08) 0%, transparent 70%)"
+                  : voiceStatus === "processing"
+                  ? "radial-gradient(ellipse 55% 45% at 50% 52%, rgba(245,158,11,0.07) 0%, transparent 70%)"
+                  : "radial-gradient(ellipse 40% 35% at 50% 52%, rgba(30,41,59,0.6) 0%, transparent 70%)",
+              transition: "background 0.8s ease",
+              animation: "voiceSpotlight 4s ease-in-out infinite",
+            }} />
+            {/* Subtle dot-grid */}
+            <div style={{
+              position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.18,
+              backgroundImage: "radial-gradient(circle, #1e293b 1px, transparent 1px)",
+              backgroundSize: "32px 32px",
+            }} />
+            {/* Corner vignette */}
+            <div style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              background: "radial-gradient(ellipse 110% 110% at 50% 50%, transparent 40%, #020810 100%)",
+            }} />
 
-            {/* Session name */}
-            <p className="absolute top-7 left-0 right-0 text-center text-xs font-mono-cyber"
-              style={{ color: "#1e293b" }}>
-              {convs.find((c) => c.id === activeId)?.title ?? "SOC IA"}
-            </p>
-
-            {/* Status label */}
-            <p
-              className="mb-12 text-[11px] font-mono-cyber font-bold uppercase tracking-[0.25em] transition-all"
-              style={{
-                color: voiceStatus === "listening"   ? "#ef4444"
-                     : voiceStatus === "speaking"    ? "#22d3ee"
-                     : voiceStatus === "processing"  ? "#f59e0b"
-                     : "#334155",
-              }}
-            >
-              {voiceStatus === "listening"  ? "● À l'écoute"
-               : voiceStatus === "processing" ? "◌ Traitement…"
-               : voiceStatus === "speaking"   ? "▶ L'assistant parle"
-               : "◎ Prêt"}
-            </p>
-
-            {/* ── BIG ORB ── */}
-            <div
-              onClick={() => {
-                if (voiceStatus === "listening") {
-                  forceProcessRef.current = true;
-                  (recognitionRef.current as MediaRecorder)?.stop();
-                }
-              }}
-              style={{
-                height: 216, width: 216, borderRadius: "50%",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: voiceStatus === "listening" ? "pointer" : "default",
-                background:
-                  voiceStatus === "listening"
-                    ? "radial-gradient(circle at 40% 35%, rgba(239,68,68,0.28) 0%, rgba(239,68,68,0.05) 70%)"
-                    : voiceStatus === "speaking"
-                    ? "radial-gradient(circle at 40% 35%, rgba(34,211,238,0.22) 0%, rgba(34,211,238,0.04) 70%)"
-                    : voiceStatus === "processing"
-                    ? "radial-gradient(circle at 40% 35%, rgba(245,158,11,0.18) 0%, rgba(245,158,11,0.03) 70%)"
-                    : "radial-gradient(circle at 40% 35%, rgba(51,65,85,0.18) 0%, rgba(51,65,85,0.03) 70%)",
-                border: `2px solid ${
-                  voiceStatus === "listening"  ? "rgba(239,68,68,0.45)"
-                  : voiceStatus === "speaking" ? "rgba(34,211,238,0.38)"
-                  : voiceStatus === "processing" ? "rgba(245,158,11,0.35)"
-                  : "rgba(51,65,85,0.18)"
-                }`,
-                ["--orb-shadow" as any]:
-                  voiceStatus === "listening"
-                    ? "0 0 70px rgba(239,68,68,0.25), 0 0 140px rgba(239,68,68,0.08)"
-                    : voiceStatus === "speaking"
-                    ? "0 0 70px rgba(34,211,238,0.22), 0 0 140px rgba(34,211,238,0.07)"
-                    : "none",
-                ["--orb-shadow-wide" as any]:
-                  voiceStatus === "listening"
-                    ? "0 0 100px rgba(239,68,68,0.35), 0 0 200px rgba(239,68,68,0.12)"
-                    : voiceStatus === "speaking"
-                    ? "0 0 100px rgba(34,211,238,0.3), 0 0 200px rgba(34,211,238,0.1)"
-                    : "none",
-                boxShadow:
-                  voiceStatus === "listening"
-                    ? "0 0 70px rgba(239,68,68,0.25), 0 0 140px rgba(239,68,68,0.08)"
-                    : voiceStatus === "speaking"
-                    ? "0 0 70px rgba(34,211,238,0.22), 0 0 140px rgba(34,211,238,0.07)"
-                    : "none",
-                animation:
-                  voiceStatus === "listening" || voiceStatus === "speaking"
-                    ? "pulseOrb 2s ease-in-out infinite"
-                    : "none",
-                transition: "background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease",
-              }}
-            >
-              {voiceStatus === "listening" ? (
-                <Mic style={{ height: 76, width: 76, color: "#ef4444" }} />
-              ) : voiceStatus === "speaking" ? (
-                <Volume2 style={{ height: 76, width: 76, color: "#22d3ee" }} />
-              ) : (
-                <Mic style={{ height: 76, width: 76, color: "#334155" }} />
-              )}
+            {/* ── Top bar ── */}
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-7 py-5">
+              <div className="flex items-center gap-2.5">
+                <div className="h-1.5 w-1.5 rounded-full"
+                  style={{
+                    background: voiceStatus === "idle" ? "#334155"
+                      : voiceStatus === "listening" ? "#ef4444"
+                      : voiceStatus === "speaking"  ? "#22d3ee"
+                      : "#f59e0b",
+                    boxShadow: voiceStatus !== "idle"
+                      ? `0 0 8px ${voiceStatus === "listening" ? "#ef4444" : voiceStatus === "speaking" ? "#22d3ee" : "#f59e0b"}`
+                      : "none",
+                    animation: voiceStatus !== "idle" ? "voiceSpotlight 1.5s ease-in-out infinite" : "none",
+                  }} />
+                <span className="text-[11px] font-mono-cyber tracking-widest" style={{ color: "#1e293b" }}>
+                  {convs.find((c) => c.id === activeId)?.title?.toUpperCase() ?? "SOC IA"}
+                </span>
+              </div>
+              <button
+                onClick={exitVoiceMode}
+                className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all"
+                style={{
+                  background: "rgba(30,41,59,0.6)",
+                  border: "1px solid rgba(51,65,85,0.4)",
+                  color: "#475569",
+                  backdropFilter: "blur(8px)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(100,116,139,0.6)";
+                  (e.currentTarget as HTMLElement).style.color = "#94a3b8";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(51,65,85,0.4)";
+                  (e.currentTarget as HTMLElement).style.color = "#475569";
+                }}
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
             </div>
 
-            {/* Transcript */}
-            <div className="mt-12 max-w-sm w-full px-6 text-center" style={{ minHeight: 56 }}>
+            {/* ── Status label ── */}
+            <div className="mb-16 flex flex-col items-center gap-2">
+              <p
+                className="text-[10px] font-mono-cyber font-black uppercase tracking-[0.35em] transition-all duration-500"
+                style={{
+                  color: voiceStatus === "listening"  ? "#ef4444"
+                       : voiceStatus === "speaking"   ? "#22d3ee"
+                       : voiceStatus === "processing" ? "#f59e0b"
+                       : "#1e293b",
+                  letterSpacing: "0.35em",
+                }}
+              >
+                {voiceStatus === "listening"  ? "en ecoute"
+                 : voiceStatus === "processing" ? "traitement"
+                 : voiceStatus === "speaking"   ? "assistant parle"
+                 : "pret"}
+              </p>
+              {/* Thin accent line */}
+              <div style={{
+                width: voiceStatus === "idle" ? 24 : 48,
+                height: 1,
+                borderRadius: 1,
+                background:
+                  voiceStatus === "listening"  ? "#ef4444"
+                  : voiceStatus === "speaking" ? "#22d3ee"
+                  : voiceStatus === "processing" ? "#f59e0b"
+                  : "#1e293b",
+                transition: "all 0.5s ease",
+              }} />
+            </div>
+
+            {/* ── Orb container (rings + sphere) ── */}
+            <div style={{ position: "relative", width: 220, height: 220, display: "flex", alignItems: "center", justifyContent: "center" }}>
+
+              {/* Expanding rings — listening & speaking */}
+              {(voiceStatus === "listening" || voiceStatus === "speaking") && (<>
+                <div style={{
+                  position: "absolute", inset: 0, borderRadius: "50%",
+                  border: `1.5px solid ${voiceStatus === "listening" ? "rgba(239,68,68,0.5)" : "rgba(34,211,238,0.45)"}`,
+                  animation: "voiceRing1 2.2s ease-out infinite",
+                }} />
+                <div style={{
+                  position: "absolute", inset: 0, borderRadius: "50%",
+                  border: `1px solid ${voiceStatus === "listening" ? "rgba(239,68,68,0.3)" : "rgba(34,211,238,0.28)"}`,
+                  animation: "voiceRing2 2.2s ease-out 0.7s infinite",
+                }} />
+                <div style={{
+                  position: "absolute", inset: 0, borderRadius: "50%",
+                  border: `1px solid ${voiceStatus === "listening" ? "rgba(239,68,68,0.16)" : "rgba(34,211,238,0.15)"}`,
+                  animation: "voiceRing3 2.2s ease-out 1.4s infinite",
+                }} />
+              </>)}
+
+              {/* Processing: dual rotating arcs */}
+              {voiceStatus === "processing" && (<>
+                <div style={{
+                  position: "absolute", inset: -14, borderRadius: "50%",
+                  border: "2px solid transparent",
+                  borderTopColor: "#f59e0b",
+                  borderRightColor: "rgba(245,158,11,0.25)",
+                  animation: "voiceSpinCW 1.1s linear infinite",
+                }} />
+                <div style={{
+                  position: "absolute", inset: -26, borderRadius: "50%",
+                  border: "1px solid transparent",
+                  borderBottomColor: "rgba(245,158,11,0.4)",
+                  borderLeftColor: "rgba(245,158,11,0.15)",
+                  animation: "voiceSpinCCW 1.8s linear infinite",
+                }} />
+              </>)}
+
+              {/* ── The sphere ── */}
+              <div
+                onClick={() => {
+                  if (voiceStatus === "listening") {
+                    forceProcessRef.current = true;
+                    (recognitionRef.current as MediaRecorder)?.stop();
+                  }
+                }}
+                style={{
+                  width: 200, height: 200, borderRadius: "50%",
+                  position: "relative",
+                  cursor: voiceStatus === "listening" ? "pointer" : "default",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background:
+                    voiceStatus === "listening"
+                      ? "radial-gradient(circle at 35% 30%, rgba(239,68,68,0.32) 0%, rgba(239,68,68,0.1) 45%, rgba(2,8,16,0.96) 100%)"
+                      : voiceStatus === "speaking"
+                      ? "radial-gradient(circle at 35% 30%, rgba(34,211,238,0.28) 0%, rgba(34,211,238,0.08) 45%, rgba(2,8,16,0.96) 100%)"
+                      : voiceStatus === "processing"
+                      ? "radial-gradient(circle at 35% 30%, rgba(245,158,11,0.22) 0%, rgba(245,158,11,0.06) 45%, rgba(2,8,16,0.96) 100%)"
+                      : "radial-gradient(circle at 35% 30%, rgba(30,41,59,0.5) 0%, rgba(15,23,42,0.3) 45%, rgba(2,8,16,0.96) 100%)",
+                  border: `1.5px solid ${
+                    voiceStatus === "listening"  ? "rgba(239,68,68,0.4)"
+                    : voiceStatus === "speaking" ? "rgba(34,211,238,0.38)"
+                    : voiceStatus === "processing" ? "rgba(245,158,11,0.35)"
+                    : "rgba(30,41,59,0.35)"
+                  }`,
+                  boxShadow:
+                    voiceStatus === "listening"
+                      ? "0 0 80px rgba(239,68,68,0.22), 0 0 160px rgba(239,68,68,0.08), inset 0 1px 0 rgba(239,68,68,0.25), inset 0 0 50px rgba(239,68,68,0.06)"
+                      : voiceStatus === "speaking"
+                      ? "0 0 80px rgba(34,211,238,0.2), 0 0 160px rgba(34,211,238,0.07), inset 0 1px 0 rgba(34,211,238,0.22), inset 0 0 50px rgba(34,211,238,0.05)"
+                      : voiceStatus === "processing"
+                      ? "0 0 60px rgba(245,158,11,0.15), inset 0 1px 0 rgba(245,158,11,0.18)"
+                      : "0 0 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(51,65,85,0.15)",
+                  animation:
+                    voiceStatus === "listening" || voiceStatus === "speaking"
+                      ? "voiceOrbBreath 2.5s ease-in-out infinite"
+                      : voiceStatus === "idle"
+                      ? "voiceIdleFloat 5s ease-in-out infinite"
+                      : "none",
+                  transition: "background 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease",
+                }}
+              >
+                {/* Inner highlight (glass top-left) */}
+                <div style={{
+                  position: "absolute", top: "12%", left: "16%",
+                  width: "35%", height: "28%", borderRadius: "50%",
+                  background:
+                    voiceStatus === "listening"  ? "radial-gradient(circle, rgba(239,68,68,0.18) 0%, transparent 100%)"
+                    : voiceStatus === "speaking" ? "radial-gradient(circle, rgba(34,211,238,0.16) 0%, transparent 100%)"
+                    : voiceStatus === "processing" ? "radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 100%)"
+                    : "radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 100%)",
+                  pointerEvents: "none",
+                }} />
+                {/* Icon */}
+                {voiceStatus === "listening" ? (
+                  <Mic style={{ width: 68, height: 68, color: "#ef4444", filter: "drop-shadow(0 0 18px rgba(239,68,68,0.6))" }} />
+                ) : voiceStatus === "speaking" ? (
+                  <Volume2 style={{ width: 68, height: 68, color: "#22d3ee", filter: "drop-shadow(0 0 18px rgba(34,211,238,0.6))" }} />
+                ) : voiceStatus === "processing" ? (
+                  <VolumeX style={{ width: 68, height: 68, color: "#f59e0b", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.5))" }} />
+                ) : (
+                  <Mic style={{ width: 68, height: 68, color: "#1e293b" }} />
+                )}
+              </div>
+            </div>
+
+            {/* ── Waveform bars (speaking) ── */}
+            <div style={{ height: 52, marginTop: 32, display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}>
+              {voiceStatus === "speaking"
+                ? [22,36,52,44,60,40,56,48,38,60,42,28,48,32].map((maxH, i) => (
+                    <div key={i} style={{
+                      width: 3, borderRadius: 2,
+                      background: "linear-gradient(to top, rgba(34,211,238,0.9), rgba(34,211,238,0.3))",
+                      transformOrigin: "center bottom",
+                      animation: `voiceWave ${0.55 + (i % 5) * 0.12}s ease-in-out ${i * 0.055}s infinite`,
+                      ["--max-h" as any]: `${maxH}px`,
+                      height: `${maxH}px`,
+                      boxShadow: "0 0 6px rgba(34,211,238,0.4)",
+                    }} />
+                  ))
+                : Array.from({ length: 14 }).map((_, i) => (
+                    <div key={i} style={{
+                      width: 3, height: 3, borderRadius: 2,
+                      background: "rgba(30,41,59,0.6)",
+                    }} />
+                  ))
+              }
+            </div>
+
+            {/* ── Transcript / hint ── */}
+            <div style={{ marginTop: 28, maxWidth: 380, width: "100%", padding: "0 32px", textAlign: "center", minHeight: 60 }}>
               {voiceTranscript ? (
-                <p className="text-sm italic leading-relaxed" style={{ color: "#94a3b8" }}>
-                  «&nbsp;{voiceTranscript}&nbsp;»
-                </p>
+                <div
+                  style={{
+                    animation: "voiceTranscriptIn 0.3s ease-out both",
+                    background: "rgba(15,23,42,0.7)",
+                    border: "1px solid rgba(51,65,85,0.5)",
+                    borderRadius: 16,
+                    padding: "12px 20px",
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  <p className="text-sm font-mono-cyber italic leading-relaxed" style={{ color: "#94a3b8" }}>
+                    &laquo;&nbsp;{voiceTranscript}&nbsp;&raquo;
+                  </p>
+                </div>
               ) : (
-                <p className="text-xs" style={{ color: "#1e293b" }}>
-                  {voiceStatus === "listening"   ? "Parlez — cliquez sur l'orbe pour annuler"
-                   : voiceStatus === "processing" ? "Envoi au LLM…"
-                   : voiceStatus === "speaking"   ? "L'assistant répond…"
-                   : "Prêt"}
+                <p className="text-[11px] font-mono-cyber" style={{ color: "#1e293b" }}>
+                  {voiceStatus === "listening"   ? "Parlez — cliquez sur l'orbe pour valider"
+                   : voiceStatus === "processing" ? "Envoi au LLM local…"
+                   : voiceStatus === "speaking"   ? "L'assistant repond — patientez"
+                   : "Appuyez sur le micro pour commencer"}
                 </p>
               )}
             </div>

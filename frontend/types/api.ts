@@ -28,6 +28,34 @@ export interface DefenseAction {
   active: boolean;
   created_at?: string;
   created_by?: 'system' | 'human' | string;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  revoked_at?: string | null;
+  iptables_command?: string | null;
+  iptables_unblock?: string | null;
+}
+
+export interface BlockedIp {
+  ip: string;
+  expires_at: string | null;
+  reason: string;
+  approved_by: string;
+  action_id: number | null;
+  blocked_at: string;
+  iptables_command: string;
+  iptables_unblock: string;
+}
+
+export interface HealthStatus {
+  status: 'ok' | 'degraded' | string;
+  time: string;
+  db?: string;
+  ollama?: string;
+  rag_initialized?: boolean;
+  rag_status?: 'ready' | 'pending' | 'unavailable';
+  geolite2_present?: boolean;
+  defense_mode?: string;
+  blocked_ips_count?: number;
 }
 
 export interface DefenseStatus {

@@ -42,7 +42,7 @@ export default function DashboardPage() {
   }, []);
 
   React.useEffect(() => {
-    const es = createAlertsSSE((a) => { setAlerts((p) => [a, ...p]); setLive(true); });
+    const es = createAlertsSSE((a) => { setAlerts((p) => [a, ...p.filter((x) => x.id !== a.id)]); setLive(true); });
     return () => es.close();
   }, []);
 

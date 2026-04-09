@@ -60,7 +60,7 @@ export default function AlertsPage() {
 
   useEffect(() => {
     fetchAlerts().then(setAlerts).catch(console.error);
-    const es = createAlertsSSE((a) => { setAlerts((p) => [a, ...p]); setLive(true); });
+    const es = createAlertsSSE((a) => { setAlerts((p) => [a, ...p.filter((x) => x.id !== a.id)]); setLive(true); });
     return () => es.close();
   }, []);
 

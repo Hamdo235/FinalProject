@@ -38,8 +38,8 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
       });
 
       L.tileLayer(
-        "https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png",
-        { attribution: "&copy; OpenStreetMap &copy; CARTO" }
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { attribution: "&copy; OpenStreetMap contributors", maxZoom: 18 }
       ).addTo(map);
 
       mapRef.current = map;
@@ -104,9 +104,12 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
   useEffect(() => {
     const load = async () => {
       try {
-        setPoints(await fetchMapPoints());
+        const pts = await fetchMapPoints();
+        setPoints(pts);
+        if (pts.length === 0) setError("Aucun point GeoIP — GeoLite2 non configuré ou aucune alerte.");
+        else setError(null);
       } catch {
-        setError("Impossible de charger les points GeoIP.");
+        setError("Impossible de joindre l'API /map/points.");
       } finally {
         setLoading(false);
       }
@@ -132,16 +135,28 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
           Chargement…
         </div>
       )}
-      {error && (
+      {/* Erreur réseau */}
+      {error && error.includes("API") && (
         <div
           className="absolute inset-0 flex items-center justify-center text-sm z-[500]"
-          style={{ background: "rgba(8,15,26,0.85)", color: "#ef4444" }}
+          style={{ background: "rgba(8,15,26,0.92)", color: "#ef4444" }}
         >
           {error}
         </div>
       )}
+      {/* Pas de données GeoIP — placeholder info */}
+      {!loading && !error?.includes("API") && points.length === 0 && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-[500]"
+          style={{ background: "rgba(8,15,26,0.97)" }}
+        >
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <p className="text-xs font-mono-cyber" style={{ color: "#475569" }}>GeoLite2 non configuré</p>
+          <p className="text-[10px] font-mono-cyber" style={{ color: "#334155" }}>Définir GEOLITE2_CITY_DB dans .env pour activer la carte</p>
+        </div>
+      )}
       {/* Plain div — Leaflet initializes directly on this node */}
-      <div ref={containerRef} style={{ height: "100%", width: "100%" }} />
+      <div ref={containerRef} style={{ height: "100%", width: "100%", visibility: points.length === 0 ? "hidden" : "visible" }} />
     </div>
   );
 }

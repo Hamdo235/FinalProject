@@ -1,9 +1,6 @@
 import "./globals.css";
 import React from "react";
-import Sidebar from "@/components/layout/Sidebar";
-import ChatbotDock from "@/components/layout/ChatbotDock";
-import MainContent from "@/components/layout/MainContent";
-import AlertPulse from "@/components/layout/AlertPulse";
+import AuthProvider from "@/components/layout/AuthProvider";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 
 export const metadata = { title: "CyberSentinel-LLM" };
@@ -29,12 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className={`${space.variable} ${jetbrains.variable} h-screen overflow-hidden antialiased`}
         style={{ background: "#080f1a", color: "#e2e8f0" }}
       >
-        <div className="flex h-screen min-h-0">
-          <Sidebar />
-          <MainContent>{children}</MainContent>
-        </div>
-        <ChatbotDock />
-        <AlertPulse />
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

@@ -8,6 +8,8 @@ import {
   SSEAlertEvent,
   DefenseAction,
   DefenseStatus,
+  BlockedIp,
+  HealthStatus,
 } from '@/types/api';
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
@@ -136,16 +138,42 @@ export async function fetchDefenseStatus(ip: string): Promise<DefenseStatus> {
   return apiFetch<DefenseStatus>(`/defense/status/${encodeURIComponent(ip)}`);
 }
 
-export async function approveDefenseAction(actionId: number): Promise<{ ok: boolean; action: DefenseAction }> {
-  return apiFetch<{ ok: boolean; action: DefenseAction }>(`/defense/actions/${actionId}/approve`, {
+export async function approveDefenseAction(
+  actionId: number,
+  approvedBy = 'Analyste SOC',
+): Promise<{ ok: boolean; action: DefenseAction; message?: string; iptables_command?: string; iptables_unblock?: string }> {
+  return apiFetch(`/defense/actions/${actionId}/approve`, {
     method: 'POST',
+    body: JSON.stringify({ approved_by: approvedBy }),
   });
 }
 
-export async function revokeDefenseAction(actionId: number): Promise<{ ok: boolean; action: DefenseAction }> {
-  return apiFetch<{ ok: boolean; action: DefenseAction }>(`/defense/actions/${actionId}/revoke`, {
+export async function revokeDefenseAction(actionId: number): Promise<{ ok: boolean; action: DefenseAction; message?: string }> {
+  return apiFetch(`/defense/actions/${actionId}/revoke`, { method: 'POST' });
+}
+
+export async function fetchBlockedIps(): Promise<BlockedIp[]> {
+  return apiFetch<BlockedIp[]>('/defense/blocked');
+}
+
+export async function manualBlockIp(body: {
+  ip: string;
+  reason?: string;
+  ttl_minutes?: number;
+  approved_by?: string;
+}): Promise<{ ok: boolean; action: DefenseAction; message?: string; iptables_command?: string; iptables_unblock?: string }> {
+  return apiFetch('/defense/block-manual', {
     method: 'POST',
+    body: JSON.stringify(body),
   });
+}
+
+export async function unblockIpDirect(ip: string): Promise<{ ok: boolean; message: string }> {
+  return apiFetch(`/defense/unblock/${encodeURIComponent(ip)}`, { method: 'POST' });
+}
+
+export async function fetchHealth(): Promise<HealthStatus> {
+  return apiFetch<HealthStatus>('/health');
 }
 
 /**

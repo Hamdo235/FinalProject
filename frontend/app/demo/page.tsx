@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import {
   demoGenerate, demoReset, fetchAlerts, createIncidentFromAlerts,
-  explainIncident, fetchDefenseActions, createAlertsSSE,
+  explainIncident, fetchDefenseActions, createAlertsSSE, approveDefenseAction,
 } from "@/lib/api";
 import type { Alert, IncidentExplanation, DefenseAction } from "@/types/api";
 
@@ -58,8 +58,8 @@ const STEPS = [
   },
   {
     icon: Shield,
-    label: "Recommandations défensives",
-    desc: "Le système propose des actions (blocage, surveillance…). L'analyste reste décisionnaire.",
+    label: "Neutralisation — Blocage Applicatif",
+    desc: "Approbation automatique du blocage en mode démo. L'IP est ajoutée à la liste noire du middleware. La commande iptables est affichée.",
     color: "#10b981",
   },
 ];
@@ -243,10 +243,10 @@ export default function DemoPage() {
 
       if (abortRef.current) return;
 
-      // ── Step 4: Defense actions ───────────────────────────────────────────
+      // ── Step 4: Neutralisation (Defense + auto-approve in demo) ───────────
       setStep(4, { status: "active" });
       await sleep(400);
-      addLog("Génération des recommandations défensives...", "info");
+      addLog("Récupération des actions défensives...", "info");
 
       let defList: DefenseAction[] = [];
       try {
@@ -262,10 +262,34 @@ export default function DemoPage() {
           "data"
         );
       });
-      addLog(`${defList.length} recommandation(s) en attente de validation humaine.`, "success");
-      setStep(4, { status: "done", result: `${defList.length} actions recommandées`, data: defList });
 
-      addLog("══════ Pipeline complet — analyse terminée ══════", "success");
+      // Auto-approve block_temp actions in demo mode
+      const toBlock = defList.filter(
+        (da) => (da.action === "block_temp" || da.action === "review") && da.ip
+      );
+      if (toBlock.length > 0) {
+        addLog("Mode DÉMO — approbation automatique des blocages en cours...", "warn");
+        await sleep(1500);
+        for (const da of toBlock.slice(0, 3)) {
+          try {
+            const res = await approveDefenseAction(da.id, "Démo automatique");
+            const cmd = res.iptables_command ?? `iptables -A INPUT -s ${da.ip} -j DROP`;
+            addLog(`✅ IP ${da.ip} ajoutée à la liste noire applicative.`, "success");
+            addLog(cmd, "data");
+            await sleep(600);
+          } catch {
+            addLog(`Approbation échouée pour ${da.ip} — mode assist requis.`, "warn");
+          }
+        }
+        addLog("Blocages actifs — middleware FastAPI retournera HTTP 403 sur ces IPs.", "success");
+      } else {
+        addLog("Aucun blocage à approuver sur ce run.", "info");
+      }
+
+      addLog(`${defList.length} recommandation(s) générée(s).`, "success");
+      setStep(4, { status: "done", result: `${toBlock.length} IP(s) neutralisée(s)`, data: defList });
+
+      addLog("══════ Pipeline complet — neutralisation terminée ══════", "success");
       setDone(true);
 
     } catch (err: unknown) {
@@ -622,7 +646,7 @@ export default function DemoPage() {
           <div className="flex items-center gap-2 mb-4">
             <Shield className="h-4 w-4" style={{ color: "#10b981" }} />
             <span className="font-semibold" style={{ color: "#e2e8f0" }}>
-              Recommandations défensives
+              Neutralisation — Actions défensives
             </span>
             <span
               className="ml-auto px-2 py-0.5 rounded-full text-xs font-bold font-mono-cyber"
@@ -670,8 +694,17 @@ export default function DemoPage() {
                     className="h-1.5 w-1.5 rounded-full"
                     style={{ background: da.active ? "#10b981" : "#334155" }}
                   />
-                  {da.active ? "Active" : "En attente"} — décision humaine requise
+                  {da.active ? "🔴 IP bloquée" : "En attente"}
                 </div>
+                {da.active && da.iptables_command && (
+                  <div
+                    className="mt-1.5 rounded-lg px-2 py-1 font-mono-cyber text-[9px] flex items-center gap-1"
+                    style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.18)", color: "#34d399" }}
+                  >
+                    <span>$</span>
+                    <span>{da.iptables_command}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>

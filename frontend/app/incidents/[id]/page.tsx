@@ -1,6 +1,7 @@
 "use client";
 import { use, useEffect, useState } from "react";
 import { fetchIncident, explainIncident, labelAlert } from "@/lib/api";
+import type { Incident } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -10,16 +11,6 @@ import {
   Brain, MapPin, MessageCircle, BellRing, ChevronRight,
   Loader2,
 } from "lucide-react";
-
-type Incident = {
-  id: number;
-  created_at: string;
-  status: string;
-  summary?: string;
-  risk?: string;
-  confidence: number;
-  related_alerts_json?: string;
-};
 
 const TIMELINE_STEPS = [
   { label: "Détection",      color: "#22d3ee" },
