@@ -236,7 +236,7 @@ export default function BlockingNotification({ newAlert }: BlockingNotificationP
   React.useEffect(() => {
     if (!newAlert) return;
     if (seenIds.current.has(newAlert.id)) return;
-    if (newAlert.severity !== "high") return;
+    if (newAlert.severity === "low") return;
     const def = newAlert.defense;
     if (!def || (def.action !== "block_temp" && def.action !== "review")) return;
 

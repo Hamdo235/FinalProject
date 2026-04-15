@@ -83,6 +83,8 @@ function actionColor(a: string) {
   return "#10b981";
 }
 
+const DEMO_STATE_KEY = "cs_demo_state";
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function DemoPage() {
   const [running, setRunning]       = React.useState(false);
@@ -95,6 +97,36 @@ export default function DemoPage() {
   const [done, setDone]             = React.useState(false);
   const logsEndRef = React.useRef<HTMLDivElement>(null);
   const abortRef   = React.useRef(false);
+  const savedRef   = React.useRef(false);
+
+  // Restore saved demo state on mount
+  React.useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(DEMO_STATE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s?.done) {
+        setSteps(s.steps ?? STEPS.map(() => ({ status: "pending" })));
+        setLogs(s.logs ?? []);
+        setAlerts(s.alerts ?? []);
+        setExpl(s.explanation ?? null);
+        setDefActions(s.defActions ?? []);
+        setDone(true);
+        savedRef.current = true;
+      }
+    } catch {}
+  }, []);
+
+  // Persist completed state so navigation doesn't wipe progress
+  React.useEffect(() => {
+    if (!done || savedRef.current) return;
+    savedRef.current = true;
+    try {
+      sessionStorage.setItem(DEMO_STATE_KEY, JSON.stringify({
+        done, steps, logs, alerts, explanation, defActions,
+      }));
+    } catch {}
+  }, [done, steps, logs, alerts, explanation, defActions]);
 
   // auto-scroll terminal
   React.useEffect(() => {
@@ -305,6 +337,8 @@ export default function DemoPage() {
   const handleReset = async () => {
     abortRef.current = true;
     try { await demoReset(); } catch {}
+    sessionStorage.removeItem(DEMO_STATE_KEY);
+    savedRef.current = false;
     setRunning(false);
     setDone(false);
     setLogs([]);

@@ -35,17 +35,21 @@ async def demo_generate(db: Session = Depends(get_session)):
     # Generate a few SSH logs as alerts
     now = datetime.now(UTC).isoformat()
     samples = [
-        {"ts": now, "source": "ssh", "ip": "8.8.8.8", "user": "root", "status": "fail"},
-        {"ts": now, "source": "ssh", "ip": "1.1.1.1", "user": "admin", "status": "fail"},
-        {"ts": now, "source": "ssh", "ip": "203.0.113.5", "user": "user", "status": "success"},
+        {"ts": now, "source": "ssh",  "ip": "8.8.8.8",     "user": "root",    "status": "fail"},
+        {"ts": now, "source": "ssh",  "ip": "1.1.1.1",     "user": "admin",   "status": "fail"},
+        {"ts": now, "source": "http", "ip": "203.0.113.5", "user": "scanner", "status": "suspicious"},
     ]
     created = 0
     created_alerts = []
     action_map = {}
     for rec in samples:
-        rule = "ssh_failed_login" if rec.get("status") == "fail" else "ssh_login"
-        severity = "high" if rec.get("status") == "fail" else "low"
-        score = 0.8 if rec.get("status") == "fail" else 0.2
+        _st = rec.get("status")
+        if _st == "fail":
+            rule, severity, score = "ssh_failed_login", "high", 0.80
+        elif _st == "suspicious":
+            rule, severity, score = "ml_port_scan", "medium", 0.72
+        else:
+            rule, severity, score = "ssh_login", "low", 0.20
         a = Alert(
             ts=datetime.fromisoformat(rec["ts"]),
             source=rec["source"],

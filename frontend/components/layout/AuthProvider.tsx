@@ -113,7 +113,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   React.useEffect(() => {
     if (isLogin || !checked) return;
     const es = createAlertsSSE((alert) => {
-      if (alert.severity === "high") setLatestAlert(alert);
+      if (
+        alert.severity === "high" ||
+        (alert.severity === "medium" && alert.defense?.action === "review")
+      ) {
+        setLatestAlert(alert);
+      }
     });
     return () => es.close();
   }, [isLogin, checked]);
