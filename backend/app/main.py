@@ -183,6 +183,10 @@ async def on_startup():
     # Lancer la boucle d'expiration automatique (asyncio, toutes les 60s)
     asyncio.create_task(ip_blacklist.expire_loop(60))
 
+    # Warm-up LLM (Ollama) : charge le modèle en RAM dès le démarrage
+    from .services.llm_ollama import warmup_ollama
+    asyncio.create_task(warmup_ollama())
+
     # Warm-up TTS (piper) + STT (whisper) en arrière-plan pour éviter la latence au premier appel
     def _warmup_models():
         try:

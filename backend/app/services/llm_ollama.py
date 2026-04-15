@@ -84,13 +84,19 @@ def _parse_json_response(text: str) -> Optional[dict]:
     return None
 
 
-async def _call_ollama(prompt: str, timeout: float = 60.0) -> Optional[str]:
+async def _call_ollama(prompt: str, timeout: float = 180.0) -> Optional[str]:
     """Appelle Ollama en mode JSON forcé. Retourne le texte brut ou None."""
     payload = {
         "model": MODEL,
         "prompt": prompt,
         "stream": False,
         "format": "json",
+        "keep_alive": -1,
+        "options": {
+            "temperature": 0.1,
+            "num_predict": 600,
+            "num_ctx": 2048,
+        },
     }
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
@@ -129,14 +135,14 @@ async def ollama_explain_incident(
     )
 
     # 3. Premier appel Ollama
-    raw = await _call_ollama(prompt, timeout=60.0)
+    raw = await _call_ollama(prompt, timeout=180.0)
     parsed = _parse_json_response(raw) if raw else None
 
     # 4. Retry avec prompt simplifié si parsing échoue
     if parsed is None:
         logger.warning("[LLM] Parsing JSON échoué — retry avec prompt simplifié")
         fallback_prompt = PROMPT_FALLBACK.format(incident_summary=summary)
-        raw = await _call_ollama(fallback_prompt, timeout=45.0)
+        raw = await _call_ollama(fallback_prompt, timeout=120.0)
         parsed = _parse_json_response(raw) if raw else None
 
     # 5. Fallback statique si retry échoue
@@ -172,8 +178,31 @@ async def ollama_chat(messages: list, stream: bool = False):
         "model": MODEL,
         "messages": messages,
         "stream": stream,
+        "keep_alive": -1,
+        "options": {
+            "temperature": 0.3,
+            "num_ctx": 2048,
+        },
     }
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=180.0) as client:
         r = await client.post(f"{OLLAMA_BASE}/api/chat", json=payload)
         r.raise_for_status()
         return r.json()
+
+
+async def warmup_ollama() -> None:
+    """Charge le modèle en RAM au démarrage pour éviter la latence au premier appel."""
+    payload = {
+        "model": MODEL,
+        "prompt": "ok",
+        "stream": False,
+        "keep_alive": -1,
+        "options": {"num_predict": 1},
+    }
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            r = await client.post(f"{OLLAMA_BASE}/api/generate", json=payload)
+            r.raise_for_status()
+            logger.info("[LLM] Modèle '%s' chargé en RAM (warm-up OK).", MODEL)
+    except Exception as exc:
+        logger.warning("[LLM] Warm-up ignoré (Ollama indisponible) : %s", exc)
