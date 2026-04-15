@@ -28,10 +28,7 @@ function getUsers(): StoredUser[] {
     const raw = localStorage.getItem(USERS_KEY);
     if (raw) return JSON.parse(raw) as StoredUser[];
   } catch {}
-  // seed default admin account
-  const defaults: StoredUser[] = [{ username: "admin", password: "sentinel2024" }];
-  localStorage.setItem(USERS_KEY, JSON.stringify(defaults));
-  return defaults;
+  return [];
 }
 
 export function isAuthenticated(): boolean {

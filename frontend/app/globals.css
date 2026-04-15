@@ -353,25 +353,38 @@ body {
 .blip-3       { animation-delay: 1.7s; }
 .blip-4       { animation-delay: 2.4s; }
 
-.login-stats {
-  display: flex; gap: 24px;
+.login-brand {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  max-width: 320px; text-align: center;
 }
-.login-stat-item {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
+.login-brand-title {
+  font-size: 1.05rem; font-weight: 700; color: #e2e8f0;
+  letter-spacing: -0.01em; line-height: 1.35;
 }
-.login-stat-val {
-  font-family: var(--font-mono); font-size: 1.4rem; font-weight: 700;
-  filter: drop-shadow(0 0 8px currentColor);
+.login-brand-title span { color: #22d3ee; }
+.login-brand-desc {
+  font-size: 0.77rem; color: #475569; line-height: 1.75;
 }
-.login-stat-label {
-  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em;
-  color: #334155; font-weight: 600;
+.login-brand-features {
+  display: flex; flex-direction: column; gap: 9px;
+  width: 100%; text-align: left; margin-top: 4px;
 }
-
-.login-left-tag {
+.login-brand-feature {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.73rem; color: #64748b; font-weight: 500;
+}
+.login-brand-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+  background: #22d3ee;
+  box-shadow: 0 0 7px rgba(34,211,238,0.65);
+}
+.login-brand-badge {
   display: flex; align-items: center; gap: 8px;
-  font-size: 0.72rem; color: #334155; font-weight: 600;
+  font-size: 0.67rem; color: #334155; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.1em;
+  margin-top: 6px; padding: 6px 14px; border-radius: 999px;
+  border: 1px solid rgba(34,211,238,0.12);
+  background: rgba(34,211,238,0.03);
 }
 .dot-live {
   width: 7px; height: 7px; border-radius: 50%;

@@ -28,6 +28,14 @@ export default function LoginPage() {
     setEmail(""); setPhone(""); setRole("Analyste SOC");
   }
 
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem("cs_users");
+      const users = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(users) || users.length === 0) setMode("signup");
+    } catch {}
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -135,22 +143,32 @@ export default function LoginPage() {
             </svg>
           </div>
 
-          <div className="login-stats">
-            {[
-              { label: "Alertes actives",   val: "247",    color: "#ef4444" },
-              { label: "Incidents ouverts", val: "12",     color: "#f59e0b" },
-              { label: "Score ML",          val: "94.3 %", color: "#10b981" },
-            ].map(({ label, val, color }) => (
-              <div key={label} className="login-stat-item">
-                <span className="login-stat-val" style={{ color }}>{val}</span>
-                <span className="login-stat-label">{label}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="login-left-tag">
-            <span className="dot-live" />
-            Surveillance réseau active — 24/7
+          <div className="login-brand">
+            <h2 className="login-brand-title">
+              Bienvenue sur <span>CyberSentinel‑LLM</span>
+            </h2>
+            <p className="login-brand-desc">
+              Une solution intelligente de détection et de réponse aux intrusions réseau,
+              combinant Machine Learning, base de connaissances MITRE ATT&CK et
+              analyse LLM en temps réel.
+            </p>
+            <div className="login-brand-features">
+              {[
+                "Détection ML — IsolationForest & LocalOutlierFactor",
+                "Raisonnement LLM via MITRE ATT\u0026CK (RAG)",
+                "Défense Human-in-the-Loop en temps réel",
+                "Cartographie GeoIP des menaces actives",
+              ].map((f) => (
+                <div key={f} className="login-brand-feature">
+                  <span className="login-brand-dot" />
+                  {f}
+                </div>
+              ))}
+            </div>
+            <div className="login-brand-badge">
+              <span className="dot-live" />
+              Projet de Fin d&apos;Études — Master Informatique
+            </div>
           </div>
         </div>
 
@@ -205,7 +223,7 @@ export default function LoginPage() {
                   <input
                     type="text"
                     autoComplete="username"
-                    placeholder={isSignup ? "Choisir un identifiant" : "admin"}
+                    placeholder={isSignup ? "Choisir un identifiant" : "Votre identifiant"}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     onFocus={() => setFocused("user")}
@@ -369,12 +387,6 @@ export default function LoginPage() {
               )}
             </p>
 
-            {/* Demo hint (sign-in only) */}
-            {!isSignup && (
-              <p className="login-hint">
-                Accès démo&nbsp;: <code>admin</code> / <code>sentinel2024</code>
-              </p>
-            )}
 
             <div className="login-scanline" />
           </div>
