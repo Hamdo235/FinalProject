@@ -148,16 +148,16 @@ export default function LoginPage() {
               Bienvenue sur <span>CyberSentinel‑LLM</span>
             </h2>
             <p className="login-brand-desc">
-              Une solution intelligente de détection et de réponse aux intrusions réseau,
-              combinant Machine Learning, base de connaissances MITRE ATT&CK et
-              analyse LLM en temps réel.
+              Une solution de détection et de réponse aux intrusions réseau,
+              alliant analyse comportementale avancée, raisonnement intelligent
+              et réponse adaptative en temps réel.
             </p>
             <div className="login-brand-features">
               {[
-                "Détection ML — IsolationForest & LocalOutlierFactor",
-                "Raisonnement LLM via MITRE ATT\u0026CK (RAG)",
-                "Défense Human-in-the-Loop en temps réel",
-                "Cartographie GeoIP des menaces actives",
+                "Analyse comportementale multi-modèles",
+                "Raisonnement contextuel et suggestions intelligentes",
+                "Réponse adaptative avec supervision humaine",
+                "Visualisation géographique des menaces actives",
               ].map((f) => (
                 <div key={f} className="login-brand-feature">
                   <span className="login-brand-dot" />

@@ -281,7 +281,8 @@ body {
   position: fixed; inset: 0; z-index: 9999;
   background: #080f1a;
   display: flex; align-items: stretch; justify-content: center;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .login-bg-grid {
@@ -320,8 +321,9 @@ body {
 .login-layout {
   position: relative; z-index: 1;
   display: flex; width: 100%; max-width: 1100px;
-  margin: 0 auto; padding: 0 24px;
+  margin: 0 auto; padding: 24px 24px;
   align-items: center; justify-content: center; gap: 48px;
+  min-height: 100%;
 }
 
 /* ── LEFT — decorative ── */
@@ -396,7 +398,8 @@ body {
 /* ── RIGHT — card ── */
 .login-right {
   flex-shrink: 0; width: 100%; max-width: 400px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 0;
 }
 
 .login-card {

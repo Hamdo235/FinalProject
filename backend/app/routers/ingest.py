@@ -81,7 +81,7 @@ async def ingest_logs(payload: Union[LogRecord, List[LogRecord]], db: Session = 
     # publish SSE events asynchronously
     for a in alerts:
         if a.id is not None:
-            payload = _alert_payload(a)
-            payload["defense"] = action_map.get(a.id)
-            asyncio.create_task(publish_alert_created(payload))
+            sse_payload = _alert_payload(a)
+            sse_payload["defense"] = action_map.get(a.id)
+            asyncio.create_task(publish_alert_created(sse_payload))
     return {"ingested": len(alerts)}

@@ -1,147 +1,137 @@
-# CyberSentinel-LLM (PFE)
+# CyberSentinel-LLM
 
-Stack: Python 3.11 (FastAPI), SQLite, scikit-learn (IF/LOF à venir), LLM local (Ollama), Next.js + Tailwind + react-leaflet, SSE, OSM.
+Plateforme de cybersécurité avec détection d'anomalies, chat LLM local et **mode vocal** (STT + TTS neural).
 
-## Quickstart
+**Stack :** Python 3.13 · FastAPI · SQLite · scikit-learn (IForest/LOF) · Ollama · Next.js 16 · Tailwind CSS · SSE
+
+---
+
+## Démarrage rapide
+
+### Prérequis
+- Python 3.11+
+- Node.js 18+
+- [Ollama](https://ollama.com/download) installé
 
 ### Backend
-1) Installer dépendances
+
 ```bash
 cd backend
+
+# 1. Environnement virtuel
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # ou: source ./venv.sh
 pip install -r requirements.txt
-```
-Astuce: vous pouvez aussi activer rapidement la venv via:
-```bash
-source ./backend/venv.sh
+
+# 2. Variables d'environnement (optionnel)
+cp .env.example .env               # puis éditer si besoin
+
+# 3. Lancer (Ollama + modèle téléchargés automatiquement)
+bash start.sh
 ```
 
-2) (Option) GeoIP pour la carte
-- Télécharger GeoLite2-City.mmdb (compte MaxMind gratuit)
-- Placer le fichier dans `backend/data/GeoLite2-City.mmdb`
-- `backend/start.sh` l'auto-détecte et exporte `GEOLITE2_CITY_DB` automatiquement.
-- Sinon, vous pouvez exporter manuellement:
 ```bash
-export GEOLITE2_CITY_DB=/chemin/absolu/vers/GeoLite2-City.mmdb
+curl http://localhost:8000/health  # vérification
 ```
-3) Lancer l’API (avec Ollama intégré automatiquement)
-```bash
-bash backend/start.sh
-```
-Notes:
-- Le script démarre Ollama s’il n’est pas lancé et télécharge le modèle si nécessaire.
-- Mode demo/dev (défaut): `APP_ENV=dev bash backend/start.sh` (DEBUG=1, reload activé).
-- Mode final: `APP_ENV=final bash backend/start.sh` (DEBUG=0, reload désactivé).
-- Variables optionnelles avant lancement: `export OLLAMA_MODEL=llama3.2` et `export OLLAMA_BASE_URL=http://localhost:11434`.
-4) Vérifier
-```bash
-curl http://localhost:8000/health
-```
+
+> **Modes :** `APP_ENV=dev bash start.sh` (défaut, reload activé) · `APP_ENV=final bash start.sh` (production)
 
 ### Frontend
+
 ```bash
 cd frontend
+cp .env.example .env.local         # ajuster NEXT_PUBLIC_API_BASE si besoin
 npm install
-npm run dev
+bash start.sh                      # ou: npm run dev
 ```
+
 Ouvrir http://localhost:3000
 
-### Démo
-- Page: http://localhost:3000/demo
-- Boutons: Générer logs, Reset
-- Carte affiche les points depuis `/map/points` (GeoIP best-effort)
+### (Optionnel) GeoIP pour la carte
+Télécharger `GeoLite2-City.mmdb` depuis [MaxMind](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data) (compte gratuit) et le placer dans `backend/data/GeoLite2-City.mmdb`. `start.sh` le détecte automatiquement.
 
-### Pages utiles
-- Alerts: http://localhost:3000/alerts (sélection → créer incident)
-- Incident: http://localhost:3000/incidents/{id} (explication LLM)
+---
 
-### LLM réel (optionnel)
-- Installer/lancer Ollama: https://ollama.com/download (start.sh le gère automatiquement s’il est présent)
-- Télécharger un modèle léger: `ollama pull llama3.2` (start.sh le télécharge si absent)
-- Variables optionnelles avant lancement (prises en compte par `bash backend/start.sh`):
-```bash
-export OLLAMA_BASE_URL=http://localhost:11434
-export OLLAMA_MODEL=llama3.2
-```
+## Fonctionnalités
+
+| Feature | Description |
+|---|---|
+| **Détection d'anomalies** | IsolationForest / LOF en temps réel sur les logs réseau |
+| **Chat LLM** | Conversation persistante avec `qwen2.5:1.5b` via Ollama |
+| **Mode vocal** | STT (Whisper base), TTS neural (Piper `fr_FR-upmc-medium`), VAD automatique |
+| **RAG** | Contexte enrichi par les alertes/incidents en base |
+| **GeoIP** | Localisation des IP sur carte OSM |
+| **Démo** | Génération de logs SSH/réseau simulés |
+| **Défense applicative** | Blocage IP, rate limiting |
+
+---
+
+## Mode vocal
+
+Le mode vocal (bouton micro dans le chat) :
+1. Détecte automatiquement la fin de parole (VAD)
+2. Transcrit avec **Whisper `base`** (CPU, français)
+3. Génère une réponse courte avec le LLM
+4. Synthétise phrase par phrase avec **Piper TTS** (voix neurale naturelle)
+
+Les modèles se téléchargent automatiquement au premier appel.
+
+---
 
 ## Endpoints principaux
-- `GET /health`
-- `POST /ingest/logs`
-- `GET /alerts`
-- `GET /incidents/{id}`
-- `POST /incidents/from-alerts`
-- `POST /llm/incidents/{id}/explain`
-- `GET /stream/alerts` (SSE)
-- `GET /map/points`
-- `POST /demo/generate`, `POST /demo/reset`
 
-## Dépannage
-- L’API ne démarre pas → utiliser le point d’entrée unique: `bash backend/start.sh` (gère env Python, Ollama et modèle).
-- GeoIP vide → vérifier le message de démarrage (`GeoIP enabled`) et le fichier `backend/data/GeoLite2-City.mmdb`.
-- Erreur “window is not defined” → le composant carte est chargé dynamiquement; relancer `npm run dev` si nécessaire.
-- LLM indisponible → installer/activer Ollama ou définir `OLLAMA_BASE_URL` et `OLLAMA_MODEL` avant `bash backend/start.sh`.
+| Méthode | Route | Description |
+|---|---|---|
+| GET | `/health` | Santé de l'API |
+| POST | `/ingest/logs` | Ingérer des logs bruts |
+| GET | `/alerts` | Liste des alertes |
+| GET | `/stream/alerts` | Flux SSE temps réel |
+| GET/POST | `/incidents` | Gestion des incidents |
+| POST | `/llm/incidents/{id}/explain` | Explication LLM d'un incident |
+| GET/POST | `/llm/conversations` | Conversations persistantes |
+| GET | `/llm/conversations/{id}/stream` | Stream SSE de réponse LLM |
+| POST | `/llm/transcribe` | Transcription audio (Whisper) |
+| POST | `/llm/tts` | Synthèse vocale (Piper) |
+| GET | `/map/points` | Points géolocalisés |
+| GET | `/metrics/model` | Métriques du détecteur ML |
+| POST | `/validation/alerts/{id}` | Labeling humain (vrai/faux positif) |
 
-## Validation finale (avant commit/push)
-- Backend tests:
+---
+
+## Cycle d'apprentissage adaptatif
+
+1. Détection non supervisée (IF/LOF) → alerte
+2. Création d'incident (UI)
+3. Explication LLM (interprétation humaine uniquement)
+4. Validation humaine : `POST /validation/alerts/{id}?label=true_attack|false_positive`
+5. Réentraînement offline : `cd backend && python -m scripts.retrain_offline`
+6. Redéploiement : `export SCORE_THRESHOLD=<valeur>` + redémarrage
+
+> Le LLM n'est jamais décideur — il explique seulement.
+
+---
+
+## Validation avant push
+
 ```bash
+# Backend tests
 cd backend && ./.venv/bin/python -m pytest -q
-```
-- Frontend lint:
-```bash
-cd frontend && npm run lint
-```
-- Frontend build production:
-```bash
-cd frontend && npm run build
-```
-- Vérifier Git (pas d’artefact runtime à committer):
-```bash
+
+# Frontend lint + build
+cd frontend && npm run lint && npm run build
+
+# Vérifier git (aucun artefact runtime)
 git status -sb
 ```
 
-## État actuel
-- Détection: heuristique simple (IF/LOF planifié)
-- LLM: local via Ollama (avec fallback si indisponible)
-- UI: Alerts/Incident/Demo fonctionnelles, carte OSM
+---
 
-## Structure documentaire
-- Les documents de planification ont été regroupés dans `docs/planning/`.
+## Dépannage
 
-## Cycle d’apprentissage adaptatif (contrôlé)
-
-Objectif: démontrer un apprentissage progressif et contrôlé, pas une IA autonome incontrôlée.
-
-### Pipeline
-1. Détection non supervisée en temps réel (IF/LOF/hybride) → détection d’inconnu
-2. Création d’alerte + incident (manuel via UI)
-3. Explication LLM (interprétation humaine, jamais décision)
-4. Validation humaine (attaque réelle / faux positif)
-5. Stockage des features + décision humaine (labels)
-6. Réentraînement offline périodique (script dédié)
-7. Redéploiement du seuil/config entraîné
-
-### Contraintes (sécurité)
-- Pas d’auto-blocage irréversible
-- Pas d’apprentissage « en ligne » dangereux
-- Le LLM n’est jamais décideur, il explique seulement
-
-### Labeling humain
-- Endpoint: `POST /validation/alerts/{id}?label=true_attack|false_positive`
-- Voir labels: `GET /validation/alerts/{id}`
-
-### Métriques du modèle
-- Endpoint: `GET /metrics/model`
-- Retourne: `threshold`, `roc_auc`, `precision`, `recall`, `f1`, `samples`, `positives`, `negatives`
-- Seuil de décision: `SCORE_THRESHOLD` (défaut 0.6)
-
-### Entraînement offline (sélection de seuil)
-- Script: `cd backend && python -m scripts.retrain_offline`
-- Produit `model_config.json` avec `score_threshold` recommandé.
-- Redéploiement:
-  - `export SCORE_THRESHOLD=<valeur_recommandée>`
-  - redémarrer le service FastAPI
-
-### Sélection du détecteur
-- `DETECTOR`: `iforest` | `lof` | `hybrid`
-- `SCORE_THRESHOLD`: float 0–1 (défaut 0.6)
+| Symptôme | Solution |
+|---|---|
+| API ne démarre pas | `bash backend/start.sh` gère tout (venv, Ollama, modèle) |
+| GeoIP manquant | Placer `GeoLite2-City.mmdb` dans `backend/data/` |
+| LLM indisponible | Vérifier `ollama serve` + `OLLAMA_MODEL=qwen2.5:1.5b` |
+| Pas de son en mode vocal | Vérifier que le navigateur a la permission micro ; les modèles Piper/Whisper se téléchargent au premier appel (~150 MB) |
+| "window is not defined" | Relancer `npm run dev` (composant carte chargé dynamiquement) |
