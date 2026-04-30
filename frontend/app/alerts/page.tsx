@@ -2,13 +2,17 @@
 import { useEffect, useState } from "react";
 import {
   fetchAlerts, labelAlert, createIncidentFromAlerts,
-  createAlertsSSE, approveDefenseAction, revokeDefenseAction,
+  approveDefenseAction, revokeDefenseAction,
 } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { Alert } from "@/types/api";
-import { Card, CardContent } from "@/components/ui/Card";
-import { CheckSquare, MapPin, MessageCircle, ShieldCheck, ShieldOff, AlertTriangle } from "lucide-react";
+import { CheckSquare, MapPin, MessageCircle, AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { getActorLabel } from "@/lib/actor";
+import { formatDateTimeLocal, formatTimeLocal } from "@/lib/time";
+import { useRealtime } from "@/components/layout/RealtimeProvider";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
 
 const SEV: Record<string, { color: string; bg: string; border: string }> = {
   high:   { color: "#ef4444", bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.25)"  },
@@ -47,45 +51,75 @@ function ActionBtn({
 }
 
 export default function AlertsPage() {
+  const actorLabel = useState(() => getActorLabel())[0];
+  const { subscribeToAlerts, sseConnected, pushToast, refreshPending } = useRealtime();
   const [alerts, setAlerts]           = useState<Alert[]>([]);
   const [selected, setSelected]       = useState<Set<number>>(new Set());
   const [live, setLive]               = useState(false);
   const [busy, setBusy]               = useState(false);
-  const [msg, setMsg]                 = useState("");
   const [labelBusy, setLabelBusy]     = useState<number | null>(null);
   const [bulkBusy, setBulkBusy]       = useState(false);
-  const [bulkMsg, setBulkMsg]         = useState("");
   const [defenseBusyId, setDefenseBusyId] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     fetchAlerts().then(setAlerts).catch(console.error);
-    const es = createAlertsSSE((a) => { setAlerts((p) => [a, ...p.filter((x) => x.id !== a.id)]); setLive(true); });
-    return () => es.close();
   }, []);
 
+  useEffect(() => {
+    return subscribeToAlerts((a) => {
+      setAlerts((p) => [a, ...p.filter((x) => x.id !== a.id)]);
+      setLive(true);
+    });
+  }, [subscribeToAlerts]);
+
+  useEffect(() => {
+    if (sseConnected) setLive(true);
+  }, [sseConnected]);
+
   const doLabel = async (id: number, label: "true_attack" | "false_positive") => {
-    setLabelBusy(id); setMsg("");
-    try { await labelAlert(id, label); setMsg(`Alerte #${id} labellisée : ${label}.`); }
-    catch { setMsg(`Erreur labellisation #${id}.`); }
-    finally { setLabelBusy(null); }
+    setLabelBusy(id);
+    try {
+      await labelAlert(id, label);
+      pushToast(
+        label === "true_attack"
+          ? `Alerte #${id} marquée comme attaque`
+          : `Alerte #${id} marquée comme faux positif`,
+        "success"
+      );
+    } catch (e: unknown) {
+      const em = e instanceof Error ? e.message : "Erreur inconnue";
+      pushToast(`Erreur labellisation #${id} : ${em}`, "error");
+    } finally { setLabelBusy(null); }
   };
 
   const updateDefense = (actionId: number, next: Alert["defense"]) =>
     setAlerts((p) => p.map((a) => (a.defense?.id === actionId ? { ...a, defense: next } : a)));
 
-  const onApprove = async (id: number) => {
+  const onApprove = async (id: number, ip?: string) => {
     setDefenseBusyId(id);
-    try { const r = await approveDefenseAction(id); updateDefense(id, r.action); setMsg(`Défense #${id} approuvée.`); }
-    catch { setMsg(`Erreur approbation #${id}.`); }
-    finally { setDefenseBusyId(null); }
+    try {
+      const r = await approveDefenseAction(id, actorLabel);
+      updateDefense(id, r.action);
+      pushToast(`✅ IP ${ip ?? r.action.ip ?? "?"} bloquée par ${actorLabel}`, "success");
+      refreshPending();
+    } catch (e: unknown) {
+      const em = e instanceof Error ? e.message : "Erreur inconnue";
+      pushToast(`Erreur approbation : ${em}`, "error");
+    } finally { setDefenseBusyId(null); }
   };
 
-  const onRevoke = async (id: number) => {
+  const onRevoke = async (id: number, ip?: string) => {
     setDefenseBusyId(id);
-    try { const r = await revokeDefenseAction(id); updateDefense(id, r.action); setMsg(`Défense #${id} révoquée.`); }
-    catch { setMsg(`Erreur révocation #${id}.`); }
-    finally { setDefenseBusyId(null); }
+    try {
+      const r = await revokeDefenseAction(id);
+      updateDefense(id, r.action);
+      pushToast(`↩ Blocage de ${ip ?? r.action.ip ?? "?"} révoqué`, "info");
+      refreshPending();
+    } catch (e: unknown) {
+      const em = e instanceof Error ? e.message : "Erreur inconnue";
+      pushToast(`Erreur révocation : ${em}`, "error");
+    } finally { setDefenseBusyId(null); }
   };
 
   const toggle = (id: number) =>
@@ -99,20 +133,32 @@ export default function AlertsPage() {
     setBusy(true);
     try {
       const r = await createIncidentFromAlerts(Array.from(selected));
-      const id = (r as any).id || (r as any).incident_id || 1;
-      setMsg(`Incident #${id} créé.`);
+      const rec = r as unknown as { id?: number; incident_id?: number };
+      const id = rec.id ?? rec.incident_id ?? 1;
+      pushToast(`Incident #${id} créé à partir de ${selected.size} alerte(s)`, "success");
       router.push(`/incidents/${id}`);
+    } catch (e: unknown) {
+      const em = e instanceof Error ? e.message : "Erreur inconnue";
+      pushToast(`Erreur de création d'incident : ${em}`, "error");
     } finally { setBusy(false); }
   };
 
   const bulkDecision = async (label: "true_attack" | "false_positive") => {
     if (!selected.size) return;
-    setBulkBusy(true); setBulkMsg("");
+    setBulkBusy(true);
     try {
       for (const id of Array.from(selected)) await labelAlert(id, label);
-      setBulkMsg(label === "true_attack" ? "Attaques confirmées." : "Faux positifs appliqués.");
-    } catch { setBulkMsg("Erreur décision en masse."); }
-    finally { setBulkBusy(false); }
+      pushToast(
+        label === "true_attack"
+          ? `${selected.size} alerte(s) confirmée(s) comme attaque`
+          : `${selected.size} alerte(s) marquée(s) comme faux positif`,
+        "success"
+      );
+      setSelected(new Set());
+    } catch (e: unknown) {
+      const em = e instanceof Error ? e.message : "Erreur inconnue";
+      pushToast(`Erreur décision en masse : ${em}`, "error");
+    } finally { setBulkBusy(false); }
   };
 
   const criticalCount = alerts.filter((a) => a.severity === "high").length;
@@ -191,9 +237,6 @@ export default function AlertsPage() {
         </Link>
       </div>
 
-      {msg     && <div className="text-sm font-medium" style={{ color: "#10b981" }}>{msg}</div>}
-      {bulkMsg && <div className="text-sm font-medium" style={{ color: "#22d3ee" }}>{bulkMsg}</div>}
-
       {/* ── Table ── */}
       <div
         className="rounded-2xl overflow-hidden"
@@ -232,7 +275,7 @@ export default function AlertsPage() {
                   />
                 </td>
                 <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#64748b" }}>
-                  {new Date(a.ts).toLocaleString()}
+                  {formatDateTimeLocal(a.ts)}
                 </td>
                 <td className="px-4 py-3 font-medium text-sm" style={{ color: "#e2e8f0" }}>
                   {a.source}
@@ -264,16 +307,17 @@ export default function AlertsPage() {
                       </span>
                       {a.defense.expires_at && (
                         <div className="text-[10px] font-mono-cyber" style={{ color: "#334155" }}>
-                          exp. {new Date(a.defense.expires_at).toLocaleTimeString()}
+                          exp. {formatTimeLocal(a.defense.expires_at!)}
                         </div>
                       )}
                       <div className="flex gap-1 mt-1">
-                        {a.defense.action === "review" && (
+                        {!a.defense.approved_by && !a.defense.revoked_at &&
+                          (a.defense.action === "review" || a.defense.action === "block_temp") && (
                           <ActionBtn
                             label="Approuver"
                             color="#10b981"
                             disabled={defenseBusyId === a.defense.id}
-                            onClick={() => onApprove(a.defense!.id)}
+                            onClick={() => onApprove(a.defense!.id, a.ip)}
                           />
                         )}
                         {a.defense.active && (
@@ -281,10 +325,15 @@ export default function AlertsPage() {
                             label="Révoquer"
                             color="#64748b"
                             disabled={defenseBusyId === a.defense.id}
-                            onClick={() => onRevoke(a.defense!.id)}
+                            onClick={() => onRevoke(a.defense!.id, a.ip)}
                           />
                         )}
                       </div>
+                      {a.defense.approved_by && (
+                        <div className="text-[9px] font-mono-cyber" style={{ color: "#10b981" }}>
+                          ✓ {a.defense.approved_by}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <span className="text-xs" style={{ color: "#334155" }}>n/a</span>
@@ -320,9 +369,14 @@ export default function AlertsPage() {
           </tbody>
         </table>
         {!alerts.length && (
-          <div className="text-center py-16 text-sm" style={{ color: "#64748b" }}>
-            Aucune alerte pour l&apos;instant.
-          </div>
+          <EmptyState
+            title="Aucune alerte"
+            description="Lancez la démonstration pour générer du trafic synthétique et voir le pipeline IDS en action."
+          >
+            <Link href="/demo">
+              <Button>Lancer la démo</Button>
+            </Link>
+          </EmptyState>
         )}
       </div>
     </main>

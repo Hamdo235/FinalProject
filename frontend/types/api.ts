@@ -106,12 +106,28 @@ export interface IncidentExplanation {
   response: string;
   confidence: number;
   sources?: string[];
+  parsed?: Record<string, unknown>;
 }
 
 export interface SSEAlertEvent {
-  type: 'alert.created' | 'hello' | 'error' | string;
+  type: 'alert.created' | 'alert_created' | 'hello' | 'error' | string;
   id?: number;
   severity?: string;
   time?: string;
   data?: Alert;
+}
+
+export interface SSEDefenseEvent {
+  type: 'defense.changed';
+  event: 'created' | 'approved' | 'revoked' | 'manual_block' | 'unblock' | 'expired';
+  data?: DefenseAction | { ip?: string; id?: number | null };
+  time?: string;
+}
+
+export type SSEEvent = SSEAlertEvent | SSEDefenseEvent;
+
+export interface IncidentCreationResponse {
+  id?: number;
+  incident_id?: number;
+  [key: string]: unknown;
 }

@@ -17,10 +17,10 @@ async def test_ingest_creates_alerts():
         alerts = list_alerts(db=db)
         assert isinstance(alerts, list)
         assert len(alerts) >= 1
-        # basic properties
+        # basic properties (AlertOut Pydantic model)
         a = alerts[0]
-        assert a["source"] == "ssh"
-        assert a["status"] in ("open", "closed")
+        assert a.source == "ssh"
+        assert a.status in ("open", "closed")
 
 
 @pytest.mark.anyio

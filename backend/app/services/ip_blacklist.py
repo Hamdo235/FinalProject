@@ -147,13 +147,42 @@ def sync_from_db(db: Any) -> None:
 
 
 async def expire_loop(interval_seconds: int = 60) -> None:
-    """Tâche asyncio : retire les IPs expirées toutes les `interval_seconds` secondes."""
+    """Tâche asyncio : retire les IPs expirées toutes les `interval_seconds` secondes.
+
+    Synchronise également la table DefenseAction (active=False, revoked_at=now)
+    pour les actions correspondantes, afin d'éviter que la DB conserve des
+    enregistrements 'active' alors que la mémoire les a déjà purgés.
+    """
     while True:
         await asyncio.sleep(interval_seconds)
         now = _utcnow()
         with _lock:
-            expired = [ip for ip, e in _blacklist.items() if e.expires_at is not None and e.expires_at <= now]
-            for ip in expired:
-                del _blacklist[ip]
-        if expired:
-            logger.info("[Blacklist] %d IP(s) expirée(s) purgée(s) : %s", len(expired), expired)
+            expired = [
+                (ip, e.action_id)
+                for ip, e in _blacklist.items()
+                if e.expires_at is not None and e.expires_at <= now
+            ]
+            for ip, _aid in expired:
+                _blacklist.pop(ip, None)
+        if not expired:
+            continue
+        # Best-effort: persist matching DefenseAction rows as inactive.
+        try:
+            from sqlmodel import Session as _S, select
+            from ..db.session import engine
+            from ..models.defense_action import DefenseAction
+            with _S(engine) as db:
+                action_ids = [aid for _ip, aid in expired if aid is not None]
+                if action_ids:
+                    rows = db.exec(
+                        select(DefenseAction).where(DefenseAction.id.in_(action_ids))
+                    ).all()
+                    for row in rows:
+                        if row.active:
+                            row.active = False
+                            row.revoked_at = now
+                            db.add(row)
+                    db.commit()
+        except Exception as exc:
+            logger.debug("[Blacklist] DB sync after expiry failed: %s", exc)
+        logger.info("[Blacklist] %d IP(s) expirée(s) purgée(s) : %s", len(expired), [ip for ip, _ in expired])

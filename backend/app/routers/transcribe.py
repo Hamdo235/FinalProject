@@ -1,5 +1,6 @@
 import logging
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from ..core.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,11 @@ async def transcribe_audio(file: UploadFile = File(...)):
         data = await file.read()
         if not data:
             raise HTTPException(status_code=400, detail="Fichier audio vide.")
+        if len(data) > settings.max_audio_size_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Fichier audio trop volumineux (max {settings.max_audio_size_bytes} octets).",
+            )
         from app.services.whisper_service import transcribe_wav
         text = transcribe_wav(data)
         return {"text": text}

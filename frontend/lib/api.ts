@@ -13,6 +13,16 @@ import {
 } from '@/types/api';
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN || '';
+
+function withAdminHeader(headers?: HeadersInit): HeadersInit {
+  const merged: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(headers as Record<string, string> | undefined),
+  };
+  if (ADMIN_TOKEN) merged['X-ADMIN-TOKEN'] = ADMIN_TOKEN;
+  return merged;
+}
 
 /**
  * Wrapper fetch avec gestion d'erreurs et timeout via AbortController.
@@ -29,14 +39,24 @@ async function apiFetch<T>(
   const isServer = typeof window === 'undefined';
   try {
     const res = await fetch(`${API_BASE}${url}`, {
-      headers: { 'Content-Type': 'application/json', ...fetchOptions.headers },
+      headers: withAdminHeader(fetchOptions.headers),
       ...(isServer ? { cache: 'no-store' as RequestCache } : {}),
       ...fetchOptions,
       signal: controller.signal,
     });
     if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`API error ${res.status}: ${err}`);
+      const raw = await res.text();
+      let detail = raw;
+      try {
+        const parsed = JSON.parse(raw);
+        if (typeof parsed?.detail === 'string') detail = parsed.detail;
+      } catch {
+        // keep raw text as detail
+      }
+      if (res.status === 401) {
+        throw new Error("Accès refusé (401). Configurez NEXT_PUBLIC_ADMIN_TOKEN ou ajoutez le header X-ADMIN-TOKEN.");
+      }
+      throw new Error(detail ? `API ${res.status}: ${detail}` : `API ${res.status}`);
     }
     return res.json() as Promise<T>;
   } catch (err: unknown) {
@@ -177,37 +197,60 @@ export async function fetchHealth(): Promise<HealthStatus> {
 }
 
 /**
- * Ouvrir un flux SSE pour les alertes en temps réel
+ * Ouvrir un flux SSE générique sur /stream/alerts.
+ *
+ * Le serveur publie `alert.created` ET `defense.changed` sur le même canal.
+ * Le navigateur reconnecte automatiquement via EventSource (~3s) tant que la
+ * connexion n'est pas fermée explicitement.
  */
-export function createAlertsSSE(onAlert: (alert: Alert) => void): EventSource {
+export interface SSEHandlers {
+  onAlert?: (alert: Alert) => void;
+  onDefense?: (event: import('@/types/api').SSEDefenseEvent) => void;
+  onError?: () => void;
+  onOpen?: () => void;
+}
+
+export function createEventStream(handlers: SSEHandlers): EventSource {
   const es = new EventSource(`${API_BASE}/stream/alerts`);
-  let errorCount = 0;
-  const MAX_ERRORS = 5;
 
   es.onmessage = (e) => {
-    errorCount = 0;
     try {
-      const parsed = JSON.parse(e.data) as SSEAlertEvent;
-      if ((parsed.type === 'alert.created' || parsed.type === 'alert_created') && (parsed as any).data) {
-        onAlert((parsed as any).data);
-      } else if (parsed.type === 'alert.created' && parsed.id) {
-        // Fallback if backend sends only id
+      const parsed = JSON.parse(e.data) as SSEAlertEvent | import('@/types/api').SSEDefenseEvent;
+      if (parsed.type === 'defense.changed') {
+        handlers.onDefense?.(parsed as import('@/types/api').SSEDefenseEvent);
+        return;
+      }
+      const alertEvt = parsed as SSEAlertEvent;
+      if (
+        (alertEvt.type === 'alert.created' || alertEvt.type === 'alert_created') &&
+        alertEvt.data
+      ) {
+        handlers.onAlert?.(alertEvt.data);
+      } else if (alertEvt.type === 'alert.created' && alertEvt.id) {
         fetchAlerts()
           .then((alerts) => {
-            if (alerts.length > 0) onAlert(alerts[0]);
+            if (alerts.length > 0) handlers.onAlert?.(alerts[0]);
           })
           .catch(() => {});
       }
     } catch (err) {
-      console.warn('[SSE] Erreur parsing alerte:', err);
+      console.warn('[SSE] Erreur parsing event:', err);
     }
   };
   es.onerror = () => {
-    errorCount += 1;
-    if (errorCount >= MAX_ERRORS) {
-      console.warn(`[SSE] Backend inaccessible après ${MAX_ERRORS} tentatives — flux fermé.`);
-      es.close();
+    if (es.readyState === EventSource.CLOSED) {
+      console.warn('[SSE] Connexion fermée définitivement par le serveur.');
     }
+    handlers.onError?.();
   };
+  es.onopen = () => handlers.onOpen?.();
   return es;
+}
+
+/**
+ * @deprecated use createEventStream({ onAlert }) instead.
+ * Maintenu pour compat de code existant.
+ */
+export function createAlertsSSE(onAlert: (alert: Alert) => void): EventSource {
+  return createEventStream({ onAlert });
 }

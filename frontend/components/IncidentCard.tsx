@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ShieldAlert, Clock, CheckCircle, ArrowRight } from "lucide-react";
 import { Incident } from "@/types/api";
+import { formatDateLocal } from "@/lib/time";
 
 export default function IncidentCard({ incident }: { incident: Incident }) {
   const isOpen = incident.status === "open";
@@ -75,7 +76,7 @@ export default function IncidentCard({ incident }: { incident: Incident }) {
           <div>
             <div style={{ color: "#334155" }}>Créé le</div>
             <div className="font-mono-cyber mt-0.5" style={{ color: "#94a3b8" }}>
-              {new Date(incident.created_at).toLocaleDateString()}
+              {formatDateLocal(incident.created_at)}
             </div>
           </div>
           {incident.risk && (

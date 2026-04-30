@@ -1,93 +1,20 @@
 "use client";
-import React from "react";
-import {
-  LineChart, Line, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell,
-} from "recharts";
+import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
+import type { SimpleChartProps } from "./SimpleChartInner";
 
-interface SimpleChartProps {
-  title: string;
-  data: Record<string, unknown>[];
-  type?: "line" | "bar";
-  xKey: string;
-  yKey: string;
-  color?: string;
-  loading?: boolean;
-  height?: number;
-}
-
-const BAR_COLORS = ["#ef4444", "#22d3ee", "#10b981", "#f59e0b", "#3b82f6"];
-
-const tooltipStyle: React.CSSProperties = {
-  backgroundColor: "#111f35",
-  border: "1px solid rgba(34,211,238,0.2)",
-  borderRadius: "10px",
-  fontSize: "12px",
-  color: "#e2e8f0",
-  boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-};
-
-const axisStyle = { fontSize: 11, fill: "#64748b" };
-
-export default function SimpleChart({
-  title, data, type = "line", xKey, yKey,
-  color = "#22d3ee", loading, height = 250,
-}: SimpleChartProps) {
-  if (loading) {
-    return (
+const SimpleChartInner = dynamic(() => import("./SimpleChartInner"), {
+  ssr: false,
+  loading: ({ isLoading }) =>
+    isLoading ? (
       <Card>
-        <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
-        <CardContent>
-          <Skeleton className="h-64 w-full" />
-        </CardContent>
+        <CardHeader><CardTitle>…</CardTitle></CardHeader>
+        <CardContent><Skeleton className="h-64 w-full" /></CardContent>
       </Card>
-    );
-  }
+    ) : null,
+});
 
-  return (
-    <Card>
-      <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={height}>
-          {type === "line" ? (
-            <LineChart data={data}>
-              <defs>
-                <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#22d3ee" />
-                  <stop offset="100%" stopColor="#3b82f6" />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-              <XAxis dataKey={xKey} tick={axisStyle} axisLine={false} tickLine={false} />
-              <YAxis tick={axisStyle} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tooltipStyle} cursor={{ stroke: "rgba(34,211,238,0.15)" }} />
-              <Line
-                type="monotone"
-                dataKey={yKey}
-                stroke="url(#lineGrad)"
-                strokeWidth={2.5}
-                dot={false}
-                activeDot={{ r: 5, fill: "#22d3ee", strokeWidth: 0 }}
-              />
-            </LineChart>
-          ) : (
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-              <XAxis dataKey={xKey} tick={axisStyle} axisLine={false} tickLine={false} />
-              <YAxis tick={axisStyle} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(34,211,238,0.04)" }} />
-              <Bar dataKey={yKey} radius={[5, 5, 0, 0]}>
-                {data.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          )}
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  );
+export default function SimpleChart(props: SimpleChartProps) {
+  return <SimpleChartInner {...props} />;
 }

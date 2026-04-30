@@ -1,14 +1,18 @@
 "use client";
 import React from "react";
 import {
-  fetchHealth, fetchBlockedIps, unblockIpDirect, manualBlockIp, demoReset,
+  unblockIpDirect, manualBlockIp, demoReset,
 } from "@/lib/api";
-import { BlockedIp, HealthStatus } from "@/types/api";
+import { getActorLabel } from "@/lib/actor";
+import { parseApiDate } from "@/lib/time";
+// Types fournis par le RealtimeProvider
 import {
   Server, Database, Brain, MapPin, Shield, ShieldOff, ShieldCheck,
   RefreshCw, Terminal, Plus, Trash2, Clock, Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { useRealtime } from "@/components/layout/RealtimeProvider";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 type StatusLevel = 'ok' | 'warn' | 'error';
 
@@ -71,7 +75,7 @@ function CopyBtn({ text }: { text: string }) {
 
 function timeLeft(expiresAt: string | null): string {
   if (!expiresAt) return "∞";
-  const diff = new Date(expiresAt).getTime() - Date.now();
+  const diff = parseApiDate(expiresAt).getTime() - Date.now();
   if (diff <= 0) return "Expiré";
   const m = Math.floor(diff / 60000);
   const s = Math.floor((diff % 60000) / 1000);
@@ -79,12 +83,17 @@ function timeLeft(expiresAt: string | null): string {
 }
 
 export default function SettingsPage() {
-  const [health, setHealth] = React.useState<HealthStatus | null>(null);
-  const [blocked, setBlocked] = React.useState<BlockedIp[]>([]);
-  const [loadingHealth, setLoadingHealth] = React.useState(true);
-  const [loadingBlocked, setLoadingBlocked] = React.useState(true);
+  const actorLabel = React.useMemo(() => getActorLabel(), []);
+  const {
+    pushToast,
+    refreshPending,
+    health,
+    refreshHealth,
+    blockedIps: blocked,
+    refreshBlocked,
+  } = useRealtime();
+  const loadingHealth = health === null;
   const [unblockBusy, setUnblockBusy] = React.useState<string | null>(null);
-  const [msg, setMsg] = React.useState("");
 
   const [showManualBlock, setShowManualBlock] = React.useState(false);
   const [manualIp, setManualIp] = React.useState("");
@@ -94,57 +103,58 @@ export default function SettingsPage() {
   const [manualResult, setManualResult] = React.useState<{ cmd?: string; msg?: string } | null>(null);
 
   const [resetBusy, setResetBusy] = React.useState(false);
+  const [confirmReset, setConfirmReset] = React.useState(false);
 
-  const loadHealth = async () => {
-    setLoadingHealth(true);
-    try { setHealth(await fetchHealth()); } catch { setHealth(null); }
-    finally { setLoadingHealth(false); }
-  };
-
-  const loadBlocked = async () => {
-    setLoadingBlocked(true);
-    try { setBlocked(await fetchBlockedIps()); } catch { setBlocked([]); }
-    finally { setLoadingBlocked(false); }
-  };
-
-  React.useEffect(() => {
-    loadHealth();
-    loadBlocked();
-    const t = setInterval(loadBlocked, 5000);
-    const onVisible = () => { if (document.visibilityState === "visible") loadBlocked(); };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => { clearInterval(t); document.removeEventListener("visibilitychange", onVisible); };
-  }, []);
+  const loadHealth = refreshHealth;
+  // No local polling: RealtimeProvider drives blockedIps via SSE + 30s safety polling.
 
   const handleUnblock = async (ip: string) => {
     setUnblockBusy(ip);
     try {
       await unblockIpDirect(ip);
-      setMsg(`IP ${ip} débloquée.`);
-      loadBlocked();
-    } catch { setMsg(`Erreur déblocage ${ip}.`); }
-    finally { setUnblockBusy(null); }
+      pushToast(`↩ IP ${ip} débloquée`, "info");
+      // SSE handles the refresh, but trigger one to be reactive immediately.
+      refreshBlocked();
+      refreshPending();
+    } catch (e: unknown) {
+      const m = e instanceof Error ? e.message : "Erreur inconnue";
+      pushToast(`Erreur de déblocage ${ip} : ${m}`, "error");
+    } finally { setUnblockBusy(null); }
   };
 
   const handleManualBlock = async () => {
     if (!manualIp.trim()) return;
     setManualBusy(true); setManualResult(null);
     try {
-      const res = await manualBlockIp({ ip: manualIp, reason: manualReason, ttl_minutes: manualTtl, approved_by: "Analyste SOC" });
+      const res = await manualBlockIp({ ip: manualIp, reason: manualReason, ttl_minutes: manualTtl, approved_by: actorLabel });
       setManualResult({ cmd: res.iptables_command, msg: res.message });
-      setManualIp(""); loadBlocked();
+      pushToast(`✅ IP ${manualIp} bloquée (${manualTtl} min)`, "success");
+      setManualIp(""); refreshBlocked();
+      refreshPending();
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Erreur inconnue";
-      setManualResult({ msg: `Erreur : ${msg}` });
+      const m = e instanceof Error ? e.message : "Erreur inconnue";
+      setManualResult({ msg: `Erreur : ${m}` });
+      pushToast(`Erreur de blocage : ${m}`, "error");
     } finally { setManualBusy(false); }
   };
 
-  const handleReset = async () => {
+  const performReset = async () => {
     setResetBusy(true);
-    try { await demoReset(); setMsg("Base de données réinitialisée."); loadBlocked(); }
-    catch { setMsg("Erreur lors de la réinitialisation."); }
-    finally { setResetBusy(false); }
+    try {
+      await demoReset();
+      pushToast("🗑 Base de données réinitialisée", "info");
+      refreshBlocked();
+      refreshPending();
+    } catch (e: unknown) {
+      const m = e instanceof Error ? e.message : "Erreur inconnue";
+      pushToast(`Erreur de réinitialisation : ${m}`, "error");
+    } finally {
+      setResetBusy(false);
+      setConfirmReset(false);
+    }
   };
+
+  const handleReset = () => setConfirmReset(true);
 
   const modeColor: Record<string, string> = {
     off: "#334155", monitor: "#f59e0b", assist: "#22d3ee", auto: "#ef4444",
@@ -159,12 +169,28 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      {msg && (
-        <div className="text-sm font-medium px-4 py-2 rounded-xl"
-          style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", color: "#10b981" }}>
-          {msg}
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirmReset}
+        title="Réinitialiser la base de données ?"
+        message={(
+          <div className="space-y-2">
+            <p>Cette opération va supprimer définitivement :</p>
+            <ul className="list-disc list-inside text-xs space-y-1" style={{ color: "#94a3b8" }}>
+              <li>Toutes les alertes et incidents enregistrés</li>
+              <li>Toutes les actions défensives (même celles approuvées)</li>
+              <li>L’enrichissement GeoIP et les traces LLM</li>
+              <li>La liste noire d’IP en mémoire</li>
+            </ul>
+            <p className="text-xs pt-1" style={{ color: "#fbbf24" }}>⚠ Opération irréversible.</p>
+          </div>
+        )}
+        confirmLabel="Réinitialiser"
+        cancelLabel="Annuler"
+        danger
+        busy={resetBusy}
+        onConfirm={performReset}
+        onCancel={() => setConfirmReset(false)}
+      />
 
       {/* ── Section 1 : État des services ── */}
       <Card>
@@ -352,11 +378,7 @@ export default function SettingsPage() {
           )}
 
           {/* Table des IPs bloquées */}
-          {loadingBlocked ? (
-            <div className="flex items-center gap-2 text-sm py-4" style={{ color: "#64748b" }}>
-              <Loader2 className="h-4 w-4 animate-spin" /> Chargement…
-            </div>
-          ) : blocked.length === 0 ? (
+          {blocked.length === 0 ? (
             <div className="text-center py-8 text-sm" style={{ color: "#334155" }}>
               <ShieldCheck className="h-8 w-8 mx-auto mb-2" style={{ color: "#10b981" }} />
               Aucune IP bloquée actuellement.

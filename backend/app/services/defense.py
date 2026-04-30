@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, UTC
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 import os
 
 from sqlmodel import select
@@ -189,6 +189,36 @@ def expire_actions(db: Session) -> int:
     return count
 
 
+async def expire_actions_loop(interval_seconds: int = 60) -> None:
+    """Periodic background task: expire defense actions and notify the frontend.
+
+    Replaces the per-request calls to `expire_actions(db)` that used to happen
+    on every `/defense/actions` and `get_active_block_for_ip()` invocation.
+    On the (rare) occurrence of expired items, a `defense.changed` SSE event is
+    broadcast so clients can drop stale entries from their caches immediately.
+    """
+    import asyncio
+    import logging
+
+    from ..db.session import engine
+    from .sse import publish_defense_changed
+
+    logger = logging.getLogger(__name__)
+
+    while True:
+        try:
+            with Session(engine) as db:
+                expired = expire_actions(db)
+            if expired > 0:
+                try:
+                    await publish_defense_changed("expired", {"count": expired})
+                except Exception as exc:
+                    logger.debug("[ExpireLoop] SSE publish failed: %s", exc)
+        except Exception as exc:
+            logger.warning("[ExpireLoop] iteration failed: %s", exc)
+        await asyncio.sleep(max(5, int(interval_seconds)))
+
+
 def get_latest_action_for_alert(db: Session, alert_id: int) -> Optional[DefenseAction]:
     stmt = (
         select(DefenseAction)
@@ -202,10 +232,39 @@ def get_latest_action_for_alert(db: Session, alert_id: int) -> Optional[DefenseA
         return None
 
 
+def get_latest_actions_for_alerts(
+    db: Session, alert_ids: List[int]
+) -> Dict[int, DefenseAction]:
+    """Batch variant: returns {alert_id: latest DefenseAction} in a single query.
+
+    Prevents the classic N+1 pattern when rendering a list of alerts with
+    their attached defense action.
+    """
+    if not alert_ids:
+        return {}
+    try:
+        stmt = (
+            select(DefenseAction)
+            .where(DefenseAction.alert_id.in_(alert_ids))  # type: ignore[attr-defined]
+            .order_by(DefenseAction.created_at.desc())
+        )
+        rows = db.exec(stmt).all()
+    except Exception:
+        return {}
+    # Only keep the most recent action per alert_id (rows are already sorted DESC).
+    latest: Dict[int, DefenseAction] = {}
+    for row in rows:
+        aid = row.alert_id
+        if aid is None or aid in latest:
+            continue
+        latest[aid] = row
+    return latest
+
+
 def get_active_block_for_ip(db: Session, ip: Optional[str]) -> Optional[DefenseAction]:
     if not ip:
         return None
-    expire_actions(db)
+    # Note: expiration is handled by the background `expire_actions_loop`.
     stmt = (
         select(DefenseAction)
         .where(DefenseAction.ip == ip)

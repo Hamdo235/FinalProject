@@ -3,6 +3,36 @@ set -euo pipefail
 
 # Unified backend launcher: ensures Ollama is running and model present,
 # exports LLM env vars, then starts FastAPI (uvicorn).
+#
+# Usage:
+#   ./start.sh           # normal launch (keeps existing DB)
+#   ./start.sh --fresh   # wipe SQLite DB before launching (clean slate)
+#   RESET_DB=1 ./start.sh  # same effect via env var
+
+# 0) Parse args
+RESET_DB="${RESET_DB:-0}"
+for arg in "$@"; do
+  case "$arg" in
+    --fresh|--reset|--clean) RESET_DB=1 ;;
+    -h|--help)
+      echo "Usage: $0 [--fresh]"
+      echo "  --fresh    Wipe data/csllm.db before launch (clean demo state)"
+      exit 0
+      ;;
+  esac
+done
+
+# 0a) Wipe DB if requested
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DB_FILE="$SCRIPT_DIR/data/csllm.db"
+if [ "$RESET_DB" = "1" ]; then
+  if [ -f "$DB_FILE" ]; then
+    echo "[start] --fresh: removing $DB_FILE"
+    rm -f "$DB_FILE" "$DB_FILE-wal" "$DB_FILE-shm"
+  else
+    echo "[start] --fresh: no DB to remove (already clean)"
+  fi
+fi
 
 # 1) Ensure Ollama server is running
 if ! pgrep -fl ollama >/dev/null 2>&1; then

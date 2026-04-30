@@ -6,8 +6,9 @@ import ChatbotDock from "./ChatbotDock";
 import AlertPulse from "./AlertPulse";
 import MainContent from "./MainContent";
 import BlockingNotification from "@/components/BlockingNotification";
-import { createAlertsSSE } from "@/lib/api";
-import { Alert } from "@/types/api";
+import RealtimeProvider from "./RealtimeProvider";
+import ToastStack from "@/components/ToastStack";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const AUTH_KEY  = "cs_auth";
 const USER_KEY  = "cs_username";
@@ -97,7 +98,6 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const router    = useRouter();
   const isLogin   = pathname === "/login";
   const [checked, setChecked] = React.useState(false);
-  const [latestAlert, setLatestAlert] = React.useState<Alert | null>(null);
 
   React.useEffect(() => {
     if (!isLogin && !isAuthenticated()) {
@@ -107,34 +107,26 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     }
   }, [isLogin, router]);
 
-  React.useEffect(() => {
-    if (isLogin || !checked) return;
-    const es = createAlertsSSE((alert) => {
-      if (
-        alert.severity === "high" ||
-        (alert.severity === "medium" && alert.defense?.action === "review")
-      ) {
-        setLatestAlert(alert);
-      }
-    });
-    return () => es.close();
-  }, [isLogin, checked]);
-
   // Login page: full-screen, no shell
   if (isLogin) {
-    return <>{children}</>;
+    return <ErrorBoundary>{children}</ErrorBoundary>;
   }
 
   // Other pages: wait for auth check before rendering shell
   if (!checked) return null;
 
   return (
-    <div className="flex h-screen min-h-0">
-      <Sidebar />
-      <MainContent>{children}</MainContent>
-      <ChatbotDock />
-      <AlertPulse />
-      <BlockingNotification newAlert={latestAlert} />
-    </div>
+    <ErrorBoundary>
+      <RealtimeProvider>
+        <div className="flex h-screen min-h-0">
+          <Sidebar />
+          <MainContent>{children}</MainContent>
+          <ChatbotDock />
+          <AlertPulse />
+          <BlockingNotification />
+          <ToastStack />
+        </div>
+      </RealtimeProvider>
+    </ErrorBoundary>
   );
 }

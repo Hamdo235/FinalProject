@@ -3,6 +3,7 @@ import React from "react";
 import {
   fetchAlerts, fetchIncidents, fetchBlockedIps, fetchModelMetrics, fetchDefenseActions,
 } from "@/lib/api";
+import { formatDateTimeLocal, parseApiDate } from "@/lib/time";
 import { Alert, Incident, BlockedIp, ModelMetrics, DefenseAction } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import SimpleChart from "@/components/SimpleChart";
@@ -17,7 +18,7 @@ function periodMs(p: Period): number {
 }
 
 function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return formatDateTimeLocal(iso);
 }
 
 function sevColor(s: string) {
@@ -137,7 +138,7 @@ export default function ReportsPage() {
   const since = Date.now() - periodMs(period);
 
   const alerts = React.useMemo(
-    () => allAlerts.filter((a) => new Date(a.ts).getTime() >= since),
+    () => allAlerts.filter((a) => parseApiDate(a.ts).getTime() >= since),
     [allAlerts, since]
   );
 

@@ -10,9 +10,12 @@ import {
 } from "lucide-react";
 import {
   demoGenerate, demoReset, fetchAlerts, createIncidentFromAlerts,
-  explainIncident, fetchDefenseActions, createAlertsSSE, approveDefenseAction,
+  explainIncident, fetchDefenseActions,
 } from "@/lib/api";
 import type { Alert, IncidentExplanation, DefenseAction } from "@/types/api";
+import { formatTimeLocal, parseApiDate } from "@/lib/time";
+import { useRealtime } from "@/components/layout/RealtimeProvider";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type StepStatus = "pending" | "active" | "done" | "error";
@@ -53,13 +56,13 @@ const STEPS = [
   {
     icon: Brain,
     label: "Analyse LLM + RAG MITRE ATT&CK",
-    desc: "Ollama llama3.2 corrèle les alertes avec la base MITRE ATT&CK via RAG et explique l'attaque.",
+    desc: "Ollama (LLM local) corrèle les alertes avec la base MITRE ATT&CK via RAG et explique l'attaque.",
     color: "#8b5cf6",
   },
   {
     icon: Shield,
     label: "Neutralisation — Blocage Applicatif",
-    desc: "Approbation automatique du blocage en mode démo. L'IP est ajoutée à la liste noire du middleware. La commande iptables est affichée.",
+    desc: "Décision humaine requise. Approuvez chaque IP depuis la notification en bas à droite ou depuis la page Alertes. La commande iptables est affichée après validation.",
     color: "#10b981",
   },
 ];
@@ -67,7 +70,51 @@ const STEPS = [
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 let logId = 0;
 function mkLog(text: string, type: LogLine["type"] = "info"): LogLine {
-  return { id: logId++, text, type, ts: new Date().toLocaleTimeString("fr-FR") };
+  return { id: logId++, text, type, ts: formatTimeLocal(new Date()) };
+}
+
+function parseIncidentExplanation(explanation: IncidentExplanation): {
+  attackType?: string;
+  mitreTechnique?: string;
+  mitreName?: string;
+  summary?: string;
+  actions: string[];
+} {
+  const parsed = (explanation as any)?.parsed as Record<string, unknown> | undefined;
+  const readFromText = (): Record<string, unknown> | null => {
+    const raw = (explanation.response || "").trim();
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start >= 0 && end > start) {
+        try {
+          return JSON.parse(raw.slice(start, end + 1)) as Record<string, unknown>;
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }
+  };
+
+  const payload = parsed ?? readFromText();
+  if (!payload) {
+    return { summary: explanation.response, actions: [] };
+  }
+  const actionsRaw = payload.recommended_actions;
+  const actions = Array.isArray(actionsRaw)
+    ? actionsRaw.map((a) => String(a)).filter(Boolean)
+    : [];
+  return {
+    attackType: payload.attack_type ? String(payload.attack_type) : undefined,
+    mitreTechnique: payload.mitre_technique ? String(payload.mitre_technique) : undefined,
+    mitreName: payload.mitre_name ? String(payload.mitre_name) : undefined,
+    summary: payload.explanation ? String(payload.explanation) : explanation.response,
+    actions,
+  };
 }
 
 function sevColor(s: string) {
@@ -95,6 +142,10 @@ export default function DemoPage() {
   const [defActions, setDefActions] = React.useState<DefenseAction[]>([]);
   const [toast, setToast]           = React.useState<Alert | null>(null);
   const [done, setDone]             = React.useState(false);
+  const [llmProgress, setLlmProgress] = React.useState<{ active: boolean; elapsed: number }>({ active: false, elapsed: 0 });
+  const [confirmReset, setConfirmReset] = React.useState(false);
+  const [resetBusy, setResetBusy]   = React.useState(false);
+  const { subscribeToAlerts, pushToast, refreshPending } = useRealtime();
   const logsEndRef = React.useRef<HTMLDivElement>(null);
   const abortRef   = React.useRef(false);
   const savedRef   = React.useRef(false);
@@ -133,14 +184,13 @@ export default function DemoPage() {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
 
-  // SSE for live toasts
+  // Subscribe to centralized SSE for live alert injection
   React.useEffect(() => {
-    const es = createAlertsSSE((a) => {
+    return subscribeToAlerts((a) => {
       setAlerts((p) => [a, ...p.filter((x) => x.id !== a.id)]);
       setToast(a);
     });
-    return () => es.close();
-  }, []);
+  }, [subscribeToAlerts]);
 
   // toast auto-dismiss
   React.useEffect(() => {
@@ -231,6 +281,7 @@ export default function DemoPage() {
       await sleep(300);
       addLog("Création d'un incident de corrélation...", "info");
       const alertIds = detected.slice(0, Math.min(12, detected.length)).map((a) => a.id);
+      const detectedIdSet = new Set(detected.map((a) => a.id));
 
       let inc: { id: number; confidence: number } | null = null;
       try {
@@ -240,26 +291,32 @@ export default function DemoPage() {
         addLog("Impossible de créer l'incident — tentative d'explication directe.", "warn");
       }
 
-      addLog("Appel Ollama llama3.2 — récupération du contexte MITRE ATT&CK RAG...", "info");
+      addLog("Appel Ollama (LLM local) — récupération du contexte MITRE ATT&CK RAG...", "info");
       addLog("Génération en cours — le modèle peut prendre 30 à 90 s sur CPU...", "warn");
 
       let expl: IncidentExplanation | null = null;
       if (inc) {
-        // Timer live : affiche chaque 8 s que ça tourne encore
-        let elapsed = 0;
+        const llmStart = Date.now();
+        setLlmProgress({ active: true, elapsed: 0 });
         const llmTimer = setInterval(() => {
-          elapsed += 8;
-          addLog(`Ollama génère... ${elapsed}s écoulées — merci de patienter.`, "info");
-        }, 8_000);
+          const elapsed = Math.floor((Date.now() - llmStart) / 1000);
+          setLlmProgress({ active: true, elapsed });
+          if (elapsed > 0 && elapsed % 8 === 0) {
+            addLog(`Ollama génère... ${elapsed}s écoulées — merci de patienter.`, "info");
+          }
+        }, 1000);
 
         try {
           expl = await explainIncident(inc.id);
           clearInterval(llmTimer);
+          const totalSec = Math.floor((Date.now() - llmStart) / 1000);
+          setLlmProgress({ active: false, elapsed: totalSec });
           setExpl(expl);
-          addLog(`Réponse LLM reçue en ${elapsed + 1}s.`, "success");
+          addLog(`Réponse LLM reçue en ${totalSec}s.`, "success");
           (expl.sources || []).forEach((src) => addLog(`Technique identifiée: ${src}`, "data"));
         } catch (e: unknown) {
           clearInterval(llmTimer);
+          setLlmProgress({ active: false, elapsed: 0 });
           const msg = e instanceof Error ? e.message : "Erreur inconnue";
           addLog(`LLM: ${msg}`, "warn");
         }
@@ -282,9 +339,20 @@ export default function DemoPage() {
 
       let defList: DefenseAction[] = [];
       try {
-        defList = await fetchDefenseActions({ limit: 10 });
+        const all = await fetchDefenseActions({ limit: 200 });
+        defList = all.filter((da) => (da.alert_id != null ? detectedIdSet.has(da.alert_id) : false));
       } catch {
         addLog("Aucune action défensive retournée par le backend.", "warn");
+      }
+
+      if (defList.length === 0) {
+        await sleep(500);
+        try {
+          const allRetry = await fetchDefenseActions({ limit: 200 });
+          defList = allRetry.filter((da) => (da.alert_id != null ? detectedIdSet.has(da.alert_id) : false));
+        } catch {
+          // keep empty list
+        }
       }
 
       setDefActions(defList);
@@ -296,30 +364,16 @@ export default function DemoPage() {
       });
 
       // Auto-approve block_temp actions in demo mode
-      const toBlock = defList.filter(
-        (da) => (da.action === "block_temp" || da.action === "review") && da.ip
-      );
+      const toBlock = defList.filter((da) => da.action === "block_temp" && da.ip);
       if (toBlock.length > 0) {
-        addLog("Mode DÉMO — approbation automatique des blocages en cours...", "warn");
-        await sleep(1500);
-        for (const da of toBlock.slice(0, 3)) {
-          try {
-            const res = await approveDefenseAction(da.id, "Démo automatique");
-            const cmd = res.iptables_command ?? `iptables -A INPUT -s ${da.ip} -j DROP`;
-            addLog(`✅ IP ${da.ip} ajoutée à la liste noire applicative.`, "success");
-            addLog(cmd, "data");
-            await sleep(600);
-          } catch {
-            addLog(`Approbation échouée pour ${da.ip} — mode assist requis.`, "warn");
-          }
-        }
-        addLog("Blocages actifs — middleware FastAPI retournera HTTP 403 sur ces IPs.", "success");
+        addLog(`Validation humaine requise — ${toBlock.length} IP(s) en attente d'approbation.`, "warn");
+        addLog("Approuvez chaque IP depuis la notification ou la page Alertes.", "info");
       } else {
         addLog("Aucun blocage à approuver sur ce run.", "info");
       }
 
       addLog(`${defList.length} recommandation(s) générée(s).`, "success");
-      setStep(4, { status: "done", result: `${toBlock.length} IP(s) neutralisée(s)`, data: defList });
+      setStep(4, { status: "done", result: toBlock.length > 0 ? `${toBlock.length} IP(s) — décision requise` : `${defList.length} recommandation(s)`, data: defList });
 
       addLog("══════ Pipeline complet — neutralisation terminée ══════", "success");
       setDone(true);
@@ -334,9 +388,16 @@ export default function DemoPage() {
     }
   };
 
-  const handleReset = async () => {
+  const performReset = async () => {
+    setResetBusy(true);
     abortRef.current = true;
-    try { await demoReset(); } catch {}
+    try {
+      await demoReset();
+      pushToast("🗑 Démonstration réinitialisée — base de données vidée", "info");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erreur inconnue";
+      pushToast(`Erreur de réinitialisation : ${msg}`, "error");
+    }
     sessionStorage.removeItem(DEMO_STATE_KEY);
     savedRef.current = false;
     setRunning(false);
@@ -346,6 +407,19 @@ export default function DemoPage() {
     setExpl(null);
     setDefActions([]);
     setSteps(STEPS.map(() => ({ status: "pending" })));
+    setLlmProgress({ active: false, elapsed: 0 });
+    refreshPending();
+    setResetBusy(false);
+    setConfirmReset(false);
+  };
+
+  const handleReset = () => {
+    if (logs.length === 0 && alerts.length === 0 && !done) {
+      // Nothing meaningful to reset — skip confirmation
+      void performReset();
+      return;
+    }
+    setConfirmReset(true);
   };
 
   const completedCount = steps.filter((s) => s.status === "done").length;
@@ -358,7 +432,7 @@ export default function DemoPage() {
       return { time: s.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), startMs: s.getTime(), count: 0 };
     });
     for (const a of alerts) {
-      const t = new Date(a.ts).getTime(); if (!Number.isFinite(t)) continue;
+      const t = parseApiDate(a.ts).getTime(); if (!Number.isFinite(t)) continue;
       const d = Math.floor((t - buckets[0].startMs) / 1800000);
       if (d >= 0 && d < buckets.length) buckets[d].count++;
     }
@@ -590,87 +664,169 @@ export default function DemoPage() {
         </div>
       </div>
 
-      {/* ── LLM Explanation panel ──────────────────────────────────────────── */}
+      {/* ── LLM live progress (visible during generation) ────────────── */}
+      {llmProgress.active && (
+        <div
+          className="rounded-2xl p-5 animate-fade-in"
+          style={{ background: "#0c1628", border: "1px solid rgba(139,92,246,0.3)", boxShadow: "0 0 24px rgba(139,92,246,0.08)" }}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.3)" }}
+            >
+              <Brain className="h-5 w-5 animate-pulse" style={{ color: "#a78bfa" }} />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold" style={{ color: "#e2e8f0" }}>
+                  Ollama génère l’analyse MITRE ATT&CK
+                </span>
+                <span className="flex gap-0.5">
+                  <span className="animate-blink" style={{ animationDelay: "0ms", color: "#a78bfa" }}>•</span>
+                  <span className="animate-blink" style={{ animationDelay: "200ms", color: "#a78bfa" }}>•</span>
+                  <span className="animate-blink" style={{ animationDelay: "400ms", color: "#a78bfa" }}>•</span>
+                </span>
+              </div>
+              <div className="text-xs mt-0.5 font-mono-cyber" style={{ color: "#64748b" }}>
+                {llmProgress.elapsed}s écoulées — le modèle local prend généralement 30 à 90 s sur CPU
+              </div>
+            </div>
+            <div
+              className="px-3 py-1 rounded-full text-xs font-bold font-mono-cyber"
+              style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.3)", color: "#a78bfa" }}
+            >
+              {llmProgress.elapsed < 30 ? "début" : llmProgress.elapsed < 60 ? "en cours" : llmProgress.elapsed < 90 ? "presque" : "étendu"}
+            </div>
+          </div>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(139,92,246,0.08)" }}>
+            <div
+              className="h-full rounded-full transition-all duration-1000"
+              style={{
+                width: `${Math.min(95, (llmProgress.elapsed / 90) * 100)}%`,
+                background: "linear-gradient(90deg, #8b5cf6, #a78bfa, #22d3ee)",
+                boxShadow: "0 0 12px rgba(139,92,246,0.5)",
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── LLM Explanation panel ───────────────────────────────────── */}
       {explanation && (
         <div
           className="rounded-2xl p-6 animate-fade-in"
           style={{ background: "#0c1628", border: "1px solid rgba(139,92,246,0.25)" }}
         >
-          {/* Header */}
-          <div className="flex items-start justify-between gap-4 mb-5">
-            <div className="flex items-center gap-3">
-              <div
-                className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)" }}
-              >
-                <Brain className="h-5 w-5" style={{ color: "#a78bfa" }} />
-              </div>
-              <div>
-                <div className="font-bold" style={{ color: "#e2e8f0" }}>
-                  Analyse LLM — Incident #{explanation.incident_id}
-                </div>
-                <div className="text-xs mt-0.5" style={{ color: "#64748b" }}>
-                  Corrélation MITRE ATT&CK via RAG — Ollama llama3.2
-                </div>
-              </div>
-            </div>
-            {/* Confidence badge */}
-            <div
-              className="px-3 py-1 rounded-full text-xs font-bold font-mono-cyber shrink-0"
-              style={{
-                background: explanation.confidence > 0.7 ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
-                border: `1px solid ${explanation.confidence > 0.7 ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"}`,
-                color: explanation.confidence > 0.7 ? "#34d399" : "#fbbf24",
-              }}
-            >
-              Confiance {(explanation.confidence * 100).toFixed(0)}%
-            </div>
-          </div>
-
-          {/* MITRE techniques badges */}
-          {explanation.sources && explanation.sources.length > 0 && (
-            <div className="mb-4">
-              <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: "#64748b" }}>
-                Techniques MITRE ATT&CK identifiées
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {explanation.sources.map((src, i) => (
-                  <span
-                    key={i}
-                    className="px-2.5 py-1 rounded-lg text-xs font-mono-cyber font-semibold"
+          {(() => {
+            const view = parseIncidentExplanation(explanation);
+            return (
+              <>
+                {/* Header */}
+                <div className="flex items-start justify-between gap-4 mb-5">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)" }}
+                    >
+                      <Brain className="h-5 w-5" style={{ color: "#a78bfa" }} />
+                    </div>
+                    <div>
+                      <div className="font-bold" style={{ color: "#e2e8f0" }}>
+                        Analyse LLM — Incident #{explanation.incident_id}
+                      </div>
+                      <div className="text-xs mt-0.5" style={{ color: "#64748b" }}>
+                        Corrélation MITRE ATT&CK via RAG — Ollama (LLM local)
+                      </div>
+                    </div>
+                  </div>
+                  {/* Confidence badge */}
+                  <div
+                    className="px-3 py-1 rounded-full text-xs font-bold font-mono-cyber shrink-0"
                     style={{
-                      background: "rgba(139,92,246,0.1)",
-                      border: "1px solid rgba(139,92,246,0.3)",
-                      color: "#a78bfa",
+                      background: explanation.confidence > 0.7 ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
+                      border: `1px solid ${explanation.confidence > 0.7 ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"}`,
+                      color: explanation.confidence > 0.7 ? "#34d399" : "#fbbf24",
                     }}
                   >
-                    {src}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+                    Confiance {(explanation.confidence * 100).toFixed(0)}%
+                  </div>
+                </div>
 
-          {/* LLM response text */}
-          <div
-            className="rounded-xl p-4 font-mono-cyber text-xs leading-relaxed whitespace-pre-wrap overflow-auto"
-            style={{
-              background: "#060c15",
-              border: "1px solid rgba(139,92,246,0.12)",
-              color: "#94a3b8",
-              maxHeight: "260px",
-            }}
-          >
-            {explanation.response}
-          </div>
+                {/* MITRE techniques badges */}
+                {explanation.sources && explanation.sources.length > 0 && (
+                  <div className="mb-4">
+                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: "#64748b" }}>
+                      Techniques MITRE ATT&CK identifiées
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {explanation.sources.map((src, i) => (
+                        <span
+                          key={i}
+                          className="px-2.5 py-1 rounded-lg text-xs font-mono-cyber font-semibold"
+                          style={{
+                            background: "rgba(139,92,246,0.1)",
+                            border: "1px solid rgba(139,92,246,0.3)",
+                            color: "#a78bfa",
+                          }}
+                        >
+                          {src}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-          {/* Footer note */}
-          <div className="flex items-center gap-1.5 mt-3">
-            <AlertTriangle className="h-3 w-3 shrink-0" style={{ color: "#f59e0b" }} />
-            <p className="text-xs" style={{ color: "#64748b" }}>
-              L&apos;analyste reste décisionnaire — aucune action n&apos;est exécutée automatiquement.
-            </p>
-          </div>
+                {/* LLM response text */}
+                <div
+                  className="rounded-xl p-4 space-y-3"
+                  style={{
+                    background: "rgba(139,92,246,0.06)",
+                    border: "1px solid rgba(139,92,246,0.2)",
+                    color: "#cbd5e1",
+                  }}
+                >
+                  {(view.attackType || view.mitreTechnique) && (
+                    <div className="flex flex-wrap gap-2">
+                      {view.attackType && (
+                        <span className="px-2 py-1 rounded-lg text-xs font-semibold" style={{ background: "rgba(239,68,68,0.12)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.3)" }}>
+                          {view.attackType}
+                        </span>
+                      )}
+                      {view.mitreTechnique && (
+                        <span className="px-2 py-1 rounded-lg text-xs font-mono-cyber" style={{ background: "rgba(34,211,238,0.1)", color: "#67e8f9", border: "1px solid rgba(34,211,238,0.25)" }}>
+                          {view.mitreTechnique}{view.mitreName ? ` — ${view.mitreName}` : ""}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {view.summary && (
+                    <p className="text-sm leading-relaxed" style={{ color: "#dbeafe" }}>
+                      {view.summary}
+                    </p>
+                  )}
+                  {view.actions.length > 0 && (
+                    <ul className="space-y-1.5 text-sm">
+                      {view.actions.map((a, idx) => (
+                        <li key={`${a}-${idx}`} className="flex items-start gap-2" style={{ color: "#cbd5e1" }}>
+                          <span style={{ color: "#22d3ee" }}>•</span>
+                          <span>{a}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Footer note */}
+                <div className="flex items-center gap-1.5 mt-3">
+                  <AlertTriangle className="h-3 w-3 shrink-0" style={{ color: "#f59e0b" }} />
+                  <p className="text-xs" style={{ color: "#64748b" }}>
+                    L&apos;analyste reste décisionnaire — aucune action n&apos;est exécutée automatiquement.
+                  </p>
+                </div>
+              </>
+            );
+          })()}
         </div>
       )}
 
@@ -792,7 +948,7 @@ export default function DemoPage() {
                     </td>
                     <td style={{ color: "#64748b" }}>{a.source}</td>
                     <td className="font-mono-cyber text-xs" style={{ color: "#334155" }}>
-                      {new Date(a.ts).toLocaleTimeString("fr-FR")}
+                      {formatTimeLocal(a.ts)}
                     </td>
                   </tr>
                 ))}
@@ -819,10 +975,33 @@ export default function DemoPage() {
           </div>
         </div>
         <div className="grid grid-rows-2 gap-5">
-          <SimpleChart title="Alertes dans le temps" data={timelineData} type="line" xKey="time" yKey="count" loading={running} />
-          <SimpleChart title="Répartition par sévérité" data={severityData} type="bar" xKey="name" yKey="value" loading={running} />
+          <SimpleChart title="Alertes dans le temps" data={timelineData} type="line" xKey="time" yKey="count" />
+          <SimpleChart title="Répartition par sévérité" data={severityData} type="bar" xKey="name" yKey="value" />
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmReset}
+        title="Réinitialiser la démonstration ?"
+        message={(
+          <div className="space-y-2">
+            <p>Cette action va :</p>
+            <ul className="list-disc list-inside text-xs space-y-1" style={{ color: "#94a3b8" }}>
+              <li>Supprimer toutes les alertes, incidents et traces LLM</li>
+              <li>Révoquer toutes les actions défensives en cours</li>
+              <li>Vider la liste noire en mémoire</li>
+              <li>Effacer l’historique du pipeline de démo</li>
+            </ul>
+            <p className="text-xs pt-1" style={{ color: "#fbbf24" }}>⚠ Cette opération est irréversible.</p>
+          </div>
+        )}
+        confirmLabel="Réinitialiser"
+        cancelLabel="Annuler"
+        danger
+        busy={resetBusy}
+        onConfirm={performReset}
+        onCancel={() => setConfirmReset(false)}
+      />
 
       {/* ── Pedagogical footer ─────────────────────────────────────────────── */}
       <div

@@ -2,11 +2,12 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createAlertsSSE } from "@/lib/api";
+import { useRealtime } from "@/components/layout/RealtimeProvider";
 import { AlertTriangle, MapPin, MessageCircle, ExternalLink, X } from "lucide-react";
 
 export default function AlertPulse() {
   const pathname = usePathname();
+  const { subscribeToAlerts } = useRealtime();
   const [toast, setToast] = React.useState<{
     id: number;
     severity?: string;
@@ -15,11 +16,10 @@ export default function AlertPulse() {
   } | null>(null);
 
   React.useEffect(() => {
-    const es = createAlertsSSE((newAlert) => {
+    return subscribeToAlerts((newAlert) => {
       setToast({ id: newAlert.id, severity: newAlert.severity, ip: newAlert.ip, ts: newAlert.ts });
     });
-    return () => es.close();
-  }, []);
+  }, [subscribeToAlerts]);
 
   React.useEffect(() => {
     if (!toast) return;

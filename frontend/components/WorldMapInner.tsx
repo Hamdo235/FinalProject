@@ -151,8 +151,8 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
           style={{ background: "rgba(8,15,26,0.97)" }}
         >
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <p className="text-xs font-mono-cyber" style={{ color: "#475569" }}>GeoLite2 non configuré</p>
-          <p className="text-[10px] font-mono-cyber" style={{ color: "#334155" }}>Définir GEOLITE2_CITY_DB dans .env pour activer la carte</p>
+          <p className="text-xs font-mono-cyber" style={{ color: "#475569" }}>Carte GeoIP en attente de données</p>
+          <p className="text-[10px] font-mono-cyber" style={{ color: "#334155" }}>Lancez la démo ou générez des alertes pour afficher les points</p>
         </div>
       )}
       {/* Plain div — Leaflet initializes directly on this node */}

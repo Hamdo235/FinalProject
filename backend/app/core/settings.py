@@ -17,11 +17,13 @@ class Settings(BaseModel):
     app_name: str = "CyberSentinel-LLM"
     debug: bool = _env_bool("DEBUG", True)
     database_url: str = f"sqlite:///{DB_DIR / 'csllm.db'}"
+    admin_token: str = os.getenv("ADMIN_TOKEN", "").strip()
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     ollama_url: str = os.getenv("OLLAMA_URL", os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
     allowed_origins: str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
     rate_limit_per_minute: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
     max_body_size_bytes: int = int(os.getenv("MAX_BODY_SIZE_BYTES", "1048576"))  # 1 MiB par défaut
+    max_audio_size_bytes: int = int(os.getenv("MAX_AUDIO_SIZE_BYTES", "5242880"))  # 5 MiB
     ollama_timeout_seconds: float = float(os.getenv("OLLAMA_TIMEOUT", "30"))
     rag_enabled: bool = _env_bool("RAG_ENABLED", True)
     rag_init_mode: str = os.getenv("RAG_INIT_MODE", "lazy")  # off | background | lazy

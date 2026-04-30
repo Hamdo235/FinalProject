@@ -2,7 +2,7 @@ import pytest
 from fastapi import HTTPException
 from sqlmodel import Session
 from app.db.session import engine
-from app.endpoints.llm_chat import chat, ChatRequest
+from app.routers.llm_chat import chat, ChatRequest
 
 @pytest.mark.anyio
 async def test_llm_chat_non_stream():

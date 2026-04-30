@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlmodel import delete
 from ..db.session import get_session
@@ -9,13 +9,28 @@ from ..models.ip_enrichment import IPEnrichment
 from ..models.defense_action import DefenseAction
 from datetime import datetime, UTC
 import json
+import logging
 from ..services.geoip import lookup_ip
 import asyncio
 from ..services.sse import publish_alert_created
 from ..services.defense import decide_defense_action, create_defense_action, action_to_dict
 from ..services import ip_blacklist
+from ..core.settings import settings
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/demo", tags=["demo"])
+
+
+def _require_admin_token(request: Request | None) -> None:
+    """Require X-ADMIN-TOKEN header if ADMIN_TOKEN is configured server-side."""
+    expected = settings.admin_token
+    if not expected:
+        return  # Dev mode: no token required
+    provided = request.headers.get("X-ADMIN-TOKEN") if request else None
+    if provided != expected:
+        client_ip = request.client.host if request and request.client else "unknown"
+        logger.warning("[DemoAuth] Unauthorized demo action from ip=%s", client_ip)
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 def _alert_payload(a: Alert) -> dict:
@@ -31,7 +46,8 @@ _DEMO_GEOIP_FALLBACK = {
 }
 
 @router.post("/generate")
-async def demo_generate(db: Session = Depends(get_session)):
+async def demo_generate(db: Session = Depends(get_session), request: Request = None):
+    _require_admin_token(request)
     # Generate a few SSH logs as alerts
     now = datetime.now(UTC).isoformat()
     samples = [
@@ -78,8 +94,8 @@ async def demo_generate(db: Session = Depends(get_session)):
                 payload = _alert_payload(a)
                 payload["defense"] = action_map.get(a.id)
                 asyncio.create_task(publish_alert_created(payload))
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("[Demo] SSE publish failed: %s", exc)
     # Best-effort GeoIP enrichment for the IPs we just inserted
     try:
         ips = {rec.get("ip") for rec in samples if rec.get("ip")}
@@ -102,19 +118,20 @@ async def demo_generate(db: Session = Depends(get_session)):
             else:
                 db.add(IPEnrichment(ip=ip, country=country, lat=lat, lon=lon))
         db.commit()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("[Demo] GeoIP enrichment failed: %s", exc)
     return {"created": created}
 
 @router.post("/reset")
-def demo_reset(db: Session = Depends(get_session)):
+def demo_reset(db: Session = Depends(get_session), request: Request = None):
+    _require_admin_token(request)
     # wipe incidents and alerts and llm traces and enrichment
     db.exec(delete(LLMTrace))
     db.exec(delete(Incident))
     try:
         db.exec(delete(DefenseAction))
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("[Demo] DefenseAction delete failed: %s", exc)
     db.exec(delete(Alert))
     db.exec(delete(IPEnrichment))
     db.commit()

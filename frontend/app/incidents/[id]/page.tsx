@@ -11,6 +11,52 @@ import {
   Brain, MapPin, MessageCircle, BellRing, ChevronRight,
   Loader2,
 } from "lucide-react";
+import { formatDateTimeLocal } from "@/lib/time";
+
+function parseLlmView(llm: { response: string; confidence: number; parsed?: Record<string, unknown> }) {
+  const fromText = (): Record<string, unknown> | null => {
+    const raw = (llm.response || "").trim();
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start >= 0 && end > start) {
+        try {
+          return JSON.parse(raw.slice(start, end + 1)) as Record<string, unknown>;
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }
+  };
+
+  const payload = llm.parsed ?? fromText();
+  if (!payload) {
+    return {
+      attackType: undefined,
+      mitreTechnique: undefined,
+      mitreName: undefined,
+      summary: llm.response,
+      actions: [] as string[],
+    };
+  }
+
+  const actionsRaw = payload.recommended_actions;
+  const actions = Array.isArray(actionsRaw)
+    ? actionsRaw.map((x) => String(x)).filter(Boolean)
+    : [];
+
+  return {
+    attackType: payload.attack_type ? String(payload.attack_type) : undefined,
+    mitreTechnique: payload.mitre_technique ? String(payload.mitre_technique) : undefined,
+    mitreName: payload.mitre_name ? String(payload.mitre_name) : undefined,
+    summary: payload.explanation ? String(payload.explanation) : llm.response,
+    actions,
+  };
+}
 
 const TIMELINE_STEPS = [
   { label: "Détection",      color: "#22d3ee" },
@@ -43,7 +89,7 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
   const { id: idStr } = use(params);
   const id = Number(idStr);
   const [incident, setIncident]     = useState<Incident | null>(null);
-  const [llm, setLlm]               = useState<{ response: string; confidence: number } | null>(null);
+  const [llm, setLlm]               = useState<{ response: string; confidence: number; parsed?: Record<string, unknown> } | null>(null);
   const [loading, setLoading]       = useState(false);
   const [llmElapsed, setLlmElapsed] = useState(0);
   const [msg, setMsg]               = useState("");
@@ -65,7 +111,7 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
     const timer = setInterval(() => setLlmElapsed((s) => s + 1), 1_000);
     try {
       const res = await explainIncident(id);
-      setLlm({ response: res.response, confidence: res.confidence });
+      setLlm({ response: res.response, confidence: res.confidence, parsed: res.parsed });
       fetchIncident(id).then(setIncident).catch(() => {});
       setMsg("Explication générée avec succès.");
     } catch (e: unknown) {
@@ -135,7 +181,7 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
                       Incident #{incident.id}
                     </h1>
                     <div className="text-sm mt-0.5 font-mono-cyber" style={{ color: "#64748b" }}>
-                      {new Date(incident.created_at).toLocaleString()}
+                      {formatDateTimeLocal(incident.created_at)}
                     </div>
                   </div>
                 </div>
@@ -371,10 +417,14 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
                 <div
                   className="rounded-2xl p-5 space-y-4"
                   style={{
-                    background: "#060c15",
-                    border: "1px solid rgba(34,211,238,0.1)",
+                    background: "rgba(34,211,238,0.06)",
+                    border: "1px solid rgba(34,211,238,0.18)",
                   }}
                 >
+                  {(() => {
+                    const view = parseLlmView(llm);
+                    return (
+                      <>
                   <div className="flex items-center justify-between">
                     <div
                       className="text-[10px] uppercase tracking-widest font-bold font-mono-cyber"
@@ -393,12 +443,36 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
                       confiance {(llm.confidence * 100).toFixed(1)}%
                     </span>
                   </div>
-                  <div
-                    className="text-sm leading-relaxed whitespace-pre-wrap"
-                    style={{ color: "#94a3b8" }}
-                  >
-                    {llm.response}
+                  {(view.attackType || view.mitreTechnique) && (
+                    <div className="flex flex-wrap gap-2">
+                      {view.attackType && (
+                        <span className="px-2 py-1 rounded-lg text-xs font-semibold" style={{ background: "rgba(239,68,68,0.12)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.3)" }}>
+                          {view.attackType}
+                        </span>
+                      )}
+                      {view.mitreTechnique && (
+                        <span className="px-2 py-1 rounded-lg text-xs font-mono-cyber" style={{ background: "rgba(139,92,246,0.12)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }}>
+                          {view.mitreTechnique}{view.mitreName ? ` — ${view.mitreName}` : ""}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div className="text-sm leading-relaxed" style={{ color: "#cbd5e1" }}>
+                    {view.summary}
                   </div>
+                  {view.actions.length > 0 && (
+                    <ul className="space-y-1.5 text-sm">
+                      {view.actions.map((action, idx) => (
+                        <li key={`${action}-${idx}`} className="flex items-start gap-2" style={{ color: "#cbd5e1" }}>
+                          <span style={{ color: "#22d3ee" }}>•</span>
+                          <span>{action}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </CardContent>

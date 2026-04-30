@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { getUsername, getUserProfile, logout, type StoredUser } from "@/components/layout/AuthProvider";
+import { useRealtime } from "@/components/layout/RealtimeProvider";
 
 const items = [
   { href: "/",          label: "Dashboard",  icon: LayoutDashboard, tag: null },
@@ -23,6 +24,7 @@ const items = [
 export default function Sidebar() {
   const pathname  = usePathname();
   const router    = useRouter();
+  const { sseConnected, healthOk, health, pendingCount } = useRealtime();
   const [username, setUsername]     = React.useState("");
   const [profile,  setProfile]      = React.useState<StoredUser | null>(null);
   const [profileOpen, setProfileOpen] = React.useState(false);
@@ -89,6 +91,7 @@ export default function Sidebar() {
         {items.map(({ href, label, icon: Icon, tag }) => {
           const active =
             pathname === href || (href !== "/" && pathname?.startsWith(href));
+          const showPendingBadge = href === "/alerts" && pendingCount > 0;
           return (
             <Link
               key={href}
@@ -114,7 +117,22 @@ export default function Sidebar() {
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="font-medium flex-1 truncate">{label}</span>
-              {tag && (
+              {showPendingBadge && (
+                <span
+                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full font-mono-cyber animate-pulse-badge"
+                  style={{
+                    background: "rgba(239,68,68,0.15)",
+                    color: "#ef4444",
+                    border: "1px solid rgba(239,68,68,0.4)",
+                    minWidth: 18,
+                    textAlign: "center",
+                  }}
+                  title={`${pendingCount} action(s) en attente d’approbation`}
+                >
+                  {pendingCount}
+                </span>
+              )}
+              {tag && !showPendingBadge && (
                 <span
                   className="text-[9px] font-bold px-1.5 py-0.5 rounded font-mono-cyber"
                   style={{
@@ -139,16 +157,64 @@ export default function Sidebar() {
 
       {/* ── User profile card ── */}
       <div className="p-3 shrink-0 space-y-2">
-        {/* System status */}
-        <div className="flex items-center gap-2 px-1 pb-1">
+        {/* System status — dynamic */}
+        {(() => {
+          // Three states: ok / degraded / unreachable
+          const reachable = health !== null;
+          const isDegraded = reachable && !healthOk;
+          const dotColor = healthOk ? "#10b981" : isDegraded ? "#f59e0b" : "#ef4444";
+          const bgColor = healthOk
+            ? "rgba(16,185,129,0.05)"
+            : isDegraded
+              ? "rgba(245,158,11,0.05)"
+              : "rgba(239,68,68,0.05)";
+          const borderColor = healthOk
+            ? "rgba(16,185,129,0.15)"
+            : isDegraded
+              ? "rgba(245,158,11,0.18)"
+              : "rgba(239,68,68,0.18)";
+          const label = healthOk
+            ? "Backend connecté"
+            : isDegraded
+              ? "Backend dégradé"
+              : "Backend injoignable";
+          const tooltip = healthOk
+            ? `Backend OK${sseConnected ? " — SSE actif" : " — SSE inactif"}`
+            : isDegraded
+              ? `Backend joignable mais dégradé : ${[
+                  health?.ollama && !health.ollama.startsWith("ok") ? "Ollama" : null,
+                  health?.rag_status && health.rag_status !== "ready" ? "RAG" : null,
+                  health?.db && !health.db.startsWith("ok") ? "DB" : null,
+                ]
+                  .filter(Boolean)
+                  .join(", ") || "service inconnu"}`
+              : "Backend injoignable — vérifiez que l'API tourne sur le port 8000";
+          return (
+        <div
+          className="flex items-center gap-2 px-2 py-1.5 rounded-lg"
+          style={{ background: bgColor, border: `1px solid ${borderColor}` }}
+          title={tooltip}
+        >
           <span
-            className="h-1.5 w-1.5 rounded-full animate-pulse-badge"
-            style={{ background: "#10b981" }}
+            className={"h-2 w-2 rounded-full " + (reachable ? "animate-pulse-badge" : "")}
+            style={{ background: dotColor }}
           />
-          <span className="text-[10px] font-semibold" style={{ color: "#334155" }}>
-            Système opérationnel
+          <span
+            className="text-[10px] font-semibold flex-1"
+            style={{ color: dotColor }}
+          >
+            {label}
+          </span>
+          <span
+            className="text-[9px] font-mono-cyber"
+            style={{ color: sseConnected ? "#22d3ee" : "#334155" }}
+            title={sseConnected ? "Flux SSE actif" : "SSE inactif"}
+          >
+            {sseConnected ? "● SSE" : "○ SSE"}
           </span>
         </div>
+          );
+        })()}
 
         {/* ── Profile button ── */}
         <button

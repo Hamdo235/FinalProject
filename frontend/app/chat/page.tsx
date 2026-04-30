@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { fetchAlerts } from "@/lib/api";
 import type { Alert } from "@/types/api";
+import { formatDateTimeLocal, parseApiDate, formatRelativeLocal } from "@/lib/time";
 
 // Marker injecté dans le contenu pour détecter les cartes Vue d'ensemble
 const OVERVIEW_MARKER = "__CS_OVERVIEW__";
@@ -65,7 +66,7 @@ function OverviewCards({ raw }: { raw: string }) {
             <span style={{ color: "#64748b" }}>Règle: <span style={{ color: "#94a3b8" }}>{a.rule || a.source || "N/A"}</span></span>
             <span style={{ color: "#64748b" }}>Statut: <span style={{ color: "#94a3b8" }}>{a.status}</span></span>
             <span style={{ color: "#64748b" }}>
-              Détectée: <span style={{ color: "#94a3b8" }}>{new Date(a.ts).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })}</span>
+              Détectée: <span style={{ color: "#94a3b8" }}>{formatDateTimeLocal(a.ts)}</span>
             </span>
           </div>
         </div>
@@ -239,14 +240,7 @@ export default function ChatPage() {
   React.useEffect(() => () => { stopSpeaking(); }, [stopSpeaking]);
 
   const formatRelative = (iso: string) => {
-    const diff = Math.max(0, Date.now() - new Date(iso).getTime());
-    const s = Math.floor(diff / 1000);
-    if (s < 10) return "à l'instant";
-    if (s < 60) return `il y a ${s}s`;
-    const m = Math.floor(s / 60);
-    if (m < 60) return `il y a ${m} min`;
-    const h = Math.floor(m / 60);
-    return h < 24 ? `il y a ${h} h` : `il y a ${Math.floor(h / 24)} j`;
+    return formatRelativeLocal(iso);
   };
 
   const urlRegex = /(https?:\/\/[^\s)]+)|(www\.[^\s)]+)/gi;
@@ -757,7 +751,7 @@ export default function ChatPage() {
       const all = await fetchAlerts();
       const top5 = all
         .slice()
-        .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime())
+        .sort((a, b) => parseApiDate(b.ts).getTime() - parseApiDate(a.ts).getTime())
         .slice(0, 5);
 
       // 2. Persister le message utilisateur

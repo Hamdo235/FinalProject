@@ -12,10 +12,15 @@ import SimpleChart from "@/components/SimpleChart";
 import WorldMap from "@/components/WorldMap";
 import {
   fetchAlerts, fetchIncidents, fetchModelMetrics,
-  fetchDefenseActions, createAlertsSSE,
+  fetchDefenseActions,
 } from "@/lib/api";
+import { formatTimeLocal, parseApiDate } from "@/lib/time";
 import { Alert, Incident, ModelMetrics, DefenseAction } from "@/types/api";
 import Link from "next/link";
+import { useRealtime } from "@/components/layout/RealtimeProvider";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
+import { Play } from "lucide-react";
 
 const SEV_BADGE: Record<string, "destructive" | "warning" | "success"> = {
   high: "destructive", medium: "warning", low: "success",
@@ -41,15 +46,22 @@ export default function DashboardPage() {
     })();
   }, []);
 
+  const { subscribeToAlerts, sseConnected } = useRealtime();
   React.useEffect(() => {
-    const es = createAlertsSSE((a) => { setAlerts((p) => [a, ...p.filter((x) => x.id !== a.id)]); setLive(true); });
-    return () => es.close();
-  }, []);
+    return subscribeToAlerts((a) => {
+      setAlerts((p) => [a, ...p.filter((x) => x.id !== a.id)]);
+      setLive(true);
+    });
+  }, [subscribeToAlerts]);
+
+  React.useEffect(() => {
+    if (sseConnected) setLive(true);
+  }, [sseConnected]);
 
   const alerts24h = React.useMemo(() => {
     const from = Date.now() - 86400000;
     return alerts.filter((a) => {
-      const t = new Date(a.ts).getTime();
+      const t = parseApiDate(a.ts).getTime();
       return Number.isFinite(t) && t >= from;
     });
   }, [alerts]);
@@ -76,7 +88,7 @@ export default function DashboardPage() {
       };
     });
     for (const a of alerts24h) {
-      const t = new Date(a.ts).getTime();
+      const t = parseApiDate(a.ts).getTime();
       if (!Number.isFinite(t)) continue;
       const d = Math.floor((t - buckets[0].startMs) / 3600000);
       if (d >= 0 && d < buckets.length) buckets[d].count++;
@@ -93,13 +105,13 @@ export default function DashboardPage() {
   const activity = React.useMemo(() => {
     const a = alerts.slice(0, 10).map((al) => ({
       type: "alert", id: al.id,
-      ts: new Date(al.ts).getTime(),
+      ts: parseApiDate(al.ts).getTime(),
       label: `Alerte ${al.severity} — ${al.source}${al.ip ? ` — ${al.ip}` : ""}`,
       severity: al.severity,
     }));
     const i = incidents.slice(0, 10).map((inc) => ({
       type: "incident", id: inc.id,
-      ts: new Date(inc.created_at).getTime(),
+      ts: parseApiDate(inc.created_at).getTime(),
       label: `Incident #${inc.id} — ${inc.status} — risque ${inc.risk || "n/a"}`,
       severity: inc.risk || "low",
     }));
@@ -136,6 +148,39 @@ export default function DashboardPage() {
           </span>
         )}
       </div>
+
+      {/* ── First-time CTA ── */}
+      {!loading && alerts.length === 0 && !error && (
+        <div
+          className="rounded-2xl p-5 flex items-center gap-4 animate-fade-in"
+          style={{
+            background: "linear-gradient(135deg, rgba(34,211,238,0.06), rgba(139,92,246,0.06))",
+            border: "1px solid rgba(34,211,238,0.2)",
+          }}
+        >
+          <div
+            className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: "rgba(34,211,238,0.1)", border: "1px solid rgba(34,211,238,0.3)" }}
+          >
+            <Play className="h-5 w-5" style={{ color: "#22d3ee" }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-bold" style={{ color: "#e2e8f0" }}>
+              Premier démarrage ?
+            </div>
+            <p className="text-xs mt-0.5" style={{ color: "#94a3b8" }}>
+              Aucune donnée n’est encore enregistrée. Lancez le pipeline de démonstration pour voir les alertes,
+              la détection ML, l’enrichissement GeoIP et l’analyse LLM en action.
+            </p>
+          </div>
+          <Link href="/demo" className="shrink-0">
+            <Button>
+              <Play className="h-3.5 w-3.5 mr-1.5" />
+              Lancer la démo
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* ── KPIs ── */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
@@ -273,9 +318,17 @@ export default function DashboardPage() {
               {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
           ) : alerts.length === 0 ? (
-            <div className="text-center py-10 text-sm" style={{ color: "#64748b" }}>
-              Aucune alerte récente.
-            </div>
+            <EmptyState
+              title="Aucune alerte récente"
+              description="Le pipeline n’a détecté aucune anomalie. Lancez la démonstration pour voir le système en action."
+            >
+              <Link href="/demo">
+                <Button>
+                  <Play className="h-3.5 w-3.5 mr-1.5" />
+                  Lancer la démo
+                </Button>
+              </Link>
+            </EmptyState>
           ) : (
             <table className="data-table">
               <thead>
@@ -303,7 +356,7 @@ export default function DashboardPage() {
                       {a.score.toFixed(2)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono-cyber text-xs" style={{ color: "#64748b" }}>
-                      {new Date(a.ts).toLocaleTimeString()}
+                      {formatTimeLocal(a.ts)}
                     </td>
                   </tr>
                 ))}
@@ -357,7 +410,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <span className="text-xs font-mono-cyber shrink-0" style={{ color: "#334155" }}>
-                    {new Date(evt.ts).toLocaleTimeString()}
+                    {formatTimeLocal(evt.ts)}
                   </span>
                 </div>
               ))}

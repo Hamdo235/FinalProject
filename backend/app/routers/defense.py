@@ -1,13 +1,17 @@
 from datetime import datetime, timedelta, UTC
 from typing import Any, Dict, List, Optional
+import asyncio
+import ipaddress
+import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlmodel import select
 
 from ..db.session import get_session
 from ..models.defense_action import DefenseAction
+from ..schemas.defense import DefenseActionOut
 from ..services.defense import (
     action_to_dict,
     defense_mode,
@@ -15,6 +19,10 @@ from ..services.defense import (
     get_active_block_for_ip,
 )
 from ..services import ip_blacklist
+from ..services.sse import publish_defense_changed
+from ..core.settings import settings
+
+logger = logging.getLogger(__name__)
 
 
 def _utcnow_naive() -> datetime:
@@ -26,6 +34,7 @@ router = APIRouter(prefix="/defense", tags=["defense"])
 
 class ApproveBody(BaseModel):
     approved_by: str = "Analyste SOC"
+    token: Optional[str] = None
 
 
 class ManualBlockBody(BaseModel):
@@ -33,23 +42,42 @@ class ManualBlockBody(BaseModel):
     reason: str = "Blocage manuel"
     ttl_minutes: int = 30
     approved_by: str = "Analyste SOC"
+    token: Optional[str] = None
 
 
-@router.get("/actions")
+_TTL_MIN = 1
+_TTL_MAX = 24 * 60  # 24 hours
+
+
+def _require_admin_token(request: Request, body_token: Optional[str] = None) -> None:
+    expected = settings.admin_token
+    if not expected:
+        # Compatibilité dev: si aucun token n'est configuré, on n'impose pas le contrôle.
+        return
+    provided = request.headers.get("X-ADMIN-TOKEN") or (body_token or "")
+    if provided != expected:
+        client_ip = request.client.host if request and request.client else "unknown"
+        logger.warning("[DefenseAuth] Unauthorized access attempt from ip=%s", client_ip)
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+@router.get("/actions", response_model=List[DefenseActionOut])
 def list_actions(
     limit: int = 100,
     active: Optional[bool] = None,
     ip: Optional[str] = None,
     db: Session = Depends(get_session),
-):
-    expire_actions(db)
+) -> List[DefenseActionOut]:
+    if limit < 1 or limit > 1000:
+        raise HTTPException(status_code=400, detail="limit doit être entre 1 et 1000.")
+    # Expiration is handled by the background `expire_actions_loop` task.
     stmt = select(DefenseAction).order_by(DefenseAction.created_at.desc()).limit(limit)
     if active is not None:
         stmt = stmt.where(DefenseAction.active == active)
     if ip:
         stmt = stmt.where(DefenseAction.ip == ip)
     items = db.exec(stmt).all()
-    return [action_to_dict(i) for i in items]
+    return [DefenseActionOut.from_dict(action_to_dict(i)) for i in items]
 
 
 @router.get("/status/{ip}")
@@ -76,20 +104,35 @@ def approve_action(
     action_id: int,
     body: ApproveBody = ApproveBody(),
     db: Session = Depends(get_session),
+    request: Request = None,
 ):
+    _require_admin_token(request, body.token)
     item = db.get(DefenseAction, action_id)
     if not item:
         raise HTTPException(status_code=404, detail="Defense action not found")
     if item.action == "block_temp" and item.active:
+        if not getattr(item, "approved_by", None):
+            now = _utcnow_naive()
+            item.approved_by = body.approved_by
+            item.approved_at = now
+            item.created_by = "human"
+            db.add(item)
+            db.commit()
+            db.refresh(item)
         if item.ip:
             ip_blacklist.add_ip(
                 ip=item.ip,
                 expires_at=item.expires_at,
-                reason=item.reason or "Blocage existant re-synchronisé",
+                reason=item.reason or "Blocage re-synchronisé",
                 approved_by=item.approved_by or body.approved_by,
                 action_id=item.id,
             )
-        return {"ok": True, "action": action_to_dict(item), "message": "Déjà bloqué"}
+        result = action_to_dict(item)
+        try:
+            asyncio.create_task(publish_defense_changed("approved", result))
+        except RuntimeError:
+            pass
+        return {"ok": True, "action": result, "message": f"IP {item.ip} confirmée bloquée par {item.approved_by}", "iptables_command": result["iptables_command"], "iptables_unblock": result["iptables_unblock"]}
     now = _utcnow_naive()
     item.action = "block_temp"
     item.active = True
@@ -113,6 +156,10 @@ def approve_action(
 
     result = action_to_dict(item)
     expire_str = item.expires_at.strftime("%H:%M:%S") if item.expires_at else "indéfini"
+    try:
+        asyncio.create_task(publish_defense_changed("approved", result))
+    except RuntimeError:
+        pass
     return {
         "ok": True,
         "action": result,
@@ -123,7 +170,8 @@ def approve_action(
 
 
 @router.post("/actions/{action_id}/revoke")
-def revoke_action(action_id: int, db: Session = Depends(get_session)):
+def revoke_action(action_id: int, db: Session = Depends(get_session), request: Request = None):
+    _require_admin_token(request)
     item = db.get(DefenseAction, action_id)
     if not item:
         raise HTTPException(status_code=404, detail="Defense action not found")
@@ -138,16 +186,33 @@ def revoke_action(action_id: int, db: Session = Depends(get_session)):
     if item.ip:
         ip_blacklist.remove_ip(item.ip)
 
+    result = action_to_dict(item)
+    try:
+        asyncio.create_task(publish_defense_changed("revoked", result))
+    except RuntimeError:
+        pass
     return {
         "ok": True,
-        "action": action_to_dict(item),
+        "action": result,
         "message": f"Blocage de l'IP {item.ip} révoqué.",
     }
 
 
 @router.post("/block-manual")
-def manual_block(body: ManualBlockBody, db: Session = Depends(get_session)):
+def manual_block(body: ManualBlockBody, db: Session = Depends(get_session), request: Request = None):
     """Blocage manuel d'une IP par l'analyste (sans alerte existante)."""
+    _require_admin_token(request, body.token)
+    try:
+        ipaddress.ip_address(body.ip)
+    except ValueError:
+        logger.warning("[Defense] Invalid IP in manual block request: %s", body.ip)
+        raise HTTPException(status_code=400, detail="Invalid IP address")
+    if body.ttl_minutes < _TTL_MIN or body.ttl_minutes > _TTL_MAX:
+        raise HTTPException(
+            status_code=400,
+            detail=f"ttl_minutes doit être entre {_TTL_MIN} et {_TTL_MAX}.",
+        )
+
     now = _utcnow_naive()
     expires_at = now + timedelta(minutes=body.ttl_minutes)
 
@@ -176,6 +241,10 @@ def manual_block(body: ManualBlockBody, db: Session = Depends(get_session)):
     )
 
     result = action_to_dict(item)
+    try:
+        asyncio.create_task(publish_defense_changed("manual_block", result))
+    except RuntimeError:
+        pass
     return {
         "ok": True,
         "action": result,
@@ -186,8 +255,14 @@ def manual_block(body: ManualBlockBody, db: Session = Depends(get_session)):
 
 
 @router.post("/unblock/{ip}")
-def unblock_ip_direct(ip: str, db: Session = Depends(get_session)):
+def unblock_ip_direct(ip: str, db: Session = Depends(get_session), request: Request = None):
     """Débloque une IP directement par son adresse."""
+    _require_admin_token(request)
+    try:
+        ipaddress.ip_address(ip)
+    except ValueError:
+        logger.warning("[Defense] Invalid IP in unblock request: %s", ip)
+        raise HTTPException(status_code=400, detail="Invalid IP address")
     ip_blacklist.remove_ip(ip)
     stmt = (
         select(DefenseAction)
@@ -202,10 +277,17 @@ def unblock_ip_direct(ip: str, db: Session = Depends(get_session)):
         item.revoked_at = _utcnow_naive()
         db.add(item)
         db.commit()
+    try:
+        asyncio.create_task(
+            publish_defense_changed("unblock", {"ip": ip, "id": item.id if item else None})
+        )
+    except RuntimeError:
+        pass
     return {"ok": True, "message": f"IP {ip} débloquée.", "ip": ip}
 
 
 @router.post("/expire")
-def run_expire(db: Session = Depends(get_session)):
+def run_expire(db: Session = Depends(get_session), request: Request = None):
+    _require_admin_token(request)
     count = expire_actions(db)
     return {"expired": count}

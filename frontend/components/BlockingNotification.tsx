@@ -2,14 +2,18 @@
 import React from "react";
 import { AlertTriangle, ShieldOff, ShieldCheck, X, Terminal, Clock } from "lucide-react";
 import { approveDefenseAction, revokeDefenseAction } from "@/lib/api";
-import { Alert } from "@/types/api";
+import { getActorLabel } from "@/lib/actor";
+import { Alert, DefenseAction } from "@/types/api";
+import { useRealtime } from "@/components/layout/RealtimeProvider";
 
 interface Notification {
   id: string;
   alert: Alert;
+  defenseActionId: number;
   startedAt: number;
   countdown: number;
   iptables?: string;
+  error?: string;
   approved?: boolean;
   rejected?: boolean;
   busy?: boolean;
@@ -17,6 +21,23 @@ interface Notification {
 
 const COUNTDOWN_SECONDS = 30;
 const MAX_NOTIFS = 3;
+
+function actionToAlert(action: DefenseAction): Alert {
+  const confidence = Number.isFinite(action.confidence) ? action.confidence : 0;
+  const severity: Alert["severity"] =
+    confidence >= 0.8 ? "high" : confidence >= 0.5 ? "medium" : "low";
+  return {
+    id: action.alert_id ?? action.id,
+    ts: action.created_at || new Date().toISOString(),
+    source: "Moteur de défense",
+    ip: action.ip || undefined,
+    rule: action.reason || "needs_review",
+    severity,
+    score: confidence,
+    status: "pending_review",
+    defense: action,
+  };
+}
 
 function sevColor(s: string) {
   if (s === "high") return "#ef4444";
@@ -218,59 +239,103 @@ function NotifCard({
             </button>
           </div>
         )}
+
+        {notif.error && (
+          <div
+            className="rounded-lg px-3 py-2 font-mono-cyber text-[10px]"
+            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.22)", color: "#fca5a5" }}
+          >
+            {notif.error}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-interface BlockingNotificationProps {
-  newAlert: Alert | null;
-}
-
-export default function BlockingNotification({ newAlert }: BlockingNotificationProps) {
+export default function BlockingNotification() {
+  const actorLabel = React.useMemo(() => getActorLabel(), []);
+  const { latestAlert, pendingActions, pushToast, refreshPending } = useRealtime();
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
-  const seenIds = React.useRef<Set<number>>(new Set());
+  const seenDefenseIds = React.useRef<Set<number>>(new Set());
+  const initializedFromSnapshot = React.useRef(false);
   const notifsRef = React.useRef<Notification[]>([]);
   notifsRef.current = notifications;
+  const dismissTimersRef = React.useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  const scheduleDismiss = React.useCallback((id: string, delay: number) => {
+    const timer = setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      dismissTimersRef.current.delete(timer);
+    }, delay);
+    dismissTimersRef.current.add(timer);
+  }, []);
 
   React.useEffect(() => {
-    if (!newAlert) return;
-    if (seenIds.current.has(newAlert.id)) return;
-    if (newAlert.severity === "low") return;
-    const def = newAlert.defense;
-    if (!def || (def.action !== "block_temp" && def.action !== "review")) return;
+    const timers = dismissTimersRef.current;
+    return () => {
+      timers.forEach((t) => clearTimeout(t));
+      timers.clear();
+    };
+  }, []);
 
-    seenIds.current.add(newAlert.id);
+  const pushFromAction = React.useCallback((action: DefenseAction) => {
+    if (!action.id) return;
+    if (seenDefenseIds.current.has(action.id)) return;
+    seenDefenseIds.current.add(action.id);
+    const alert = actionToAlert(action);
     setNotifications((prev) => {
+      if (prev.some((n) => n.defenseActionId === action.id)) return prev;
       if (prev.length >= MAX_NOTIFS) return prev;
       const n: Notification = {
-        id: `${newAlert.id}-${Date.now()}`,
-        alert: newAlert,
+        id: `def-${action.id}-${Date.now()}`,
+        alert,
+        defenseActionId: action.id,
         startedAt: Date.now(),
         countdown: COUNTDOWN_SECONDS,
       };
       return [n, ...prev];
     });
-  }, [newAlert]);
+  }, []);
+
+  // React to live SSE alerts that carry a fresh pending defense action
+  React.useEffect(() => {
+    if (!latestAlert?.defense) return;
+    const def = latestAlert.defense;
+    if (!def.ip || def.revoked_at) return;
+    if (def.approved_by || def.approved_at) return;
+    if (def.action !== "review" && def.action !== "block_temp") return;
+    pushFromAction(def);
+  }, [latestAlert, pushFromAction]);
+
+  // React to centralized pendingActions snapshot (replaces local polling)
+  React.useEffect(() => {
+    const pendingIds = new Set(pendingActions.map((a) => a.id));
+    setNotifications((prev) =>
+      prev.filter((n) => n.approved || n.rejected || pendingIds.has(n.defenseActionId))
+    );
+
+    if (!initializedFromSnapshot.current) {
+      pendingActions.forEach((action) => {
+        if (action.id) seenDefenseIds.current.add(action.id);
+      });
+      initializedFromSnapshot.current = true;
+      return;
+    }
+
+    for (const action of pendingActions) pushFromAction(action);
+  }, [pendingActions, pushFromAction]);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
-      setNotifications((prev) => {
-        const updated = prev.map((n) => {
+      setNotifications((prev) =>
+        prev.map((n) => {
           if (n.approved || n.rejected) return n;
           const elapsed = Math.floor((Date.now() - n.startedAt) / 1000);
           const countdown = Math.max(0, COUNTDOWN_SECONDS - elapsed);
           return { ...n, countdown };
-        });
-        // Auto-reject notifications where countdown reached 0 more than 2s ago
-        return updated.map((n) => {
-          if (!n.approved && !n.rejected && n.countdown === 0) {
-            const overdue = (Date.now() - n.startedAt) / 1000 - COUNTDOWN_SECONDS;
-            if (overdue >= 2) return { ...n, rejected: true };
-          }
-          return n;
-        });
-      });
+        })
+      );
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -284,43 +349,71 @@ export default function BlockingNotification({ newAlert }: BlockingNotificationP
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, busy: false } : n)));
       return;
     }
-    const defId = notif.alert.defense?.id;
+    const defId = notif.defenseActionId;
     if (!defId) {
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, busy: false } : n)));
       return;
     }
     try {
-      const res = await approveDefenseAction(defId, "Analyste SOC");
+      const res = await approveDefenseAction(defId, actorLabel);
       setNotifications((prev) =>
         prev.map((n) =>
           n.id === id
-            ? { ...n, busy: false, approved: true, iptables: res.iptables_command ?? undefined }
+            ? { ...n, busy: false, approved: true, error: undefined, iptables: res.iptables_command ?? undefined }
             : n
         )
       );
-      setTimeout(() => setNotifications((prev) => prev.filter((n) => n.id !== id)), 8000);
-    } catch {
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, busy: false } : n)));
+      pushToast(`✅ IP ${notif.alert.ip ?? "?"} bloquée par ${actorLabel}`, "success");
+      refreshPending();
+      scheduleDismiss(id, 8000);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erreur inconnue";
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, busy: false, error: msg } : n)));
+      pushToast(`❌ Erreur d'approbation : ${msg}`, "error");
     }
-  }, []);
+  }, [actorLabel, pushToast, refreshPending, scheduleDismiss, setNotifications]);
 
   const handleReject = React.useCallback(async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, busy: true } : n))
     );
     const notif = notifsRef.current.find((n) => n.id === id);
-    const defId = notif?.alert.defense?.id;
+    const defId = notif?.defenseActionId;
     if (defId) {
-      try { await revokeDefenseAction(defId); } catch {}
+      try { await revokeDefenseAction(defId); }
+      catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Erreur inconnue";
+        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, busy: false, error: msg } : n)));
+        pushToast(`❌ Erreur de révocation : ${msg}`, "error");
+        return;
+      }
     }
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, busy: false, rejected: true } : n))
+      prev.map((n) => (n.id === id ? { ...n, busy: false, error: undefined, rejected: true } : n))
     );
-    setTimeout(() => setNotifications((prev) => prev.filter((n) => n.id !== id)), 3000);
-  }, []);
+    if (notif?.alert.ip) {
+      pushToast(`↩ Action sur ${notif.alert.ip} rejetée`, "info");
+    }
+    refreshPending();
+    scheduleDismiss(id, 3000);
+  }, [pushToast, refreshPending, scheduleDismiss]);
 
-  const handleDismiss = (id: string) =>
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const handleDismiss = React.useCallback((id: string) =>
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
+  , []);
+
+  // Keyboard shortcut: Esc dismisses the most recent (top) active notification
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const list = notifsRef.current;
+      if (list.length === 0) return;
+      const target = list.find((n) => !n.busy) ?? list[0];
+      if (target) handleDismiss(target.id);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleDismiss]);
 
   if (notifications.length === 0) return null;
 

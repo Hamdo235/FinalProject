@@ -1,6 +1,6 @@
 # CyberSentinel-LLM
 
-Plateforme de cybersécurité avec détection d'anomalies, chat LLM local et **mode vocal** (STT + TTS neural).
+Plateforme de cybersécurité avec détection d'anomalies, chat LLM local et mode vocal (STT + TTS neural).
 
 **Stack :** Python 3.13 · FastAPI · SQLite · scikit-learn (IForest/LOF) · Ollama · Next.js 16 · Tailwind CSS · SSE
 

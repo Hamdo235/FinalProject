@@ -33,6 +33,9 @@ async def publish(event: dict):
     for q in list(_subscribers):
         _safe_put(q, event)
 
+_HEARTBEAT_INTERVAL = 15.0  # seconds — keep proxies alive and detect dead clients
+
+
 async def _event_generator():
     # initial hello
     hello = json.dumps({"type": "hello", "time": datetime.now(UTC).isoformat()})
@@ -41,11 +44,16 @@ async def _event_generator():
     _subscribers.add(q)
     try:
         while True:
-            item = await q.get()
+            try:
+                item = await asyncio.wait_for(q.get(), timeout=_HEARTBEAT_INTERVAL)
+            except asyncio.TimeoutError:
+                # Send a comment-only line: clients ignore it but TCP/proxies see traffic.
+                yield ": heartbeat\n\n"
+                continue
             try:
                 payload = json.dumps(item)
             except (TypeError, ValueError):
-                payload = json.dumps({"type":"error","detail":"unserializable"})
+                payload = json.dumps({"type": "error", "detail": "unserializable"})
             yield f"data: {payload}\n\n"
     finally:
         _subscribers.discard(q)
@@ -58,5 +66,18 @@ async def publish_alert_created(alert: dict):
     await publish({
         "type": "alert.created",
         "data": alert,
+        "time": datetime.now(UTC).isoformat(),
+    })
+
+
+async def publish_defense_changed(event: str, action: dict | None = None):
+    """Publish defense action lifecycle events (created/approved/revoked/expired/manual_block/unblock).
+
+    Keeps the frontend in sync without forcing it to poll /defense/actions every few seconds.
+    """
+    await publish({
+        "type": "defense.changed",
+        "event": event,
+        "data": action,
         "time": datetime.now(UTC).isoformat(),
     })
