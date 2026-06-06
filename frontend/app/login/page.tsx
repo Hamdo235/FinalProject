@@ -76,7 +76,7 @@ export default function LoginPage() {
         <div className="login-welcome-splash">
           <div className="login-welcome-inner">
             <div className="login-welcome-shield">
-              <Shield style={{ width: 38, height: 38, color: "#fff" }} />
+              <Shield className="h-[38px] w-[38px] text-white" />
             </div>
             <p className="login-welcome-hi">Bonjour,</p>
             <p className="login-welcome-name">{welcome}</p>
@@ -120,14 +120,14 @@ export default function LoginPage() {
             <svg viewBox="0 0 320 320" className="radar-svg">
               {[40, 80, 120, 160].map((r) => (
                 <circle key={r} cx="160" cy="160" r={r}
-                  fill="none" stroke="rgba(34,211,238,0.12)" strokeWidth="1" />
+                  fill="none" stroke="rgba(91,138,110,0.15)" strokeWidth="1" />
               ))}
-              <line x1="160" y1="0"   x2="160" y2="320" stroke="rgba(34,211,238,0.07)" strokeWidth="1" />
-              <line x1="0"   y1="160" x2="320" y2="160" stroke="rgba(34,211,238,0.07)" strokeWidth="1" />
+              <line x1="160" y1="0"   x2="160" y2="320" stroke="rgba(91,138,110,0.08)" strokeWidth="1" />
+              <line x1="0"   y1="160" x2="320" y2="160" stroke="rgba(91,138,110,0.08)" strokeWidth="1" />
               <defs>
                 <radialGradient id="sweepGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%"   stopColor="#22d3ee" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0"    />
+                  <stop offset="0%"   stopColor="#5B8A6E" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#5B8A6E" stopOpacity="0"    />
                 </radialGradient>
                 <mask id="sweepMask">
                   <path d="M160 160 L160 0 A160 160 0 0 1 317 213 Z" fill="white" />
@@ -135,11 +135,11 @@ export default function LoginPage() {
               </defs>
               <circle cx="160" cy="160" r="160" fill="url(#sweepGrad)" mask="url(#sweepMask)"
                 className="radar-sweep" />
-              <circle cx="220" cy="100" r="3" fill="#22d3ee" className="blip blip-1" />
-              <circle cx="100" cy="195" r="2" fill="#22d3ee" className="blip blip-2" />
-              <circle cx="190" cy="215" r="2.5" fill="#10b981" className="blip blip-3" />
-              <circle cx="130" cy="110" r="2" fill="#f59e0b" className="blip blip-4" />
-              <circle cx="160" cy="160" r="4" fill="#22d3ee" style={{ filter: "drop-shadow(0 0 6px #22d3ee)" }} />
+              <circle cx="220" cy="100" r="3" fill="#5B8A6E" className="blip blip-1" />
+              <circle cx="100" cy="195" r="2" fill="#4A7B9D" className="blip blip-2" />
+              <circle cx="190" cy="215" r="2.5" fill="#5B8A6E" className="blip blip-3" />
+              <circle cx="130" cy="110" r="2" fill="#B8960A" className="blip blip-4" />
+              <circle cx="160" cy="160" r="4" fill="#5B8A6E" style={{ filter: "drop-shadow(0 0 6px rgba(91,138,110,0.6))" }} />
             </svg>
           </div>
 
@@ -180,7 +180,7 @@ export default function LoginPage() {
             <div className="login-card-header">
               <div className="login-logo-wrap">
                 <div className="login-logo">
-                  <Radar style={{ width: 22, height: 22, color: "#fff" }} />
+                  <Radar className="h-[22px] w-[22px] text-white" />
                 </div>
                 <div className="login-logo-pulse" />
               </div>
@@ -199,7 +199,7 @@ export default function LoginPage() {
                 className={`login-tab ${!isSignup ? "active" : ""}`}
                 onClick={() => switchMode("signin")}
               >
-                <Lock style={{ width: 13, height: 13 }} />
+                <Lock className="h-[13px] w-[13px]" />
                 Connexion
               </button>
               <button
@@ -207,7 +207,7 @@ export default function LoginPage() {
                 className={`login-tab ${isSignup ? "active" : ""}`}
                 onClick={() => switchMode("signup")}
               >
-                <UserPlus style={{ width: 13, height: 13 }} />
+                <UserPlus className="h-[13px] w-[13px]" />
                 Inscription
               </button>
             </div>
@@ -219,7 +219,7 @@ export default function LoginPage() {
               <div className={`login-field ${focused === "user" ? "focused" : ""}`}>
                 <label className="login-label">Identifiant</label>
                 <div className="login-input-wrap">
-                  <User className="login-input-icon" style={{ width: 15, height: 15 }} />
+                  <User className="login-input-icon h-[15px] w-[15px]" />
                   <input
                     type="text"
                     autoComplete="username"
@@ -238,7 +238,7 @@ export default function LoginPage() {
               <div className={`login-field ${focused === "pass" ? "focused" : ""}`}>
                 <label className="login-label">Mot de passe</label>
                 <div className="login-input-wrap">
-                  <Lock className="login-input-icon" style={{ width: 15, height: 15 }} />
+                  <Lock className="login-input-icon h-[15px] w-[15px]" />
                   <input
                     type={showPass ? "text" : "password"}
                     autoComplete={isSignup ? "new-password" : "current-password"}
@@ -253,8 +253,8 @@ export default function LoginPage() {
                   <button type="button" onClick={() => setShowPass((v) => !v)}
                     className="login-eye-btn" tabIndex={-1}>
                     {showPass
-                      ? <EyeOff style={{ width: 15, height: 15 }} />
-                      : <Eye    style={{ width: 15, height: 15 }} />}
+                      ? <EyeOff className="h-[15px] w-[15px]" />
+                      : <Eye    className="h-[15px] w-[15px]" />}
                   </button>
                 </div>
               </div>
@@ -264,7 +264,7 @@ export default function LoginPage() {
                 <div className={`login-field ${focused === "confirm" ? "focused" : ""}`}>
                   <label className="login-label">Confirmer le mot de passe</label>
                   <div className="login-input-wrap">
-                    <Lock className="login-input-icon" style={{ width: 15, height: 15 }} />
+                    <Lock className="login-input-icon h-[15px] w-[15px]" />
                     <input
                       type={showPass ? "text" : "password"}
                       autoComplete="new-password"
@@ -283,9 +283,9 @@ export default function LoginPage() {
               {/* Email (signup only) */}
               {isSignup && (
                 <div className={`login-field ${focused === "email" ? "focused" : ""}`}>
-                  <label className="login-label">Adresse e-mail <span style={{ color: "#334155", fontWeight: 400 }}>(optionnel)</span></label>
+                  <label className="login-label">Adresse e-mail <span className="text-text-muted font-normal">(optionnel)</span></label>
                   <div className="login-input-wrap">
-                    <Mail className="login-input-icon" style={{ width: 15, height: 15 }} />
+                    <Mail className="login-input-icon h-[15px] w-[15px]" />
                     <input
                       type="email"
                       autoComplete="email"
@@ -303,9 +303,9 @@ export default function LoginPage() {
               {/* Phone (signup only) */}
               {isSignup && (
                 <div className={`login-field ${focused === "phone" ? "focused" : ""}`}>
-                  <label className="login-label">Numéro de téléphone <span style={{ color: "#334155", fontWeight: 400 }}>(optionnel)</span></label>
+                  <label className="login-label">Numéro de téléphone <span className="text-text-muted font-normal">(optionnel)</span></label>
                   <div className="login-input-wrap">
-                    <Phone className="login-input-icon" style={{ width: 15, height: 15 }} />
+                    <Phone className="login-input-icon h-[15px] w-[15px]" />
                     <input
                       type="tel"
                       autoComplete="tel"
@@ -325,12 +325,11 @@ export default function LoginPage() {
                 <div className="login-field">
                   <label className="login-label">Rôle dans l&apos;équipe</label>
                   <div className="login-input-wrap">
-                    <Briefcase className="login-input-icon" style={{ width: 15, height: 15 }} />
+                    <Briefcase className="login-input-icon h-[15px] w-[15px]" />
                     <select
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
-                      className="login-input"
-                      style={{ cursor: "pointer" }}
+                      className="login-input cursor-pointer"
                     >
                       <option value="Analyste SOC">Analyste SOC</option>
                       <option value="Analyste SOC Senior">Analyste SOC Senior</option>
@@ -347,7 +346,7 @@ export default function LoginPage() {
               {/* Error */}
               {error && (
                 <div className="login-error">
-                  <AlertCircle style={{ width: 14, height: 14, flexShrink: 0 }} />
+                  <AlertCircle className="h-[14px] w-[14px] shrink-0" />
                   {error}
                 </div>
               )}
@@ -362,7 +361,7 @@ export default function LoginPage() {
                 ) : (
                   <span className="login-btn-label">
                     {isSignup ? "Créer mon compte" : "Accéder au SOC"}
-                    <ArrowRight style={{ width: 16, height: 16 }} />
+                    <ArrowRight className="h-4 w-4" />
                   </span>
                 )}
               </button>

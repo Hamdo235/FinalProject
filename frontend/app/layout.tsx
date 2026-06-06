@@ -1,11 +1,11 @@
 import "./globals.css";
 import React from "react";
 import AuthProvider from "@/components/layout/AuthProvider";
-import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 
 export const metadata = { title: "CyberSentinel-LLM" };
 
-const space = Space_Grotesk({
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
@@ -21,10 +21,10 @@ const jetbrains = JetBrains_Mono({
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" style={{ colorScheme: "dark" }}>
+    <html lang="fr">
       <body
-        className={`${space.variable} ${jetbrains.variable} h-screen overflow-hidden antialiased`}
-        style={{ background: "#080f1a", color: "#e2e8f0" }}
+        className={`${inter.variable} ${jetbrains.variable} h-screen overflow-hidden antialiased`}
+        style={{ background: "#FAFAF8", color: "#1A1A1A" }}
       >
         <AuthProvider>{children}</AuthProvider>
       </body>

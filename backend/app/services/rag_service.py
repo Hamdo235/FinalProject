@@ -1,7 +1,8 @@
 """
 Service RAG (Retrieval-Augmented Generation) basé sur ChromaDB + sentence-transformers.
-Indexe une base MITRE ATT&CK simplifiée localement. CPU-only, ~384 MB RAM.
+Indexe une base MITRE ATT&CK complète localement. CPU-only, ~384 MB RAM.
 """
+import json
 import os
 import logging
 from threading import Lock
@@ -10,11 +11,15 @@ from ..core.settings import settings
 
 logger = logging.getLogger(__name__)
 
-# --- Chemin persistance ChromaDB ---
+# --- Chemins ---
 CHROMA_PERSIST_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "chroma_db")
 CHROMA_PERSIST_DIR = os.path.abspath(CHROMA_PERSIST_DIR)
 COLLECTION_NAME = "mitre_attack"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+
+_MITRE_JSON_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "data", "mitre_techniques.json")
+)
 
 # --- Flag d'initialisation (évite double init simultanée) ---
 _is_initialized: bool = False
@@ -22,9 +27,10 @@ _is_initialized: bool = False
 # --- Singletons ---
 _collection = None
 _embed_fn = None
+_chroma_client = None
 _init_lock = Lock()
 
-# --- Base MITRE ATT&CK simplifiée ---
+# --- Base MITRE ATT&CK de secours (15 techniques) ---
 MITRE_TECHNIQUES: List[Dict] = [
     {
         "id": "T1110.001",
@@ -149,6 +155,21 @@ MITRE_TECHNIQUES: List[Dict] = [
 ]
 
 
+def _load_techniques() -> List[Dict]:
+    """Charge depuis mitre_techniques.json si disponible, sinon utilise la liste de secours."""
+    if os.path.exists(_MITRE_JSON_PATH):
+        try:
+            with open(_MITRE_JSON_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list) and len(data) > len(MITRE_TECHNIQUES):
+                logger.info("[RAG] %d techniques chargées depuis %s", len(data), _MITRE_JSON_PATH)
+                return data
+        except Exception as exc:
+            logger.warning("[RAG] Impossible de charger mitre_techniques.json : %s", exc)
+    logger.info("[RAG] Utilisation de la base embarquée (%d techniques).", len(MITRE_TECHNIQUES))
+    return MITRE_TECHNIQUES
+
+
 def _build_document(t: Dict) -> str:
     """Construit le texte d'embedding pour une technique MITRE."""
     return (
@@ -162,10 +183,10 @@ def _build_document(t: Dict) -> str:
 def initialize() -> None:
     """
     Initialise ChromaDB et indexe les techniques MITRE ATT&CK.
-    Appel idempotent : ne réindexe pas si la collection existe déjà.
+    Re-indexe automatiquement si le fichier JSON a plus de techniques que la collection.
     Ne doit PAS être appelé en même temps qu'une inférence Ollama.
     """
-    global _is_initialized, _collection, _embed_fn
+    global _is_initialized, _collection, _embed_fn, _chroma_client
 
     with _init_lock:
         if _is_initialized:
@@ -177,6 +198,8 @@ def initialize() -> None:
             import chromadb
             from chromadb.utils import embedding_functions
 
+            techniques = _load_techniques()
+
             # Embedding function (sentence-transformers, CPU-only)
             _embed_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
                 model_name=EMBEDDING_MODEL,
@@ -184,37 +207,62 @@ def initialize() -> None:
             )
 
             # Client ChromaDB persistant
-            client = chromadb.PersistentClient(
+            _chroma_client = chromadb.PersistentClient(
                 path=CHROMA_PERSIST_DIR,
                 settings=chromadb.Settings(anonymized_telemetry=False),
             )
 
             # Récupérer ou créer la collection
-            _collection = client.get_or_create_collection(
+            _collection = _chroma_client.get_or_create_collection(
                 name=COLLECTION_NAME,
                 embedding_function=_embed_fn,
                 metadata={"hnsw:space": "cosine"},
             )
 
-            # Indexer seulement si la collection est vide
-            if _collection.count() == 0:
-                logger.info("[RAG] Indexation de %d techniques MITRE ATT&CK...", len(MITRE_TECHNIQUES))
-                documents = [_build_document(t) for t in MITRE_TECHNIQUES]
-                ids = [t["id"] for t in MITRE_TECHNIQUES]
+            existing_count = _collection.count()
+            needs_reindex = existing_count == 0 or existing_count < len(techniques)
+
+            if needs_reindex:
+                if existing_count > 0:
+                    logger.info(
+                        "[RAG] Re-indexation : %d → %d techniques (collection supprimée et recrée).",
+                        existing_count, len(techniques),
+                    )
+                    _chroma_client.delete_collection(COLLECTION_NAME)
+                    _collection = _chroma_client.create_collection(
+                        name=COLLECTION_NAME,
+                        embedding_function=_embed_fn,
+                        metadata={"hnsw:space": "cosine"},
+                    )
+                else:
+                    logger.info("[RAG] Indexation de %d techniques MITRE ATT&CK...", len(techniques))
+
+                documents = [_build_document(t) for t in techniques]
+                ids       = [t["id"] for t in techniques]
                 metadatas = [
                     {
-                        "id": t["id"],
-                        "name": t["name"],
-                        "detection": t["detection"],
+                        "id":         t["id"],
+                        "name":       t["name"],
+                        "detection":  t["detection"],
                         "mitigation": t["mitigation"],
-                        "severity": t["severity"],
+                        "severity":   t["severity"],
                     }
-                    for t in MITRE_TECHNIQUES
+                    for t in techniques
                 ]
-                _collection.add(documents=documents, ids=ids, metadatas=metadatas)
-                logger.info("[RAG] Indexation terminée (%d techniques).", len(MITRE_TECHNIQUES))
+                # Insertion par lots de 100 pour éviter les timeouts sur CPU
+                batch = 100
+                for i in range(0, len(techniques), batch):
+                    _collection.add(
+                        documents=documents[i:i+batch],
+                        ids=ids[i:i+batch],
+                        metadatas=metadatas[i:i+batch],
+                    )
+                logger.info("[RAG] Indexation terminée (%d techniques).", len(techniques))
             else:
-                logger.info("[RAG] Collection existante (%d documents). Pas de réindexation.", _collection.count())
+                logger.info(
+                    "[RAG] Collection existante (%d documents). Pas de réindexation.",
+                    existing_count,
+                )
 
             _is_initialized = True
             logger.info("[RAG] Service RAG prêt.")

@@ -14,36 +14,37 @@ import { useRealtime } from "@/components/layout/RealtimeProvider";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 
-const SEV: Record<string, { color: string; bg: string; border: string }> = {
-  high:   { color: "#ef4444", bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.25)"  },
-  medium: { color: "#f59e0b", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.25)" },
-  low:    { color: "#10b981", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.2)"  },
+const SEV_CLS: Record<string, string> = {
+  high:   "bg-[#FDF0E8] text-accent-terra border-[#F0C4A8]",
+  medium: "bg-[#FDF8E0] text-[#B8960A]    border-[#F0E090]",
+  low:    "bg-[#EBF3EE] text-accent-sage  border-[#B8D8C4]",
 };
 
 function SevBadge({ s }: { s: string }) {
-  const c = SEV[s] ?? { color: "#64748b", bg: "rgba(100,116,139,0.08)", border: "rgba(100,116,139,0.2)" };
+  const cls = SEV_CLS[s] ?? "bg-text-muted/10 text-text-secondary border-text-muted/20";
   return (
-    <span
-      className="cyber-badge font-mono-cyber"
-      style={{ background: c.bg, color: c.color, border: `1px solid ${c.border}` }}
-    >
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.06em] font-mono border ${cls}`}>
       {s}
     </span>
   );
 }
 
+type BtnColor = "red" | "teal" | "muted";
+const BTN_CLS: Record<BtnColor, string> = {
+  red:   "border-[#F0C4A8] text-accent-terra bg-[#FDF0E8] hover:bg-[#F8E0D0]",
+  teal:  "border-[#B8D8C4] text-accent-sage  bg-[#EBF3EE] hover:bg-[#D8EDE0]",
+  muted: "border-bg-border text-text-secondary bg-bg-base hover:bg-bg-card",
+};
+
 function ActionBtn({
   label, color, onClick, disabled,
-}: { label: string; color: string; onClick: () => void; disabled?: boolean }) {
+}: { label: string; color: BtnColor; onClick: () => void; disabled?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all disabled:opacity-40"
-      style={{ border: `1px solid ${color}35`, color, background: `${color}0a` }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `${color}18`; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = `${color}0a`; }}
+      className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border disabled:opacity-40 ${BTN_CLS[color]}`}
     >
       {label}
     </button>
@@ -169,79 +170,48 @@ export default function AlertsPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: "#e2e8f0" }}>Alertes</h1>
-          <p className="text-sm mt-0.5" style={{ color: "#64748b" }}>
+          <h1 className="text-xl font-bold text-text-primary">Alertes</h1>
+          <p className="text-sm mt-0.5 text-text-secondary">
             {alerts.length} alerte{alerts.length !== 1 ? "s" : ""} —{" "}
-            <span style={{ color: "#ef4444" }}>{criticalCount} critique{criticalCount !== 1 ? "s" : ""}</span>
+            <span className="text-accent-terra">{criticalCount} critique{criticalCount !== 1 ? "s" : ""}</span>
           </p>
         </div>
-        <span
-          className="inline-flex items-center gap-1.5 cyber-badge font-mono-cyber"
-          style={
-            live
-              ? { background: "rgba(16,185,129,0.08)", color: "#10b981", border: "1px solid rgba(16,185,129,0.25)" }
-              : { background: "rgba(100,116,139,0.08)", color: "#64748b", border: "1px solid rgba(100,116,139,0.15)" }
-          }
-        >
-          <span
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ background: live ? "#10b981" : "#64748b" }}
-          />
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.06em] font-mono border ${
+          live
+            ? "bg-[#EBF3EE] text-accent-sage border-[#B8D8C4]"
+            : "bg-bg-base text-text-muted border-bg-border"
+        }`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-accent-sage animate-pulse" : "bg-text-muted"}`} />
           {live ? "LIVE" : "OFF"}
         </span>
       </div>
 
       {/* ── Toolbar ── */}
       <div className="flex flex-wrap gap-2">
-        <button
-          onClick={createIncident}
-          disabled={!selected.size || busy}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
-          style={{ border: "1px solid rgba(34,211,238,0.25)", color: "#22d3ee", background: "rgba(34,211,238,0.07)" }}
-        >
-          <CheckSquare className="h-3.5 w-3.5" />
-          Créer incident ({selected.size})
+        <button onClick={createIncident} disabled={!selected.size || busy}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border disabled:opacity-40 border-[#B8D8C4] text-accent-sage bg-[#EBF3EE] hover:bg-[#D8EDE0]">
+          <CheckSquare className="h-3.5 w-3.5" />Creer incident ({selected.size})
         </button>
-        <button
-          onClick={() => bulkDecision("true_attack")}
-          disabled={!selected.size || bulkBusy}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
-          style={{ border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", background: "rgba(239,68,68,0.07)" }}
-        >
-          <AlertTriangle className="h-3.5 w-3.5" />
-          Confirmer attaque
+        <button onClick={() => bulkDecision("true_attack")} disabled={!selected.size || bulkBusy}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border disabled:opacity-40 border-[#F0C4A8] text-accent-terra bg-[#FDF0E8] hover:bg-[#F8E0D0]">
+          <AlertTriangle className="h-3.5 w-3.5" />Confirmer attaque
         </button>
-        <button
-          onClick={() => bulkDecision("false_positive")}
-          disabled={!selected.size || bulkBusy}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
-          style={{ border: "1px solid rgba(100,116,139,0.2)", color: "#64748b", background: "rgba(100,116,139,0.06)" }}
-        >
+        <button onClick={() => bulkDecision("false_positive")} disabled={!selected.size || bulkBusy}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border disabled:opacity-40 border-bg-border text-text-secondary bg-bg-base hover:bg-bg-card">
           Faux positif
         </button>
-        <Link
-          href="/dashboard#map"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
-          style={{ border: "1px solid rgba(34,211,238,0.15)", color: "#67e8f9", background: "rgba(34,211,238,0.05)" }}
-        >
-          <MapPin className="h-3.5 w-3.5" />
-          Carte
+        <Link href="/dashboard#map"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border border-[#A8C8E0] text-accent-slate bg-[#EAF2F8] hover:bg-[#D8E8F4]">
+          <MapPin className="h-3.5 w-3.5" />Carte
         </Link>
-        <Link
-          href="/chat"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
-          style={{ border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b", background: "rgba(245,158,11,0.06)" }}
-        >
-          <MessageCircle className="h-3.5 w-3.5" />
-          Chat SOC
+        <Link href="/chat"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border border-[#F0E090] text-[#B8960A] bg-[#FDF8E0] hover:bg-[#F5F0C0]">
+          <MessageCircle className="h-3.5 w-3.5" />Chat SOC
         </Link>
       </div>
 
       {/* ── Table ── */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ border: "1px solid rgba(34,211,238,0.08)", background: "#0c1628" }}
-      >
+      <div className="rounded-2xl overflow-hidden bg-bg-card border border-bg-border">
         <table className="data-table">
           <thead>
             <tr>
@@ -250,7 +220,7 @@ export default function AlertsPage() {
                   type="checkbox"
                   checked={alerts.length > 0 && selected.size === alerts.length}
                   onChange={toggleAll}
-                  style={{ accentColor: "#22d3ee" }}
+                  className="accent-accent-sage"
                 />
               </th>
               <th>Time</th>
@@ -271,93 +241,57 @@ export default function AlertsPage() {
                     type="checkbox"
                     checked={selected.has(a.id)}
                     onChange={() => toggle(a.id)}
-                    style={{ accentColor: "#22d3ee" }}
+                    className="accent-accent-sage"
                   />
                 </td>
-                <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#64748b" }}>
-                  {formatDateTimeLocal(a.ts)}
-                </td>
-                <td className="px-4 py-3 font-medium text-sm" style={{ color: "#e2e8f0" }}>
-                  {a.source}
-                </td>
-                <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#22d3ee" }}>
-                  {a.ip || "—"}
-                </td>
-                <td className="px-4 py-3 text-xs" style={{ color: "#64748b" }}>
-                  {a.rule || "—"}
-                </td>
+                <td className="px-4 py-3 font-mono-cyber text-xs text-text-secondary">{formatDateTimeLocal(a.ts)}</td>
+                <td className="px-4 py-3 font-medium text-sm text-text-primary">{a.source}</td>
+                <td className="px-4 py-3 font-mono-cyber text-xs text-text-mono">{a.ip || "—"}</td>
+                <td className="px-4 py-3 text-xs text-text-secondary">{a.rule || "—"}</td>
                 <td className="px-4 py-3">
                   <SevBadge s={a.severity} />
                 </td>
-                <td className="px-4 py-3 font-mono-cyber text-xs font-bold" style={{ color: "#10b981" }}>
-                  {a.score.toFixed(2)}
-                </td>
+                <td className="px-4 py-3 font-mono-cyber text-xs font-bold text-accent-sage">{a.score.toFixed(2)}</td>
                 <td className="px-4 py-3">
                   {a.defense ? (
                     <div className="space-y-1.5">
-                      <span
-                        className="cyber-badge font-mono-cyber text-[10px]"
-                        style={
-                          a.defense.action === "block_temp"
-                            ? { background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)" }
-                            : { background: "rgba(245,158,11,0.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.25)" }
-                        }
-                      >
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide font-mono border ${
+                        a.defense.action === "block_temp"
+                          ? "bg-[#FDF0E8] text-accent-terra border-[#F0C4A8]"
+                          : "bg-[#FDF8E0] text-[#B8960A] border-[#F0E090]"
+                      }`}>
                         {a.defense.action}
                       </span>
                       {a.defense.expires_at && (
-                        <div className="text-[10px] font-mono-cyber" style={{ color: "#334155" }}>
+                        <div className="text-[10px] font-mono-cyber text-text-muted">
                           exp. {formatTimeLocal(a.defense.expires_at!)}
                         </div>
                       )}
                       <div className="flex gap-1 mt-1">
                         {!a.defense.approved_by && !a.defense.revoked_at &&
                           (a.defense.action === "review" || a.defense.action === "block_temp") && (
-                          <ActionBtn
-                            label="Approuver"
-                            color="#10b981"
-                            disabled={defenseBusyId === a.defense.id}
-                            onClick={() => onApprove(a.defense!.id, a.ip)}
-                          />
+                          <ActionBtn label="Approuver" color="teal" disabled={defenseBusyId === a.defense.id} onClick={() => onApprove(a.defense!.id, a.ip)} />
                         )}
                         {a.defense.active && (
-                          <ActionBtn
-                            label="Révoquer"
-                            color="#64748b"
-                            disabled={defenseBusyId === a.defense.id}
-                            onClick={() => onRevoke(a.defense!.id, a.ip)}
-                          />
+                          <ActionBtn label="Révoquer" color="muted" disabled={defenseBusyId === a.defense.id} onClick={() => onRevoke(a.defense!.id, a.ip)} />
                         )}
                       </div>
                       {a.defense.approved_by && (
-                        <div className="text-[9px] font-mono-cyber" style={{ color: "#10b981" }}>
-                          ✓ {a.defense.approved_by}
-                        </div>
+                        <div className="text-[9px] font-mono-cyber text-accent-sage">✓ {a.defense.approved_by}</div>
                       )}
                     </div>
                   ) : (
-                    <span className="text-xs" style={{ color: "#334155" }}>n/a</span>
+                    <span className="text-xs text-text-muted">n/a</span>
                   )}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1.5 flex-wrap items-center">
-                    <ActionBtn
-                      label="Attaque"
-                      color="#ef4444"
-                      disabled={labelBusy === a.id}
-                      onClick={() => doLabel(a.id, "true_attack")}
-                    />
-                    <ActionBtn
-                      label="Faux pos."
-                      color="#10b981"
-                      disabled={labelBusy === a.id}
-                      onClick={() => doLabel(a.id, "false_positive")}
-                    />
+                    <ActionBtn label="Attaque"   color="red"  disabled={labelBusy === a.id} onClick={() => doLabel(a.id, "true_attack")} />
+                    <ActionBtn label="Faux pos." color="teal" disabled={labelBusy === a.id} onClick={() => doLabel(a.id, "false_positive")} />
                     {a.ip && (
                       <Link
                         href={`/dashboard?ip=${encodeURIComponent(a.ip)}#map`}
-                        className="text-xs underline font-mono-cyber"
-                        style={{ color: "#22d3ee" }}
+                        className="text-xs underline font-mono-cyber text-accent-slate hover:text-[#3A6B8D]"
                       >
                         Carte
                       </Link>

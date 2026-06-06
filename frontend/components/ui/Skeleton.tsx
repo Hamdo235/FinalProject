@@ -5,7 +5,7 @@ export function Skeleton({ className, style, ...props }: React.HTMLAttributes<HT
   return (
     <div
       className={cn("animate-pulse rounded-xl", className)}
-      style={{ background: "rgba(34,211,238,0.06)", ...style }}
+      style={{ background: "rgba(127,119,221,0.08)", ...style }}
       {...props}
     />
   );

@@ -342,7 +342,7 @@ l'explicabilité et la réactivité du triage d'alertes au sein d'un SOC.
 \begin{itemize}
   \item[\ding{43}] Développer un pipeline d'ingestion de logs et de détection
   d'anomalies (IsolationForest / LOF + fallback heuristique) ;
-  \item[\ding{43}] Implémenter un module RAG indexant 15 techniques MITRE
+  \item[\ding{43}] Implémenter un module RAG indexant 697 techniques MITRE
   ATT\&CK dans ChromaDB pour enrichir le raisonnement du LLM ;
   \item[\ding{43}] Intégrer un LLM local (Ollama) pour fournir des explications
   structurées en JSON avec score de confiance pondéré ;
@@ -577,10 +577,11 @@ tactiques, techniques et procédures (TTP) utilisées par les acteurs malveillan
 avec pour chaque technique une description, des indicateurs de détection et des mesures
 d'atténuation.\\
 
-Dans \textbf{CyberSentinel-LLM}, 15 techniques MITRE ATT\&CK sont indexées
-dans ChromaDB avec le modèle d'embedding \textit{all-MiniLM-L6-v2} (384
-dimensions, CPU-only), permettant une recherche sémantique locale sans
-dépendance cloud.
+Dans \textbf{CyberSentinel-LLM}, \textbf{697 techniques MITRE ATT\&CK}
+(version Enterprise, parsées depuis le bundle STIX officiel via
+\texttt{scripts/fetch\_mitre.py}) sont indexées dans ChromaDB avec le modèle
+d'embedding \textit{all-MiniLM-L6-v2} (384 dimensions, CPU-only), permettant
+une recherche sémantique locale sans dépendance cloud.
 \end{onehalfspace}
 
 \section*{Conclusion du Chapitre 1}
@@ -669,7 +670,7 @@ EF03 & Gestion des alertes & Lister, filtrer et labelliser les alertes généré
 \hline
 EF04 & Gestion des incidents & Créer, consulter et suivre les incidents \\
 \hline
-EF05 & RAG MITRE ATT\&CK & Indexer 15 techniques et enrichir le contexte LLM \\
+EF05 & RAG MITRE ATT\&CK & Indexer 697 techniques et enrichir le contexte LLM \\
 \hline
 EF06 & Explication LLM & Générer une explication JSON structurée d'un incident \\
 \hline
@@ -758,8 +759,8 @@ L'architecture comprend cinq grandes couches :
   \item[\ding{43}] \textbf{Couche 3 — Détection ML :} pipeline non supervisé
   + heuristique (IsolationForest, LOF, fallback), scoring 0..1, règles de
   sévérité ;
-  \item[\ding{43}] \textbf{Couche 4 — RAG + LLM :} ChromaDB avec 15
-  techniques MITRE ATT\&CK, embedding all-MiniLM-L6-v2, Ollama pour
+  \item[\ding{43}] \textbf{Couche 4 — RAG + LLM :} ChromaDB avec 697
+  techniques MITRE ATT\&CK (bundle STIX Enterprise), embedding all-MiniLM-L6-v2, Ollama pour
   explication structurée et chat conversationnel ;
   \item[\ding{43}] \textbf{Couche 5 — Défense :} moteur de décision
   défensive, liste noire mémoire O(1), middleware blocage IP (HTTP 403),
@@ -838,7 +839,7 @@ clairement définie :
 IF/LOF, scoring 0..1, fallback heuristique \\
 \hline
 \texttt{services/rag\_service.py} & ChromaDB, embedding all-MiniLM-L6-v2,
-15 techniques MITRE ATT\&CK, retrieve\_context() \\
+697 techniques MITRE ATT\&CK (STIX Enterprise), retrieve\_context() \\
 \hline
 \texttt{services/llm\_ollama.py} & Prompt RAG enrichi, appel Ollama,
 parsing JSON, retry, confiance pondérée \\
@@ -999,15 +1000,19 @@ score_{IF} = 1 - P_{normal} \in [0, 1]
 \end{tcolorbox}
 
 \begin{onehalfspace}
-\textbf{Scoring LOF :} le facteur d'anomalie local est normalisé par
-min-max sur le batch :
+\textbf{Scoring LOF (mode novelty) :} le modèle LOF est entraîné une seule
+fois sur la matrice d'historique (\texttt{novelty=True}). Le score d'un
+nouveau point est obtenu via \texttt{score\_samples()}, puis normalisé :
 \end{onehalfspace}
 
 \begin{tcolorbox}[colback=lightblue, colframe=darkblue, arc=5pt,
-  title={\textbf{Formule LOF normalisée}}]
+  title={\textbf{Formule LOF — normalisation novelty}}]
 \[
-score_{LOF} = 1 - \frac{nof_x - nof_{min}}{nof_{max} - nof_{min}}
+score_{LOF} = \max\!\left(0,\, \min\!\left(1,\, \frac{\max(0,\, -s(x) - 1)}{3}\right)\right)
 \]
+Où $s(x) = \texttt{score\_samples}(x) \leq 0$ ;
+$s(x) \approx -1$ pour un inlier (score $\rightarrow 0$),
+$s(x) \ll -1$ pour une anomalie (score $\rightarrow 1$).
 \end{tcolorbox}
 
 \begin{onehalfspace}
@@ -1035,7 +1040,8 @@ que sur sa seule mémoire d'entraînement.
   \item[\ding{43}] \textbf{Persistance :} dossier \texttt{chroma\_db/} à la
   racine du projet ;
   \item[\ding{43}] \textbf{Initialisation idempotente :} ne réindexe que si
-  la collection est vide — aucune pénalité au redémarrage ;
+  la collection contient moins de techniques que le fichier JSON source
+  (\texttt{json\_count > collection\_count}) — aucune pénalité au redémarrage ;
   \item[\ding{43}] \textbf{Modèle d'embedding :} \textit{all-MiniLM-L6-v2}
   (sentence-transformers, $\sim$80 MB, CPU-only, 384 dimensions).
 \end{itemize}
@@ -1043,9 +1049,14 @@ que sur sa seule mémoire d'entraînement.
 \subsection*{Techniques MITRE ATT\&CK indexées}
 \end{onehalfspace}
 
+La base ChromaDB contient \textbf{697 techniques} parsées depuis le bundle
+STIX officiel MITRE ATT\&CK Enterprise. Le tableau ci-dessous présente un
+échantillon représentatif des techniques les plus pertinentes pour
+le scénario SSH de démonstration :
+
 \begin{table}[!h]
 \centering
-\caption{15 techniques MITRE ATT\&CK indexées dans ChromaDB}
+\caption{Échantillon de techniques MITRE ATT\&CK indexées (697 au total dans ChromaDB)}
 \begin{tabular}{|p{2.5cm}|p{5cm}|p{1.5cm}|}
 \hline
 \textbf{ID} & \textbf{Nom} & \textbf{Sévérité} \\
@@ -1486,7 +1497,7 @@ Les tests réalisés sur le prototype ont permis de valider les points suivants 
 \hline
 Ingestion + scoring ML & \checkmark Complet & IF/LOF/hybride fonctionnels \\
 \hline
-RAG MITRE ATT\&CK (ChromaDB) & \checkmark Complet & 15 techniques indexées \\
+RAG MITRE ATT\&CK (ChromaDB) & \checkmark Complet & 697 techniques indexées (STIX Enterprise) \\
 \hline
 Explication LLM structurée JSON & \checkmark Complet & Retry + fallback \\
 \hline
@@ -1570,7 +1581,7 @@ blocage applicatif à validation humaine.\\
 
 Le projet a permis de démontrer la viabilité technique de cette approche
 en cinq couches : un pipeline ML (IsolationForest + LOF + heuristique), un
-module RAG indexant 15 techniques MITRE ATT\&CK dans ChromaDB, un LLM local
+module RAG indexant 697 techniques MITRE ATT\&CK dans ChromaDB, un LLM local
 (Ollama/qwen2.5) produisant des analyses JSON structurées avec score de
 confiance pondéré ($0.4 \times ML + 0.3 \times RAG + 0.3 \times LLM$),
 un système de neutralisation adaptive avec middleware HTTP 403 et notification
@@ -1593,8 +1604,10 @@ automatiquement, et features ML limitées au domaine SSH.\\
 \begin{itemize}
   \item[\ding{43}] Entraînement supervisé multi-classes pour couvrir
   davantage de familles d'attaques (DDoS, injection, ransomware) ;
-  \item[\ding{43}] Enrichissement de la base RAG avec l'intégralité des
-  techniques MITRE ATT\&CK (835 techniques) et les CVE récentes ;
+  \item[\ding{43}] Enrichissement de la base RAG avec les CVE récentes
+  et les bulletins ANSSI pour couvrir les menaces spécifiques à l'Afrique
+  centrale (la base MITRE ATT\&CK Enterprise, 697 techniques, est déjà
+  intégralement indexée dans cette version) ;
   \item[\ding{43}] Intégration d'une exécution automatique des règles
   iptables après approbation humaine, via des scripts système sécurisés ;
   \item[\ding{43}] Séparation en microservices et intégration d'un
@@ -1775,9 +1788,9 @@ Certification Électronique du Tchad.
 \begin{verbatim}
 cd backend
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+bash start.sh
 # API disponible sur http://localhost:8000
-# RAG initialisé automatiquement au démarrage
+# Surveille uniquement app/ (pas chroma_db/ ni data/)
 # Documentation Swagger : http://localhost:8000/docs
 \end{verbatim}
 \end{small}
@@ -1808,7 +1821,7 @@ npm run dev
 \hline
 \texttt{SCORE\_THRESHOLD} & 0.6 & Seuil de détection ML \\
 \hline
-\texttt{DETECTOR} & hybrid & IF / LOF / hybrid \\
+\texttt{DETECTOR} & iforest & IF / LOF / hybrid \\
 \hline
 \texttt{DEFENSE\_MODE} & assist & off/monitor/assist/auto \\
 \hline

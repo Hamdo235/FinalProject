@@ -12,63 +12,78 @@ const NAV_CARDS = [
     icon: BarChart3,
     label: "Dashboard",
     desc: "Vue d'ensemble, KPI, timeline, carte GeoIP.",
-    color: "#22d3ee",
+    color: "#4A7B9D",
+    bg: "#EAF2F8",
+    border: "#A8C8E0",
   },
   {
     href: "/alerts",
     icon: AlertTriangle,
     label: "Alertes",
     desc: "Flux temps réel, labellisation, défense.",
-    color: "#ef4444",
+    color: "#C4714A",
+    bg: "#FDF0E8",
+    border: "#F0C4A8",
   },
   {
     href: "/incidents",
     icon: Shield,
     label: "Incidents",
     desc: "Groupement d'alertes, explication LLM.",
-    color: "#f59e0b",
+    color: "#B8960A",
+    bg: "#FDF8E0",
+    border: "#F0E090",
   },
   {
     href: "/chat",
     icon: MessageCircle,
     label: "Chat SOC",
     desc: "Interroger le LLM sur l'activité en cours.",
-    color: "#22d3ee",
+    color: "#4A7B9D",
+    bg: "#EAF2F8",
+    border: "#A8C8E0",
   },
   {
     href: "/demo",
     icon: Play,
-    label: "Démo",
-    desc: "Pipeline complet ML → LLM en action.",
-    color: "#10b981",
+    label: "Demo",
+    desc: "Pipeline complet ML LLM en action.",
+    color: "#5B8A6E",
+    bg: "#EBF3EE",
+    border: "#B8D8C4",
   },
   {
     href: "/model",
     icon: Cpu,
-    label: "Modèle ML",
-    desc: "Métriques F1, précision, rappel.",
-    color: "#3b82f6",
+    label: "Modele ML",
+    desc: "Metriques F1, precision, rappel.",
+    color: "#4A7B9D",
+    bg: "#EAF2F8",
+    border: "#A8C8E0",
   },
 ];
 
 const CYCLE = [
   {
     step: "01",
-    title: "Détection",
-    desc: "Les logs réseau sont classifiés par le modèle ML. Les anomalies génèrent des alertes avec un score de confiance.",
-    color: "#22d3ee",
+    title: "Detection",
+    desc: "Les logs reseau sont classes par le modele ML. Les anomalies generent des alertes avec un score de confiance.",
+    color: "#4A7B9D",
+    bg: "#EAF2F8",
   },
   {
     step: "02",
-    title: "Décision humaine",
-    desc: "L'analyste SOC labellise les alertes (vraie attaque / faux positif) assisté par le LLM explicatif.",
-    color: "#f59e0b",
+    title: "Decision humaine",
+    desc: "L'analyste SOC labellise les alertes (vraie attaque / faux positif) assiste par le LLM explicatif.",
+    color: "#B8960A",
+    bg: "#FDF8E0",
   },
   {
     step: "03",
     title: "Apprentissage",
-    desc: "Le modèle est réentraîné hors-ligne avec les labels validés. Le cycle s'améliore continuellement.",
-    color: "#10b981",
+    desc: "Le modele est reentraine hors-ligne avec les labels valides. Le cycle s'ameliore continuellement.",
+    color: "#5B8A6E",
+    bg: "#EBF3EE",
   },
 ];
 
@@ -78,35 +93,24 @@ export default function HomePage() {
 
       {/* ── Hero ── */}
       <section className="relative text-center space-y-6 py-14 px-4">
-        {/* Background glow */}
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse 60% 40% at 50% 0%, rgba(34,211,238,0.06) 0%, transparent 70%)",
-          }}
+          style={{ background: "radial-gradient(ellipse 60% 40% at 50% 0%, rgba(91,138,110,0.06) 0%, transparent 70%)" }}
         />
-
         <div className="relative">
-          <div
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono-cyber mb-6"
-            style={{
-              background: "rgba(34,211,238,0.08)",
-              border: "1px solid rgba(34,211,238,0.2)",
-              color: "#22d3ee",
-            }}
-          >
-            <Radar className="h-3.5 w-3.5 animate-pulse-cyan" />
-            IDS Cognitif — 100% local, zéro cloud
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono-cyber mb-6 bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
+            <Radar className="h-3.5 w-3.5" />
+            IDS Cognitif - 100% local, zero cloud
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4">
-            <span className="gradient-text-teal">CyberSentinel</span>
-            <span style={{ color: "#e2e8f0" }}>‑LLM</span>
+            <span style={{ color: "#5B8A6E" }}>CyberSentinel</span>
+            <span className="text-text-primary">-LLM</span>
           </h1>
 
-          <p className="text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: "#64748b" }}>
-            Plateforme de détection d&apos;intrusion avec analyse ML, enrichissement GeoIP,
-            explication LLM et corrélation MITRE ATT&amp;CK. L&apos;analyste reste décisionnaire —
+          <p className="text-lg max-w-2xl mx-auto leading-relaxed text-text-secondary">
+            Plateforme de detection d&apos;intrusion avec analyse ML, enrichissement GeoIP,
+            explication LLM et correlation MITRE ATT&amp;CK. L&apos;analyste reste decisionnaire -
             aucune action automatique.
           </p>
 
@@ -121,7 +125,7 @@ export default function HomePage() {
             <Link href="/demo">
               <Button size="lg" variant="outline" className="flex items-center gap-2">
                 <Play className="h-4 w-4" />
-                Voir la démo
+                Voir la demo
               </Button>
             </Link>
           </div>
@@ -132,46 +136,38 @@ export default function HomePage() {
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           {
-            icon: <Activity className="h-5 w-5" style={{ color: "#10b981" }} />,
-            label: "Flux temps réel",
+            icon: <Activity className="h-5 w-5 text-accent-sage" />,
+            label: "Flux temps reel",
             value: "SSE actif",
             sub: "Alertes en streaming",
-            color: "#10b981",
+            color: "#5B8A6E", bg: "#EBF3EE", border: "#B8D8C4",
           },
           {
-            icon: <Cpu className="h-5 w-5" style={{ color: "#3b82f6" }} />,
-            label: "Modèle ML",
+            icon: <Cpu className="h-5 w-5 text-accent-slate" />,
+            label: "Modele ML",
             value: "RandomForest",
-            sub: "Détection d'anomalies",
-            color: "#3b82f6",
+            sub: "Detection d'anomalies",
+            color: "#4A7B9D", bg: "#EAF2F8", border: "#A8C8E0",
           },
           {
-            icon: <Lock className="h-5 w-5" style={{ color: "#f59e0b" }} />,
+            icon: <Lock className="h-5 w-5 text-[#B8960A]" />,
             label: "Assistant LLM",
             value: "Explicatif",
             sub: "Aucune action automatique",
-            color: "#f59e0b",
+            color: "#B8960A", bg: "#FDF8E0", border: "#F0E090",
           },
-        ].map(({ icon, label, value, sub, color }) => (
-          <div
-            key={label}
-            className="cyber-card p-5 flex items-center gap-4"
-            style={{ borderColor: `${color}20` }}
-          >
+        ].map(({ icon, label, value, sub, color, bg, border }) => (
+          <div key={label} className="cyber-card p-5 flex items-center gap-4">
             <div
               className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: `${color}12`, border: `1px solid ${color}25` }}
+              style={{ background: bg, border: `1px solid ${border}` }}
             >
               {icon}
             </div>
             <div>
-              <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "#334155" }}>
-                {label}
-              </div>
-              <div className="text-lg font-bold font-mono-cyber mt-0.5" style={{ color }}>
-                {value}
-              </div>
-              <div className="text-xs" style={{ color: "#334155" }}>{sub}</div>
+              <div className="text-[11px] uppercase tracking-wider font-semibold text-text-muted">{label}</div>
+              <div className="text-lg font-bold font-mono-cyber mt-0.5" style={{ color }}>{value}</div>
+              <div className="text-xs text-text-muted">{sub}</div>
             </div>
           </div>
         ))}
@@ -179,40 +175,26 @@ export default function HomePage() {
 
       {/* ── Navigation cards ── */}
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-widest mb-4" style={{ color: "#334155" }}>
-          Accès rapide
+        <h2 className="text-sm font-semibold uppercase tracking-widest mb-4 text-text-muted">
+          Acces rapide
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {NAV_CARDS.map(({ href, icon: Icon, label, desc, color }) => (
+          {NAV_CARDS.map(({ href, icon: Icon, label, desc, color, bg, border }) => (
             <Link key={href} href={href} className="group block">
-              <div
-                className="cyber-card p-5 h-full transition-all"
-                style={{ borderColor: "rgba(34,211,238,0.08)" }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = `${color}30`;
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${color}15`;
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(34,211,238,0.08)";
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "";
-                }}
-              >
+              <div className="cyber-card p-5 h-full transition-all hover:-translate-y-1">
                 <div className="flex items-start justify-between mb-3">
                   <div
                     className="h-10 w-10 rounded-xl flex items-center justify-center"
-                    style={{ background: `${color}12`, border: `1px solid ${color}22` }}
+                    style={{ background: bg, border: `1px solid ${border}` }}
                   >
                     <Icon className="h-5 w-5" style={{ color }} />
                   </div>
                   <ArrowRight
-                    className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ color }}
+                    className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-text-muted"
                   />
                 </div>
-                <div className="font-semibold mb-1" style={{ color: "#e2e8f0" }}>{label}</div>
-                <div className="text-sm" style={{ color: "#64748b" }}>{desc}</div>
+                <div className="font-semibold mb-1 text-text-primary">{label}</div>
+                <div className="text-sm text-text-secondary">{desc}</div>
               </div>
             </Link>
           ))}
@@ -222,30 +204,26 @@ export default function HomePage() {
       {/* ── Learning cycle ── */}
       <section>
         <div className="flex items-center gap-2 mb-5">
-          <Zap className="h-4 w-4" style={{ color: "#22d3ee" }} />
-          <h2 className="text-sm font-semibold uppercase tracking-widest" style={{ color: "#334155" }}>
-            Cycle adaptatif contrôlé
+          <Zap className="h-4 w-4 text-accent-sage" />
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-text-muted">
+            Cycle adaptatif controle
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {CYCLE.map(({ step, title, desc, color }) => (
+          {CYCLE.map(({ step, title, desc, color, bg }) => (
             <div
               key={step}
               className="cyber-card p-5 relative overflow-hidden"
-              style={{ borderColor: `${color}18` }}
             >
+              <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: color }} />
               <div
-                className="absolute top-0 left-0 right-0 h-0.5"
-                style={{ background: color, opacity: 0.6 }}
-              />
-              <div
-                className="text-5xl font-bold font-mono-cyber mb-3 opacity-10 leading-none"
+                className="text-5xl font-bold font-mono-cyber mb-3 leading-none opacity-20"
                 style={{ color }}
               >
                 {step}
               </div>
-              <div className="font-semibold mb-2" style={{ color: "#e2e8f0" }}>{title}</div>
-              <div className="text-sm leading-relaxed" style={{ color: "#64748b" }}>{desc}</div>
+              <div className="font-semibold mb-2 text-text-primary">{title}</div>
+              <div className="text-sm leading-relaxed text-text-secondary">{desc}</div>
             </div>
           ))}
         </div>

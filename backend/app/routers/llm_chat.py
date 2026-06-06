@@ -8,11 +8,16 @@ import socket
 from urllib.parse import urlparse
 from fastapi.responses import StreamingResponse
 import json
+from datetime import datetime, timedelta, timezone
 from sqlmodel import Session, select
+from sqlalchemy import func
 from ..db.session import get_session
 from ..models.alert import Alert
 from ..models.incident import Incident
+from ..models.defense_action import DefenseAction
 from ..core.settings import settings
+from ..services import ip_blacklist
+from ..services.defense import defense_mode
 
 router = APIRouter(prefix="/llm", tags=["LLM"])
 
@@ -32,17 +37,11 @@ class ChatRequest(BaseModel):
     auto_tool: bool = True
     voice_mode: bool = False  # When True: short prompt + capped tokens for voice
 
-def _is_overview_question(text: str) -> bool:
-    low = text.lower()
-    keywords = [
-        "attaque", "alertes", "incidents", "récap", "resume", "résumé",
-        "vue d'ensemble", "overview", "statut", "dernières", "récentes", "bilan",
-    ]
-    return any(k in low for k in keywords)
 
-
-def _summarize_alerts(db: Session, limit: int = 8) -> dict:
-    stmt = select(Alert).order_by(Alert.ts.desc()).limit(max(1, min(limit, 100)))
+def _summarize_alerts(db: Session, limit: int = 10, since: datetime | None = None) -> dict:
+    stmt = select(Alert).order_by(Alert.ts.desc()).limit(max(1, min(limit, 200)))
+    if since:
+        stmt = stmt.where(Alert.ts >= since)
     alerts = db.exec(stmt).all()
     counts = {"low": 0, "medium": 0, "high": 0}
     for a in alerts:
@@ -55,12 +54,12 @@ def _summarize_alerts(db: Session, limit: int = 8) -> dict:
         "examples": [
             {
                 "id": a.id,
-                "ts": a.ts,
+                "ts": str(a.ts),
                 "source": a.source,
                 "ip": a.ip,
                 "rule": a.rule,
                 "severity": a.severity,
-                "score": a.score,
+                "score": round(float(a.score or 0), 2),
             }
             for a in alerts[:5]
         ],
@@ -80,7 +79,7 @@ def _summarize_incidents(db: Session, limit: int = 5) -> dict:
         "examples": [
             {
                 "id": i.id,
-                "created_at": i.created_at,
+                "created_at": str(i.created_at),
                 "status": i.status,
                 "risk": i.risk,
                 "confidence": i.confidence,
@@ -89,6 +88,72 @@ def _summarize_incidents(db: Session, limit: int = 5) -> dict:
             for i in incs[:5]
         ],
     }
+
+
+def _build_platform_context(db: Session) -> str:
+    """Snapshot temps réel de la plateforme — injecté dans chaque message."""
+    now       = datetime.now(timezone.utc).replace(tzinfo=None)
+    today     = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    last_hour = now - timedelta(hours=1)
+
+    alerts_today     = _summarize_alerts(db, limit=100, since=today)
+    alerts_last_hour = _summarize_alerts(db, limit=50,  since=last_hour)
+    alerts_recent    = _summarize_alerts(db, limit=10)
+    incs             = _summarize_incidents(db, limit=5)
+    mode             = defense_mode()
+    blocked          = ip_blacklist.count()
+
+    total_alerts_db = db.exec(select(func.count()).select_from(Alert)).scalar_one()
+    total_incs_db   = db.exec(select(func.count()).select_from(Incident)).scalar_one()
+
+    active_blocks = db.exec(
+        select(DefenseAction)
+        .where(DefenseAction.active == True)  # noqa: E712
+        .order_by(DefenseAction.created_at.desc())
+        .limit(5)
+    ).all()
+    blocks_info = [{"ip": b.ip, "action": b.action, "reason": b.reason} for b in active_blocks]
+
+    lines = [
+        "=== ÉTAT TEMPS RÉEL DE LA PLATEFORME CYBERSENTINEL ===",
+        f"Date/heure actuelle : {now.strftime('%Y-%m-%d %H:%M:%S')} UTC",
+        f"Mode de défense actif : {mode}",
+        f"IPs bloquées : {blocked}",
+        "",
+        f"--- Alertes (total en base : {total_alerts_db}) ---",
+        f"Cette heure  : {alerts_last_hour['total']} | sévérités : {alerts_last_hour['by_severity']}",
+        f"Aujourd'hui  : {alerts_today['total']} | sévérités : {alerts_today['by_severity']}",
+        f"10 dernières : {alerts_recent['by_severity']}",
+    ]
+    if alerts_recent["examples"]:
+        lines.append("Détail des 5 dernières alertes :")
+        for a in alerts_recent["examples"]:
+            lines.append(
+                f"  [#{a['id']}] {a['ts']} | source:{a['source']} | IP:{a['ip']} "
+                f"| règle:{a['rule']} | sévérité:{a['severity']} | score:{a['score']}"
+            )
+
+    lines += [
+        "",
+        f"--- Incidents (total en base : {total_incs_db}) ---",
+        f"Récents : {incs['total']} | statuts : {incs['by_status']}",
+    ]
+    if incs["examples"]:
+        lines.append("Détail des derniers incidents :")
+        for i in incs["examples"]:
+            lines.append(
+                f"  [#{i['id']}] {i['created_at']} | statut:{i['status']} "
+                f"| risque:{i['risk']} | confiance:{i['confidence']} | {i['summary']}"
+            )
+
+    if blocks_info:
+        lines.append("")
+        lines.append(f"--- Blocages actifs ({len(blocks_info)}) ---")
+        for b in blocks_info:
+            lines.append(f"  IP:{b['ip']} | action:{b['action']} | raison:{b['reason']}")
+
+    lines.append("======================================================")
+    return "\n".join(lines)
 
 
 def _is_ollama_reachable(url: str) -> bool:
@@ -107,44 +172,47 @@ async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get
     """
     Endpoint de chat global (conversation libre) avec un prompt système explicatif.
     """
-    # Prompt système pour cadrer le LLM
+    # Contexte plateforme — injecté dans CHAQUE message
+    platform_ctx = _build_platform_context(db)
+
     if req.voice_mode:
         system_prompt = (
-            "Tu es l'assistant vocal de CyberSentinel. "
-            "Réponds en 1 à 2 phrases courtes, en français, de façon naturelle et conversationnelle. "
+            "Tu es l'assistant vocal de CyberSentinel, une plateforme SOC de cybersécurité.\n"
+            "Tu as accès en temps réel aux alertes, incidents et blocages de la plateforme.\n"
+            "Les données du contexte sont des FAITS réels enregistrés par la plateforme : "
+            "parle-en avec certitude (ex: 'Le système a détecté', 'La plateforme a bloqué').\n"
+            "N'utilise JAMAIS 'probablement', 'il est possible que', 'il semble que' "
+            "pour décrire des données présentes dans le contexte.\n"
+            "Réponds en 1 à 2 phrases courtes, en français, de façon naturelle.\n"
             "Pas de listes, pas de markdown, pas de code."
         )
     else:
         system_prompt = (
-            "Tu es l'assistant d'analyse de CyberSentinel. "
-            "Tu peux répondre de manière conversationnelle aux salutations et questions générales. "
-            "Ta mission principale reste l'explication des alertes, incidents et métriques de sécurité. "
-            "Tu ne dois jamais proposer ni exécuter d'actions automatiques. "
-            "Sois poli, clair et concis."
+            "Tu es l'assistant d'analyse de CyberSentinel, une plateforme SOC de cybersécurité.\n"
+            "Tu as accès en temps réel aux données de la plateforme : alertes, incidents, "
+            "mode de défense et IPs bloquées.\n"
+            "RÈGLE IMPORTANTE : les données du contexte sont des FAITS certains, "
+            "enregistrés et mesurés par la plateforme. "
+            "Parle-en avec assurance : dis 'Le système a détecté', 'La plateforme a bloqué', "
+            "'Le score ML est de X', 'L'alerte #N indique'. "
+            "N'utilise JAMAIS 'probablement', 'peut-être', 'il est possible que', "
+            "'il semble que' pour décrire des faits déjà présents dans le contexte.\n"
+            "Tu peux utiliser 'probablement' uniquement pour des déductions ou hypothèses "
+            "qui vont AU-DELÀ des données du contexte.\n"
+            "Tu ne dois jamais exécuter d'actions automatiques sans confirmation explicite.\n"
+            "Réponds en français, de façon claire et concise."
         )
-    ollama_options = {"num_thread": 8} if not req.voice_mode else {"num_predict": 100, "num_thread": 8, "temperature": 0.7}
-    # Construire le payload pour Ollama
-    messages_ollama = [{"role": "system", "content": system_prompt}]
 
-    # Mode hybride: si activé et dernière question liée à la plateforme,
-    # ajouter un contexte synthétique à partir de la base.
-    if req.auto_tool and req.messages:
-        last_user = None
-        for m in reversed(req.messages):
-            if m.role == "user":
-                last_user = m.content
-                break
-        if last_user and _is_overview_question(last_user):
-            alerts_summary = _summarize_alerts(db, limit=8)
-            incidents_summary = _summarize_incidents(db, limit=5)
-            context = (
-                f"Contexte plateforme. Récap alertes: total={alerts_summary['total']}, par sévérité={alerts_summary['by_severity']}. "
-                f"Exemples: {alerts_summary['examples']}. "
-                f"Récap incidents: total={incidents_summary['total']}, par statut={incidents_summary['by_status']}. "
-                f"Exemples: {incidents_summary['examples']}."
-            )
-            messages_ollama.append({"role": "system", "content": f"Contexte:\n{context}"})
+    ollama_options = (
+        {"num_thread": 8, "num_predict": 100, "num_ctx": 1536, "temperature": 0.7}
+        if req.voice_mode else
+        {"num_thread": 8, "num_predict": 400, "num_ctx": 2048, "temperature": 0.3}
+    )
 
+    messages_ollama = [
+        {"role": "system", "content": system_prompt},
+        {"role": "system", "content": platform_ctx},
+    ]
     messages_ollama.extend([{"role": m.role, "content": m.content} for m in req.messages])
 
     if not stream:
@@ -159,6 +227,7 @@ async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get
                         "model": MODEL,
                         "messages": messages_ollama,
                         "stream": False,
+                        "keep_alive": -1,
                         "options": ollama_options,
                     },
                 )
@@ -187,7 +256,7 @@ async def chat(req: ChatRequest, stream: bool = False, db: Session = Depends(get
                 async with client.stream(
                     "POST",
                     f"{OLLAMA_URL}/api/chat",
-                    json={"model": MODEL, "messages": messages_ollama, "stream": True, "options": ollama_options},
+                    json={"model": MODEL, "messages": messages_ollama, "stream": True, "keep_alive": -1, "options": ollama_options},
                 ) as resp:
                     if resp.status_code != 200:
                         yield "event: error\n"

@@ -44,12 +44,12 @@ export default function IncidentsPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: "#e2e8f0" }}>Incidents</h1>
-          <p className="text-sm mt-0.5" style={{ color: "#64748b" }}>
+          <h1 className="text-xl font-bold text-text-primary">Incidents</h1>
+          <p className="text-sm mt-0.5 text-text-secondary">
             {incidents.length} incident{incidents.length !== 1 ? "s" : ""} —{" "}
-            <span style={{ color: "#f59e0b" }}>{openCount} ouvert{openCount !== 1 ? "s" : ""}</span>
+            <span className="text-accent-amber">{openCount} ouvert{openCount !== 1 ? "s" : ""}</span>
             {closedCount > 0 && (
-              <span style={{ color: "#10b981" }}>{", "}{closedCount} fermé{closedCount !== 1 ? "s" : ""}</span>
+              <span className="text-accent-sage">{", "}{closedCount} fermé{closedCount !== 1 ? "s" : ""}</span>
             )}
           </p>
         </div>
@@ -85,21 +85,13 @@ export default function IncidentsPage() {
       {incidents.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Total",  value: incidents.length,                 color: "#22d3ee" },
-            { label: "Ouverts", value: openCount,                        color: "#f59e0b" },
-            { label: "Fermés", value: closedCount,                       color: "#10b981" },
-          ].map(({ label, value, color }) => (
-            <div
-              key={label}
-              className="cyber-card p-4 text-center"
-              style={{ borderColor: `${color}25` }}
-            >
-              <div className="text-2xl font-bold font-mono-cyber" style={{ color }}>
-                {value}
-              </div>
-              <div className="text-xs mt-1 uppercase tracking-wider" style={{ color: "#334155" }}>
-                {label}
-              </div>
+            { label: "Total",   value: incidents.length, cls: "text-accent-slate",  card: "border-t-2 border-t-accent-slate" },
+            { label: "Ouverts", value: openCount,         cls: "text-[#B8960A]",       card: "border-t-2 border-t-[#E8C547]"   },
+            { label: "Fermes",  value: closedCount,       cls: "text-accent-sage",    card: "border-t-2 border-t-accent-sage"  },
+          ].map(({ label, value, cls, card }) => (
+            <div key={label} className={`cyber-card p-4 text-center ${card}`}>
+              <div className={`text-2xl font-bold font-mono-cyber ${cls}`}>{value}</div>
+              <div className="text-xs mt-1 uppercase tracking-wider text-text-muted">{label}</div>
             </div>
           ))}
         </div>
@@ -109,16 +101,9 @@ export default function IncidentsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4" style={{ color: "#f59e0b" }} />
+            <ShieldAlert className="h-4 w-4 text-accent-amber" />
             Liste des incidents
-            <span
-              className="cyber-badge font-mono-cyber"
-              style={{
-                background: "rgba(34,211,238,0.08)",
-                color: "#22d3ee",
-                border: "1px solid rgba(34,211,238,0.2)",
-              }}
-            >
+            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-bold font-mono border bg-[#EBF3EE] text-accent-sage border-[#B8D8C4]">
               {incidents.length}
             </span>
           </CardTitle>
@@ -144,10 +129,8 @@ export default function IncidentsPage() {
       </Card>
 
       {error && (
-        <Card>
-          <CardContent className="text-sm" style={{ color: "#ef4444" }}>
-            {error}
-          </CardContent>
+        <Card accentColor="red">
+          <CardContent className="text-sm text-accent-red">{error}</CardContent>
         </Card>
       )}
     </div>

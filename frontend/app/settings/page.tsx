@@ -16,16 +16,17 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 
 type StatusLevel = 'ok' | 'warn' | 'error';
 
+const STATUS_CLS: Record<StatusLevel, { text: string; dot: string }> = {
+  ok:    { text: "text-accent-sage",  dot: "bg-accent-sage"  },
+  warn:  { text: "text-[#B8960A]",   dot: "bg-[#E8C547]"    },
+  error: { text: "text-accent-terra", dot: "bg-accent-terra" },
+};
+
 function StatusChip({ level, label }: { level: StatusLevel; label: string }) {
-  const cfg: Record<StatusLevel, { color: string; glow: string }> = {
-    ok:    { color: "#10b981", glow: "rgba(16,185,129,0.6)" },
-    warn:  { color: "#f59e0b", glow: "rgba(245,158,11,0.5)" },
-    error: { color: "#ef4444", glow: "rgba(239,68,68,0.6)" },
-  };
-  const { color, glow } = cfg[level];
+  const { text, dot } = STATUS_CLS[level];
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-semibold font-mono-cyber" style={{ color }}>
-      <span className="h-2 w-2 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${glow}` }} />
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold font-mono-cyber ${text}`}>
+      <span className={`h-2 w-2 rounded-full ${dot}`} />
       {label}
     </span>
   );
@@ -40,21 +41,18 @@ function ServiceRow({
   chip: string;
   hint?: string;
 }) {
-  const iconColor = level === 'ok' ? '#22d3ee' : level === 'warn' ? '#f59e0b' : '#64748b';
+  const iconCls = level === 'ok' ? 'text-accent-sage' : level === 'warn' ? 'text-[#B8960A]' : 'text-text-secondary';
   return (
-    <div
-      className="flex flex-col gap-1 rounded-xl p-3"
-      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
-    >
+    <div className="flex flex-col gap-1 rounded-xl p-3 bg-bg-base border border-bg-border">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4" style={{ color: iconColor }} />
-          <span className="text-sm font-medium" style={{ color: '#94a3b8' }}>{label}</span>
+          <Icon className={`h-4 w-4 ${iconCls}`} />
+          <span className="text-sm font-medium text-text-secondary">{label}</span>
         </div>
         <StatusChip level={level} label={chip} />
       </div>
       {hint && (
-        <p className="text-[10px] font-mono-cyber pl-6" style={{ color: '#475569' }}>{hint}</p>
+        <p className="text-[10px] font-mono-cyber pl-6 text-text-muted">{hint}</p>
       )}
     </div>
   );
@@ -65,8 +63,11 @@ function CopyBtn({ text }: { text: string }) {
   return (
     <button
       onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-      className="text-[10px] font-mono-cyber px-2 py-0.5 rounded transition-all"
-      style={{ background: "rgba(34,211,238,0.07)", border: "1px solid rgba(34,211,238,0.15)", color: copied ? "#10b981" : "#22d3ee" }}
+      className={`text-[10px] font-mono-cyber px-2 py-0.5 rounded border transition-all ${
+        copied
+          ? "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage"
+          : "bg-[#EAF2F8] border-[#A8C8E0] text-accent-slate"
+      }`}
     >
       {copied ? "✓ Copié" : "Copier"}
     </button>
@@ -156,17 +157,18 @@ export default function SettingsPage() {
 
   const handleReset = () => setConfirmReset(true);
 
-  const modeColor: Record<string, string> = {
-    off: "#334155", monitor: "#f59e0b", assist: "#22d3ee", auto: "#ef4444",
+  const modeCls: Record<string, string> = {
+    off:     "bg-bg-base border-bg-border text-text-secondary",
+    monitor: "bg-[#FDF8E0] border-[#F0E090] text-[#B8960A]",
+    assist:  "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage",
+    auto:    "bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra",
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-xl font-bold" style={{ color: "#e2e8f0" }}>Paramètres</h1>
-        <p className="text-sm mt-0.5" style={{ color: "#64748b" }}>
-          État des services, défense applicative et administration.
-        </p>
+        <h1 className="text-xl font-bold text-text-primary">Paramètres</h1>
+        <p className="text-sm mt-0.5 text-text-secondary">État des services, défense applicative et administration.</p>
       </div>
 
       <ConfirmDialog
@@ -175,13 +177,13 @@ export default function SettingsPage() {
         message={(
           <div className="space-y-2">
             <p>Cette opération va supprimer définitivement :</p>
-            <ul className="list-disc list-inside text-xs space-y-1" style={{ color: "#94a3b8" }}>
+            <ul className="list-disc list-inside text-xs space-y-1 text-text-secondary">
               <li>Toutes les alertes et incidents enregistrés</li>
               <li>Toutes les actions défensives (même celles approuvées)</li>
               <li>L’enrichissement GeoIP et les traces LLM</li>
               <li>La liste noire d’IP en mémoire</li>
             </ul>
-            <p className="text-xs pt-1" style={{ color: "#fbbf24" }}>⚠ Opération irréversible.</p>
+            <p className="text-xs pt-1 text-accent-amber">⚠ Opération irréversible.</p>
           </div>
         )}
         confirmLabel="Réinitialiser"
@@ -197,21 +199,17 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Server className="h-4 w-4" style={{ color: "#22d3ee" }} />
+              <Server className="h-4 w-4 text-accent-slate" />
               État des services
             </span>
-            <button
-              onClick={loadHealth}
-              className="text-xs flex items-center gap-1 transition-all"
-              style={{ color: "#64748b" }}
-            >
+            <button onClick={loadHealth} className="text-xs flex items-center gap-1 transition-all text-text-secondary hover:text-text-primary">
               <RefreshCw className="h-3 w-3" /> Actualiser
             </button>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loadingHealth ? (
-            <div className="flex items-center gap-2 text-sm" style={{ color: "#64748b" }}>
+            <div className="flex items-center gap-2 text-sm text-text-secondary">
               <Loader2 className="h-4 w-4 animate-spin" /> Vérification…
             </div>
           ) : (
@@ -257,40 +255,26 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="h-4 w-4" style={{ color: "#22d3ee" }} />
-            Configuration défense
+            <Shield className="h-4 w-4 text-accent-sage" />
+            Configuration defense
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-sm" style={{ color: "#64748b" }}>Mode actif :</span>
-            <span
-              className="px-3 py-1 rounded-full text-xs font-bold font-mono-cyber uppercase tracking-wide"
-              style={{
-                background: `${modeColor[health?.defense_mode ?? "assist"] ?? "#22d3ee"}15`,
-                border: `1px solid ${modeColor[health?.defense_mode ?? "assist"] ?? "#22d3ee"}35`,
-                color: modeColor[health?.defense_mode ?? "assist"] ?? "#22d3ee",
-              }}
-            >
+            <span className="text-sm text-text-secondary">Mode actif :</span>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono-cyber uppercase tracking-wide border ${
+              modeCls[health?.defense_mode ?? "assist"] ?? modeCls.assist
+            }`}>
               {health?.defense_mode ?? "assist"}
             </span>
-            <span className="text-[11px] font-mono-cyber" style={{ color: "#334155" }}>
-              Configurable via env DEFENSE_MODE
-            </span>
+            <span className="text-[11px] font-mono-cyber text-text-muted">Configurable via env DEFENSE_MODE</span>
           </div>
           <div className="flex items-center gap-2">
-            <Shield className="h-3.5 w-3.5 shrink-0" style={{ color: "#22d3ee" }} />
-            <span className="text-sm" style={{ color: "#64748b" }}>
-              IPs bloquées actives :
-            </span>
-            <span className="font-bold font-mono-cyber" style={{ color: "#ef4444" }}>
-              {health?.blocked_ips_count ?? blocked.length}
-            </span>
+            <Shield className="h-3.5 w-3.5 shrink-0 text-accent-sage" />
+            <span className="text-sm text-text-secondary">IPs bloquées actives :</span>
+            <span className="font-bold font-mono-cyber text-accent-terra">{health?.blocked_ips_count ?? blocked.length}</span>
           </div>
-          <div
-            className="text-[11px] rounded-lg px-3 py-2"
-            style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.15)", color: "#f59e0b" }}
-          >
+          <div className="text-[11px] rounded-lg px-3 py-2 bg-accent-amber/[0.07] border border-accent-amber/18 text-accent-amber">
             off = désactivé · monitor = journalisation uniquement · assist = recommandations humaines ·
             auto = blocage automatique si score ≥ 0.85
           </div>
@@ -302,18 +286,14 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <ShieldOff className="h-4 w-4" style={{ color: "#ef4444" }} />
-              IPs actuellement bloquées
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold font-mono-cyber"
-                style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444" }}>
+              <ShieldOff className="h-4 w-4 text-accent-terra" />
+              IPs actuellement bloquees
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold font-mono-cyber bg-[#FDF0E8] border border-[#F0C4A8] text-accent-terra">
                 {blocked.length}
               </span>
             </span>
-            <button
-              onClick={() => setShowManualBlock(!showManualBlock)}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-semibold transition-all"
-              style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.2)", color: "#22d3ee" }}
-            >
+            <button onClick={() => setShowManualBlock(!showManualBlock)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-semibold transition-all border bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage hover:bg-[#D8EDE0]">
               <Plus className="h-3.5 w-3.5" /> Bloquer une IP
             </button>
           </CardTitle>
@@ -321,54 +301,43 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           {/* Formulaire blocage manuel */}
           {showManualBlock && (
-            <div
-              className="rounded-xl p-4 space-y-3 animate-fade-in"
-              style={{ background: "rgba(34,211,238,0.04)", border: "1px solid rgba(34,211,238,0.15)" }}
-            >
-              <div className="text-xs font-semibold" style={{ color: "#22d3ee" }}>Blocage manuel</div>
+            <div className="rounded-xl p-4 space-y-3 animate-fade-in bg-[#EBF3EE] border border-[#B8D8C4]">
+              <div className="text-xs font-semibold text-accent-sage">Blocage manuel</div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <input
-                  className="rounded-lg px-3 py-1.5 text-sm font-mono-cyber col-span-1"
-                  style={{ background: "#060c15", border: "1px solid rgba(34,211,238,0.2)", color: "#e2e8f0" }}
+                  className="rounded-lg px-3 py-1.5 text-sm font-mono-cyber col-span-1 bg-white border border-[#B8D8C4] text-text-primary outline-none focus:border-accent-sage"
                   placeholder="IP (ex: 1.2.3.4)"
                   value={manualIp} onChange={(e) => setManualIp(e.target.value)}
                 />
                 <input
-                  className="rounded-lg px-3 py-1.5 text-sm col-span-1 sm:col-span-2"
-                  style={{ background: "#060c15", border: "1px solid rgba(34,211,238,0.2)", color: "#e2e8f0" }}
+                  className="rounded-lg px-3 py-1.5 text-sm col-span-1 sm:col-span-2 bg-white border border-[#B8D8C4] text-text-primary outline-none focus:border-accent-sage"
                   placeholder="Raison du blocage"
                   value={manualReason} onChange={(e) => setManualReason(e.target.value)}
                 />
               </div>
               <div className="flex items-center gap-3">
-                <label className="text-xs font-mono-cyber" style={{ color: "#64748b" }}>
-                  TTL : <span style={{ color: "#22d3ee" }}>{manualTtl} min</span>
+                <label className="text-xs font-mono-cyber text-text-secondary">
+                  TTL : <span className="text-accent-sage">{manualTtl} min</span>
                 </label>
-                <input
-                  type="range" min={5} max={120} step={5} value={manualTtl}
+                <input type="range" min={5} max={120} step={5} value={manualTtl}
                   onChange={(e) => setManualTtl(Number(e.target.value))}
-                  className="flex-1"
-                  style={{ accentColor: "#22d3ee" }}
+                  className="flex-1 accent-accent-sage"
                 />
               </div>
-              <button
-                onClick={handleManualBlock} disabled={manualBusy || !manualIp.trim()}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
-                style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444" }}
-              >
+              <button onClick={handleManualBlock} disabled={manualBusy || !manualIp.trim()}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-sm font-bold border transition-all disabled:opacity-40 bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra hover:bg-[#F8E0D0]">
                 {manualBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldOff className="h-3.5 w-3.5" />}
-                Bloquer l'IP
+                Bloquer l&apos;IP
               </button>
               {manualResult && (
                 <div className="space-y-1">
                   {manualResult.msg && (
-                    <div className="text-xs font-mono-cyber" style={{ color: "#10b981" }}>{manualResult.msg}</div>
+                    <div className="text-xs font-mono-cyber text-accent-sage">{manualResult.msg}</div>
                   )}
                   {manualResult.cmd && (
-                    <div className="flex items-center gap-2 rounded-lg px-3 py-2"
-                      style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)" }}>
-                      <Terminal className="h-3 w-3 shrink-0" style={{ color: "#10b981" }} />
-                      <span className="text-[10px] font-mono-cyber flex-1" style={{ color: "#34d399" }}>{manualResult.cmd}</span>
+                    <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-[#EBF3EE] border border-[#B8D8C4]">
+                      <Terminal className="h-3 w-3 shrink-0 text-accent-sage" />
+                      <span className="text-[10px] font-mono-cyber flex-1 text-accent-sage">{manualResult.cmd}</span>
                       <CopyBtn text={manualResult.cmd} />
                     </div>
                   )}
@@ -379,8 +348,8 @@ export default function SettingsPage() {
 
           {/* Table des IPs bloquées */}
           {blocked.length === 0 ? (
-            <div className="text-center py-8 text-sm" style={{ color: "#334155" }}>
-              <ShieldCheck className="h-8 w-8 mx-auto mb-2" style={{ color: "#10b981" }} />
+            <div className="text-center py-8 text-sm text-text-muted">
+              <ShieldCheck className="h-8 w-8 mx-auto mb-2 text-accent-sage" />
               Aucune IP bloquée actuellement.
             </div>
           ) : (
@@ -399,20 +368,18 @@ export default function SettingsPage() {
                 <tbody>
                   {blocked.map((b) => (
                     <tr key={b.ip}>
-                      <td className="font-mono-cyber text-xs px-4 py-3" style={{ color: "#22d3ee" }}>{b.ip}</td>
-                      <td className="text-xs px-4 py-3" style={{ color: "#94a3b8" }}>{b.reason}</td>
-                      <td className="text-xs px-4 py-3" style={{ color: "#64748b" }}>{b.approved_by}</td>
+                      <td className="font-mono-cyber text-xs px-4 py-3 text-text-mono">{b.ip}</td>
+                      <td className="text-xs px-4 py-3 text-text-secondary">{b.reason}</td>
+                      <td className="text-xs px-4 py-3 text-text-secondary">{b.approved_by}</td>
                       <td className="font-mono-cyber text-xs px-4 py-3">
-                        <div className="flex items-center gap-1" style={{ color: "#f59e0b" }}>
+                        <div className="flex items-center gap-1 text-accent-amber">
                           <Clock className="h-3 w-3" />
                           <ExpiryCountdown expiresAt={b.expires_at} />
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <code className="text-[10px] font-mono-cyber" style={{ color: "#34d399" }}>
-                            {b.iptables_command}
-                          </code>
+                          <code className="text-[10px] font-mono-cyber text-accent-sage">{b.iptables_command}</code>
                           <CopyBtn text={b.iptables_command} />
                         </div>
                       </td>
@@ -420,8 +387,7 @@ export default function SettingsPage() {
                         <button
                           onClick={() => handleUnblock(b.ip)}
                           disabled={unblockBusy === b.ip}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all disabled:opacity-40"
-                          style={{ background: "rgba(100,116,139,0.08)", border: "1px solid rgba(100,116,139,0.2)", color: "#64748b" }}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border disabled:opacity-40 bg-text-muted/[0.08] border-text-muted/22 text-text-secondary hover:bg-text-muted/[0.16]"
                         >
                           {unblockBusy === b.ip ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                           Débloquer
@@ -440,25 +406,19 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Terminal className="h-4 w-4" style={{ color: "#64748b" }} />
+            <Terminal className="h-4 w-4 text-text-secondary" />
             Administration système
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex flex-wrap gap-3">
-            <button
-              onClick={handleReset} disabled={resetBusy}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444" }}
-            >
+            <button onClick={handleReset} disabled={resetBusy}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all disabled:opacity-40 bg-accent-red/[0.08] border-accent-red/22 text-accent-red hover:bg-accent-red/[0.16]">
               {resetBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
               Réinitialiser la démo (base de données)
             </button>
           </div>
-          <div
-            className="text-[11px] rounded-lg px-3 py-2"
-            style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)", color: "#64748b" }}
-          >
+          <div className="text-[11px] rounded-lg px-3 py-2 bg-accent-red/[0.05] border border-accent-red/12 text-text-secondary">
             ⚠ La réinitialisation supprime toutes les alertes, incidents, traces LLM et enrichissements GeoIP.
           </div>
         </CardContent>

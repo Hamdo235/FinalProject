@@ -38,8 +38,7 @@ export default function DashboardPage() {
   React.useEffect(() => {
     (async () => {
       try {
-        const [a, i, m] = await Promise.all([fetchAlerts(), fetchIncidents(), fetchModelMetrics()]);
-        const d = await fetchDefenseActions({ limit: 100 });
+        const [a, i, m, d] = await Promise.all([fetchAlerts(), fetchIncidents(), fetchModelMetrics(), fetchDefenseActions({ limit: 100 })]);
         setAlerts(a); setIncidents(i); setMetrics(m); setDefenseActions(d);
       } catch { setError("Impossible de charger les données du backend."); }
       finally { setLoading(false); }
@@ -127,23 +126,12 @@ export default function DashboardPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: "#e2e8f0" }}>
-            Vue opérationnelle
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: "#64748b" }}>
-            Alertes, incidents et ML en temps réel.
-          </p>
+          <h1 className="text-xl font-bold text-text-primary">Vue opérationnelle</h1>
+          <p className="text-sm mt-0.5 text-text-secondary">Alertes, incidents et ML en temps réel.</p>
         </div>
         {live && (
-          <span
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono-cyber animate-pulse-badge"
-            style={{
-              background: "rgba(16,185,129,0.08)",
-              border: "1px solid rgba(16,185,129,0.25)",
-              color: "#10b981",
-            }}
-          >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#10b981" }} />
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono-cyber animate-pulse-badge bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent-sage animate-pulse" />
             LIVE
           </span>
         )}
@@ -151,24 +139,13 @@ export default function DashboardPage() {
 
       {/* ── First-time CTA ── */}
       {!loading && alerts.length === 0 && !error && (
-        <div
-          className="rounded-2xl p-5 flex items-center gap-4 animate-fade-in"
-          style={{
-            background: "linear-gradient(135deg, rgba(34,211,238,0.06), rgba(139,92,246,0.06))",
-            border: "1px solid rgba(34,211,238,0.2)",
-          }}
-        >
-          <div
-            className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: "rgba(34,211,238,0.1)", border: "1px solid rgba(34,211,238,0.3)" }}
-          >
-            <Play className="h-5 w-5" style={{ color: "#22d3ee" }} />
+        <div className="rounded-2xl p-5 flex items-center gap-4 animate-fade-in bg-[#EBF3EE] border border-[#B8D8C4]">
+          <div className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0 bg-white border border-[#B8D8C4]">
+            <Play className="h-5 w-5 text-accent-sage" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold" style={{ color: "#e2e8f0" }}>
-              Premier démarrage ?
-            </div>
-            <p className="text-xs mt-0.5" style={{ color: "#94a3b8" }}>
+            <div className="text-sm font-bold text-text-primary">Premier démarrage ?</div>
+            <p className="text-xs mt-0.5 text-text-secondary">
               Aucune donnée n’est encore enregistrée. Lancez le pipeline de démonstration pour voir les alertes,
               la détection ML, l’enrichissement GeoIP et l’analyse LLM en action.
             </p>
@@ -184,76 +161,25 @@ export default function DashboardPage() {
 
       {/* ── KPIs ── */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <MetricCard
-          title="Alertes 24h"
-          value={loading ? "…" : totalAlerts}
-          subtitle="Toutes sévérités"
-          loading={loading}
-          accent="cyan"
-          icon={<Activity className="h-4 w-4" style={{ color: "#22d3ee" }} />}
-        />
-        <MetricCard
-          title="Critiques"
-          value={loading ? "…" : criticalAlerts}
-          subtitle="Sévérité haute"
-          loading={loading}
-          accent="red"
-          icon={<AlertTriangle className="h-4 w-4" style={{ color: "#ef4444" }} />}
-        />
-        <MetricCard
-          title="Incidents ouverts"
-          value={loading ? "…" : openIncidents}
-          subtitle="En cours"
-          loading={loading}
-          accent="amber"
-          icon={<Shield className="h-4 w-4" style={{ color: "#f59e0b" }} />}
-        />
-        <MetricCard
-          title="F1-score"
-          value={loading ? "…" : f1Display}
-          subtitle="Modèle ML"
-          loading={loading}
-          accent="green"
-          icon={<TrendingUp className="h-4 w-4" style={{ color: "#10b981" }} />}
-        />
-        <MetricCard
-          title="Blocages actifs"
-          value={loading ? "…" : activeBlocks}
-          subtitle="Défense"
-          loading={loading}
-          accent="blue"
-          icon={<Zap className="h-4 w-4" style={{ color: "#3b82f6" }} />}
-        />
+        <MetricCard title="Alertes 24h"      value={loading ? "…" : totalAlerts}    subtitle="Toutes severites" loading={loading} accent="slate" icon={<Activity      className="h-4 w-4 text-accent-slate" />} />
+        <MetricCard title="Critiques"         value={loading ? "…" : criticalAlerts} subtitle="Severite haute"   loading={loading} accent="red"   icon={<AlertTriangle className="h-4 w-4 text-accent-terra" />} />
+        <MetricCard title="Incidents ouverts" value={loading ? "…" : openIncidents}  subtitle="En cours"         loading={loading} accent="amber" icon={<Shield        className="h-4 w-4 text-[#B8960A]" />} />
+        <MetricCard title="F1-score"          value={loading ? "…" : f1Display}      subtitle="Modele ML"        loading={loading} accent="green" icon={<TrendingUp    className="h-4 w-4 text-accent-sage" />} />
+        <MetricCard title="Blocages actifs"   value={loading ? "…" : activeBlocks}   subtitle="Defense"          loading={loading} accent="sage"  icon={<Zap           className="h-4 w-4 text-accent-sage" />} />
       </div>
 
       {/* ── Quick actions ── */}
       <div className="flex flex-wrap gap-2">
         {[
-          { href: "/alerts",    label: "Voir les alertes",    color: "#22d3ee" },
-          { href: "/incidents", label: "Voir les incidents",   color: "#22d3ee" },
-          { href: "/chat",      label: "Interroger le SOC IA", color: "#f59e0b" },
-          { href: "/demo",      label: "Lancer une démo",      color: "#22d3ee" },
-        ].map(({ href, label, color }) => (
-          <Link
-            key={label}
-            href={href}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
-            style={{
-              border: `1px solid ${color}30`,
-              color,
-              background: `${color}0a`,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = `${color}18`;
-              (e.currentTarget as HTMLElement).style.borderColor = `${color}55`;
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = `${color}0a`;
-              (e.currentTarget as HTMLElement).style.borderColor = `${color}30`;
-            }}
+          { href: "/alerts",    label: "Voir les alertes",    cls: "border-[#B8D8C4] text-accent-sage   bg-[#EBF3EE] hover:bg-[#D8EDE0]" },
+          { href: "/incidents", label: "Voir les incidents",   cls: "border-[#F0E090] text-[#B8960A]    bg-[#FDF8E0] hover:bg-[#F5F0C0]" },
+          { href: "/chat",      label: "Interroger le SOC IA", cls: "border-[#A8C8E0] text-accent-slate  bg-[#EAF2F8] hover:bg-[#D8E8F4]" },
+          { href: "/demo",      label: "Lancer une demo",      cls: "border-[#B8D8C4] text-accent-sage   bg-[#EBF3EE] hover:bg-[#D8EDE0]" },
+        ].map(({ href, label, cls }) => (
+          <Link key={label} href={href}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border ${cls}`}
           >
-            {label}
-            <ChevronRight className="h-3.5 w-3.5" />
+            {label}<ChevronRight className="h-3.5 w-3.5" />
           </Link>
         ))}
       </div>
@@ -272,12 +198,10 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" style={{ color: "#22d3ee" }} />
+                <MapPin className="h-4 w-4 text-accent-sage" />
                 Carte GeoIP
               </span>
-              <span className="text-xs font-mono-cyber" style={{ color: "#334155" }}>
-                Points enrichis
-              </span>
+              <span className="text-xs font-mono-cyber text-text-muted">Points enrichis</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -303,11 +227,7 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Dernières alertes</span>
-            <Link
-              href="/alerts"
-              className="text-xs font-medium flex items-center gap-1 transition-all"
-              style={{ color: "#22d3ee" }}
-            >
+            <Link href="/alerts" className="text-xs font-medium flex items-center gap-1 transition-all text-accent-sage hover:text-[#4A7A5E]">
               Voir tout <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </CardTitle>
@@ -346,18 +266,10 @@ export default function DashboardPage() {
                     <td className="px-4 py-3">
                       <Badge variant={SEV_BADGE[a.severity] ?? "default"}>{a.severity}</Badge>
                     </td>
-                    <td className="px-4 py-3 font-medium text-sm" style={{ color: "#e2e8f0" }}>
-                      {a.source}
-                    </td>
-                    <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#22d3ee" }}>
-                      {a.ip || "—"}
-                    </td>
-                    <td className="px-4 py-3 font-mono-cyber text-xs font-semibold" style={{ color: "#10b981" }}>
-                      {a.score.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono-cyber text-xs" style={{ color: "#64748b" }}>
-                      {formatTimeLocal(a.ts)}
-                    </td>
+                    <td className="px-4 py-3 font-medium text-sm text-text-primary">{a.source}</td>
+                    <td className="px-4 py-3 font-mono-cyber text-xs text-text-mono">{a.ip || "—"}</td>
+                    <td className="px-4 py-3 font-mono-cyber text-xs font-semibold text-accent-sage">{a.score.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-mono-cyber text-xs text-text-secondary">{formatTimeLocal(a.ts)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -370,48 +282,26 @@ export default function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock className="h-4 w-4" style={{ color: "#64748b" }} />
+            <Clock className="h-4 w-4 text-text-secondary" />
             Flux d&apos;activité
           </CardTitle>
         </CardHeader>
         <CardContent className="py-2">
           {activity.length === 0 ? (
-            <div className="text-sm py-4" style={{ color: "#64748b" }}>
-              Aucune activité récente.
-            </div>
+            <div className="text-sm py-4 text-text-secondary">Aucune activité récente.</div>
           ) : (
             <div className="space-y-0">
               {activity.map((evt) => (
-                <div
-                  key={`${evt.type}-${evt.id}`}
-                  className="flex items-center justify-between py-2.5 px-1 rounded-lg"
-                  style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}
-                >
+                <div key={`${evt.type}-${evt.id}`} className="flex items-center justify-between py-2.5 px-1 border-b border-bg-border last:border-0">
                   <div className="flex items-center gap-3">
-                    <span
-                      className="h-2 w-2 rounded-full shrink-0"
-                      style={{
-                        background:
-                          evt.severity === "high"
-                            ? "#ef4444"
-                            : evt.severity === "medium"
-                            ? "#f59e0b"
-                            : "#10b981",
-                        boxShadow:
-                          evt.severity === "high"
-                            ? "0 0 6px rgba(239,68,68,0.5)"
-                            : evt.severity === "medium"
-                            ? "0 0 6px rgba(245,158,11,0.5)"
-                            : "0 0 6px rgba(16,185,129,0.5)",
-                      }}
-                    />
-                    <span className="text-sm" style={{ color: "#94a3b8" }}>
-                      {evt.label}
-                    </span>
+                    <span className={`h-2 w-2 rounded-full shrink-0 ${
+                      evt.severity === "high"   ? "bg-accent-terra"
+                      : evt.severity === "medium" ? "bg-[#E8C547]"
+                      : "bg-accent-sage"
+                    }`} />
+                    <span className="text-sm text-text-secondary">{evt.label}</span>
                   </div>
-                  <span className="text-xs font-mono-cyber shrink-0" style={{ color: "#334155" }}>
-                    {formatTimeLocal(evt.ts)}
-                  </span>
+                  <span className="text-xs font-mono-cyber shrink-0 text-text-muted">{formatTimeLocal(evt.ts)}</span>
                 </div>
               ))}
             </div>
@@ -420,10 +310,8 @@ export default function DashboardPage() {
       </Card>
 
       {error && (
-        <Card>
-          <CardContent className="text-sm" style={{ color: "#ef4444" }}>
-            {error}
-          </CardContent>
+        <Card accentColor="red">
+          <CardContent className="text-sm text-accent-red">{error}</CardContent>
         </Card>
       )}
     </div>

@@ -38,8 +38,12 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
       });
 
       L.tileLayer(
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        { attribution: "&copy; OpenStreetMap contributors", maxZoom: 18 }
+        "https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          subdomains: "abcd",
+          maxZoom: 19,
+        }
       ).addTo(map);
 
       mapRef.current = map;
@@ -71,19 +75,21 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
       for (const pt of points) {
         if (pt.lat == null || pt.lon == null) continue;
         const isHighlighted = !!highlightIp && pt.ip === highlightIp;
+        const sevColor = pt.severity === "high" ? "#C4714A" : pt.severity === "medium" ? "#E8C547" : "#5B8A6E";
+        const markerColor = isHighlighted ? "#5B8A6E" : sevColor;
         const marker = L.circleMarker([pt.lat, pt.lon], {
-          color: isHighlighted ? "#10b981" : "#22d3ee",
+          color: markerColor,
           weight: 2,
-          fillColor: isHighlighted ? "#10b981" : "#3b82f6",
+          fillColor: markerColor,
           fillOpacity: 0.85,
-          radius: isHighlighted ? 9 : 6,
+          radius: isHighlighted ? 10 : 7,
         })
           .bindPopup(
-            `<div style="background:#0c1628;color:#e2e8f0;padding:6px 8px;border-radius:8px;font-size:12px">
-              <div><strong style="color:#22d3ee">IP:</strong> ${pt.ip}</div>
-              ${pt.country ? `<div><strong style="color:#22d3ee">Pays:</strong> ${pt.country}</div>` : ""}
-              <div><strong style="color:#22d3ee">Alertes:</strong> ${pt.count}</div>
-              <a href="/alerts" style="color:#67e8f9">Voir les alertes</a>
+            `<div style="background:#FFFFFF;color:#1A1A1A;padding:8px 10px;border-radius:10px;font-size:12px;border:1px solid #E8E5E0;box-shadow:0 4px 12px rgba(0,0,0,0.10)">
+              <div><strong style="color:#5B8A6E">IP:</strong> ${pt.ip}</div>
+              ${pt.country ? `<div><strong style="color:#5B8A6E">Pays:</strong> ${pt.country}</div>` : ""}
+              <div><strong style="color:#5B8A6E">Alertes:</strong> ${pt.count}</div>
+              <a href="/alerts" style="color:#4A7B9D">Voir les alertes</a>
             </div>`
           )
           .addTo(mapRef.current!);
@@ -124,35 +130,26 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
 
   return (
     <div
-      className="rounded-xl overflow-hidden relative"
-      style={{ height, width: "100%", border: "1px solid rgba(34,211,238,0.2)" }}
+      className="rounded-2xl overflow-hidden relative border border-bg-border shadow-card"
+      style={{ height, width: "100%" }}
     >
       {loading && points.length === 0 && (
-        <div
-          className="absolute inset-0 flex items-center justify-center text-sm z-[500] font-mono-cyber"
-          style={{ background: "rgba(8,15,26,0.85)", color: "#64748b" }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center text-sm z-[500] font-mono-cyber bg-bg-base/90 text-text-muted">
           Chargement…
         </div>
       )}
       {/* Erreur réseau */}
       {error && error.includes("API") && (
-        <div
-          className="absolute inset-0 flex items-center justify-center text-sm z-[500]"
-          style={{ background: "rgba(8,15,26,0.92)", color: "#ef4444" }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center text-sm z-[500] bg-bg-base/95 text-accent-terra">
           {error}
         </div>
       )}
       {/* Pas de données GeoIP — placeholder info */}
       {!loading && !error?.includes("API") && points.length === 0 && (
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-[500]"
-          style={{ background: "rgba(8,15,26,0.97)" }}
-        >
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <p className="text-xs font-mono-cyber" style={{ color: "#475569" }}>Carte GeoIP en attente de données</p>
-          <p className="text-[10px] font-mono-cyber" style={{ color: "#334155" }}>Lancez la démo ou générez des alertes pour afficher les points</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-[500] bg-bg-base/95">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-muted"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <p className="text-xs font-mono-cyber text-text-secondary">Carte GeoIP en attente de données</p>
+          <p className="text-[10px] font-mono-cyber text-text-muted">Lancez la démo ou générez des alertes pour afficher les points</p>
         </div>
       )}
       {/* Plain div — Leaflet initializes directly on this node */}

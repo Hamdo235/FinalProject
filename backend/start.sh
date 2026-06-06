@@ -138,7 +138,7 @@ export GEOLITE2_CITY_DB="${GEOLITE2_CITY_DB:-/home/hamdo/Documents/MyProject/bac
 
 UVICORN_ARGS=(app.main:app --host 0.0.0.0 --port 8000 --app-dir "$APP_DIR")
 if [ "$UVICORN_RELOAD" = "1" ]; then
-  UVICORN_ARGS+=(--reload --reload-dir "$APP_DIR")
+  UVICORN_ARGS+=(--reload --reload-dir "$APP_DIR/app")
 fi
 
 exec "$PYTHON_BIN" -m uvicorn "${UVICORN_ARGS[@]}"

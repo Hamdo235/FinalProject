@@ -94,8 +94,9 @@ async def _call_ollama(prompt: str, timeout: float = 180.0) -> Optional[str]:
         "keep_alive": -1,
         "options": {
             "temperature": 0.1,
-            "num_predict": 600,
+            "num_predict": 500,
             "num_ctx": 2048,
+            "num_thread": 8,
         },
     }
     try:

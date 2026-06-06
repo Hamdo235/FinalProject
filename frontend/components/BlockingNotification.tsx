@@ -40,9 +40,19 @@ function actionToAlert(action: DefenseAction): Alert {
 }
 
 function sevColor(s: string) {
-  if (s === "high") return "#ef4444";
-  if (s === "medium") return "#f59e0b";
-  return "#10b981";
+  if (s === "high") return "#C4714A";
+  if (s === "medium") return "#B8960A";
+  return "#5B8A6E";
+}
+function sevBg(s: string) {
+  if (s === "high") return "#FDF0E8";
+  if (s === "medium") return "#FDF8E0";
+  return "#EBF3EE";
+}
+function sevBorder(s: string) {
+  if (s === "high") return "#F0C4A8";
+  if (s === "medium") return "#F0E090";
+  return "#B8D8C4";
 }
 
 function NotifCard({
@@ -57,79 +67,60 @@ function NotifCard({
   const pct = Math.max(0, (notif.countdown / COUNTDOWN_SECONDS) * 100);
   const color = sevColor(notif.alert.severity);
 
+  const borderColor = notif.approved ? "#B8D8C4" : notif.rejected ? "#E8E5E0" : "#C4714A";
+  const headerBg   = notif.approved ? "#EBF3EE" : notif.rejected ? "#F5F3EE" : "#FDF0E8";
+  const headerText = notif.approved ? "#5B8A6E" : notif.rejected ? "#8A8A8A" : "#C4714A";
+
   return (
     <div
-      className="w-80 rounded-2xl overflow-hidden animate-slide-in-right"
+      className="w-80 rounded-2xl overflow-hidden animate-slide-in-right bg-white"
       style={{
-        background: "#0a1220",
-        border: `1px solid ${notif.approved ? "rgba(16,185,129,0.5)" : notif.rejected ? "rgba(100,116,139,0.3)" : "rgba(239,68,68,0.5)"}`,
-        boxShadow: notif.approved
-          ? "0 0 30px rgba(16,185,129,0.15)"
-          : `0 0 30px rgba(239,68,68,0.15)`,
+        border: `2px solid ${borderColor}`,
+        boxShadow: "0 20px 60px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08)",
       }}
     >
       {/* Header */}
       <div
         className="flex items-center gap-2 px-4 py-3"
-        style={{
-          background: notif.approved
-            ? "rgba(16,185,129,0.1)"
-            : "rgba(239,68,68,0.08)",
-          borderBottom: `1px solid ${notif.approved ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}`,
-        }}
+        style={{ background: headerBg, borderBottom: `1px solid ${borderColor}` }}
       >
         {notif.approved ? (
-          <ShieldCheck className="h-4 w-4 shrink-0" style={{ color: "#10b981" }} />
+          <ShieldCheck className="h-4 w-4 shrink-0" style={{ color: "#5B8A6E" }} />
         ) : notif.rejected ? (
-          <ShieldOff className="h-4 w-4 shrink-0" style={{ color: "#64748b" }} />
+          <ShieldOff className="h-4 w-4 shrink-0" style={{ color: "#8A8A8A" }} />
         ) : (
-          <AlertTriangle
-            className="h-4 w-4 shrink-0 animate-pulse"
-            style={{ color: "#ef4444" }}
-          />
+          <AlertTriangle className="h-4 w-4 shrink-0 animate-pulse" style={{ color: "#C4714A" }} />
         )}
-        <span
-          className="text-xs font-bold font-mono-cyber tracking-wide flex-1"
-          style={{
-            color: notif.approved ? "#10b981" : notif.rejected ? "#64748b" : "#ef4444",
-          }}
-        >
+        <span className="text-xs font-bold font-mono-cyber tracking-wide flex-1" style={{ color: headerText }}>
           {notif.approved
-            ? "✅ BLOCAGE ACTIF"
+            ? "BLOCAGE ACTIF"
             : notif.rejected
-            ? "❌ REJETÉ"
-            : "⚠ MENACE DÉTECTÉE — BLOCAGE RECOMMANDÉ"}
+            ? "REJETÉ"
+            : "MENACE DÉTECTÉE — BLOCAGE RECOMMANDÉ"}
         </span>
       </div>
 
       {/* Body */}
       <div className="px-4 py-3 space-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono-cyber" style={{ color: "#64748b" }}>
-            IP SOURCE
-          </span>
-          <span
-            className="text-xs font-bold font-mono-cyber"
-            style={{ color: "#22d3ee" }}
-          >
+          <span className="text-[10px] font-mono-cyber text-text-muted">IP SOURCE</span>
+          <span className="text-sm font-bold font-mono text-text-primary">
             {notif.alert.ip || "N/A"}
           </span>
         </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono-cyber" style={{ color: "#64748b" }}>
-              RÈGLE
-            </span>
-            <span className="text-[11px]" style={{ color: "#94a3b8" }}>
+            <span className="text-[10px] font-mono-cyber text-text-muted">RÈGLE</span>
+            <span className="text-[11px] text-text-secondary">
               {notif.alert.rule || notif.alert.source}
             </span>
           </div>
           <span
             className="text-[10px] font-bold font-mono-cyber px-2 py-0.5 rounded-full"
             style={{
-              background: `${color}15`,
-              border: `1px solid ${color}30`,
+              background: sevBg(notif.alert.severity),
+              border: `1px solid ${sevBorder(notif.alert.severity)}`,
               color,
             }}
           >
@@ -138,12 +129,10 @@ function NotifCard({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono-cyber" style={{ color: "#64748b" }}>
-            SCORE ML
-          </span>
+          <span className="text-[10px] font-mono-cyber text-text-muted">SCORE ML</span>
           <span
             className="text-xs font-bold font-mono-cyber"
-            style={{ color: notif.alert.score >= 0.8 ? "#ef4444" : "#f59e0b" }}
+            style={{ color: notif.alert.score >= 0.8 ? "#C4714A" : "#B8960A" }}
           >
             {(notif.alert.score * 10).toFixed(1)}/10
           </span>
@@ -154,34 +143,28 @@ function NotifCard({
           <div className="pt-1">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" style={{ color: "#f59e0b" }} />
-                <span className="text-[10px] font-mono-cyber" style={{ color: "#f59e0b" }}>
-                  Délai analyste
-                </span>
+                <Clock className="h-3 w-3 text-[#B8960A]" />
+                <span className="text-[10px] font-mono-cyber text-[#B8960A]">Délai analyste</span>
               </div>
               <span
                 className="text-[11px] font-bold font-mono-cyber"
-                style={{ color: notif.countdown <= 10 ? "#ef4444" : "#f59e0b" }}
+                style={{ color: notif.countdown <= 10 ? "#C4714A" : "#B8960A" }}
               >
                 {notif.countdown}s
               </span>
             </div>
-            <div
-              className="h-1.5 rounded-full overflow-hidden"
-              style={{ background: "rgba(239,68,68,0.1)" }}
-            >
+            <div className="h-1.5 rounded-full overflow-hidden bg-[#F0EDE8]">
               <div
                 className="h-full rounded-full transition-all duration-1000"
                 style={{
                   width: `${pct}%`,
-                  background:
-                    notif.countdown > 15
-                      ? "linear-gradient(90deg,#f59e0b,#ef4444)"
-                      : "linear-gradient(90deg,#ef4444,#dc2626)",
+                  background: notif.countdown > 15
+                    ? "linear-gradient(90deg,#E8C547,#C4714A)"
+                    : "linear-gradient(90deg,#C4714A,#A85030)",
                 }}
               />
             </div>
-            <p className="text-[9px] mt-1 font-mono-cyber" style={{ color: "#334155" }}>
+            <p className="text-[9px] mt-1 font-mono-cyber text-text-muted">
               Aucune action automatique — décision humaine requise
             </p>
           </div>
@@ -189,12 +172,9 @@ function NotifCard({
 
         {/* iptables command after approve */}
         {notif.approved && notif.iptables && (
-          <div
-            className="rounded-lg px-3 py-2 font-mono-cyber text-[10px] flex items-start gap-2"
-            style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)" }}
-          >
-            <Terminal className="h-3 w-3 shrink-0 mt-0.5" style={{ color: "#10b981" }} />
-            <span style={{ color: "#34d399" }}>{notif.iptables}</span>
+          <div className="rounded-lg px-3 py-2 font-mono-cyber text-[10px] flex items-start gap-2 bg-[#EBF3EE] border border-[#B8D8C4]">
+            <Terminal className="h-3 w-3 shrink-0 mt-0.5 text-accent-sage" />
+            <span className="text-[#3D6B50]">{notif.iptables}</span>
           </div>
         )}
 
@@ -204,47 +184,22 @@ function NotifCard({
             <button
               onClick={() => onApprove(notif.id)}
               disabled={notif.busy}
-              className="flex-1 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
-              style={{
-                background: "rgba(16,185,129,0.12)",
-                border: "1px solid rgba(16,185,129,0.35)",
-                color: "#10b981",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.22)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.12)";
-              }}
+              className="flex-1 py-2 rounded-[10px] text-xs font-bold transition-all disabled:opacity-50 bg-accent-sage text-white hover:bg-[#4A7A5E] active:scale-[0.98]"
             >
-              {notif.busy ? "…" : "✅ APPROUVER"}
+              {notif.busy ? "…" : "✓ APPROUVER"}
             </button>
             <button
               onClick={() => onReject(notif.id)}
               disabled={notif.busy}
-              className="flex-1 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
-              style={{
-                background: "rgba(100,116,139,0.08)",
-                border: "1px solid rgba(100,116,139,0.2)",
-                color: "#64748b",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(100,116,139,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(100,116,139,0.08)";
-              }}
+              className="flex-1 py-2 rounded-[10px] text-xs font-bold transition-all disabled:opacity-50 bg-white border-[1.5px] border-[#C4714A] text-[#C4714A] hover:bg-[#FDF0E8] active:scale-[0.98]"
             >
-              ❌ REJETER
+              ✕ REJETER
             </button>
           </div>
         )}
 
         {notif.error && (
-          <div
-            className="rounded-lg px-3 py-2 font-mono-cyber text-[10px]"
-            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.22)", color: "#fca5a5" }}
-          >
+          <div className="rounded-lg px-3 py-2 font-mono-cyber text-[10px] bg-[#FDF0E8] border border-[#F0C4A8] text-[#C4714A]">
             {notif.error}
           </div>
         )}
@@ -426,10 +381,9 @@ export default function BlockingNotification() {
         <div key={n.id} className="pointer-events-auto relative">
           <button
             onClick={() => handleDismiss(n.id)}
-            className="absolute -top-1.5 -right-1.5 z-10 h-5 w-5 rounded-full flex items-center justify-center transition-all"
-            style={{ background: "#1e293b", border: "1px solid rgba(255,255,255,0.1)" }}
+            className="absolute -top-1.5 -right-1.5 z-10 h-5 w-5 rounded-full flex items-center justify-center transition-all bg-white border border-[#E8E5E0] shadow-sm hover:border-[#C4714A] hover:text-[#C4714A] text-text-muted"
           >
-            <X className="h-2.5 w-2.5" style={{ color: "#64748b" }} />
+            <X className="h-2.5 w-2.5" />
           </button>
           <NotifCard notif={n} onApprove={handleApprove} onReject={handleReject} />
         </div>

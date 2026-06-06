@@ -21,25 +21,34 @@ function fmtDate(iso: string): string {
   return formatDateTimeLocal(iso);
 }
 
-function sevColor(s: string) {
-  if (s === "high") return "#ef4444";
-  if (s === "medium") return "#f59e0b";
-  return "#10b981";
-}
+type SevClass = { badge: string };
+const SEV_CLS: Record<string, SevClass> = {
+  high:   { badge: "bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra" },
+  medium: { badge: "bg-[#FDF8E0] border-[#F0E090] text-[#B8960A]"   },
+  low:    { badge: "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage"  },
+};
+const sevBadgeCls = (s: string) => SEV_CLS[s]?.badge ?? SEV_CLS.low.badge;
 
-function StatCard({ title, value, color, icon: Icon }: { title: string; value: string | number; color: string; icon: React.ElementType }) {
+type StatVariant = "cyan" | "red" | "amber" | "violet" | "teal";
+const STAT_VAR: Record<StatVariant, { val: string; icon: string; top: string }> = {
+  cyan:   { val: "text-accent-slate",  icon: "bg-[#EAF2F8] border-[#A8C8E0] text-accent-slate",  top: "border-t-accent-slate"  },
+  red:    { val: "text-accent-terra",  icon: "bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra",  top: "border-t-accent-terra"  },
+  amber:  { val: "text-[#B8960A]",    icon: "bg-[#FDF8E0] border-[#F0E090] text-[#B8960A]",      top: "border-t-[#E8C547]"     },
+  violet: { val: "text-accent-sage",  icon: "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage",   top: "border-t-accent-sage"  },
+  teal:   { val: "text-accent-sage",  icon: "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage",   top: "border-t-accent-sage"  },
+};
+
+function StatCard({ title, value, variant, icon: Icon }: { title: string; value: string | number; variant: StatVariant; icon: React.ElementType }) {
+  const { val, icon, top } = STAT_VAR[variant];
   return (
-    <div
-      className="cyber-card p-5 flex flex-col gap-3"
-      style={{ borderColor: `${color}20` }}
-    >
+    <div className={`cyber-card p-5 flex flex-col gap-3 border-t-2 ${top}`}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#64748b" }}>{title}</span>
-        <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: `${color}12`, border: `1px solid ${color}22` }}>
-          <Icon className="h-3.5 w-3.5" style={{ color }} />
+        <span className="text-[0.68rem] font-bold uppercase tracking-widest text-text-secondary">{title}</span>
+        <div className={`h-7 w-7 rounded-lg flex items-center justify-center border ${icon}`}>
+          <Icon className="h-3.5 w-3.5" />
         </div>
       </div>
-      <div className="text-2xl font-bold font-mono-cyber" style={{ color }}>{value}</div>
+      <div className={`text-2xl font-bold font-mono-cyber ${val}`}>{value}</div>
     </div>
   );
 }
@@ -181,8 +190,8 @@ export default function ReportsPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: "#e2e8f0" }}>Rapports</h1>
-          <p className="text-sm mt-0.5" style={{ color: "#64748b" }}>Analyse consolidée de la sécurité réseau.</p>
+          <h1 className="text-xl font-bold text-text-primary">Rapports</h1>
+          <p className="text-sm mt-0.5 text-text-secondary">Analyse consolidée de la sécurité réseau.</p>
         </div>
         {/* Period filter */}
         <div className="flex gap-1.5">
@@ -190,12 +199,11 @@ export default function ReportsPage() {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold font-mono-cyber transition-all"
-              style={
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono-cyber border transition-all ${
                 period === p
-                  ? { background: "rgba(34,211,238,0.15)", border: "1px solid rgba(34,211,238,0.4)", color: "#22d3ee" }
-                  : { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", color: "#64748b" }
-              }
+                  ? "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage"
+                  : "bg-bg-base border-bg-border text-text-secondary hover:text-text-primary"
+              }`}
             >
               {p}
             </button>
@@ -204,8 +212,7 @@ export default function ReportsPage() {
       </div>
 
       {loadError && (
-        <div className="text-sm font-medium px-4 py-3 rounded-xl flex items-center gap-2"
-          style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444" }}>
+        <div className="text-sm font-medium px-4 py-3 rounded-xl flex items-center gap-2 bg-accent-red/[0.07] border border-accent-red/22 text-accent-red">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           Impossible de contacter le backend — vérifiez que le serveur est démarré.
         </div>
@@ -213,21 +220,21 @@ export default function ReportsPage() {
 
       {/* ── Section 1 : Résumé période ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard title="Alertes" value={loading ? "…" : alerts.length} color="#22d3ee" icon={Activity} />
-        <StatCard title="Critiques" value={loading ? "…" : alerts.filter((a) => a.severity === "high").length} color="#ef4444" icon={AlertTriangle} />
-        <StatCard title="Incidents ouverts" value={loading ? "…" : openInc} color="#f59e0b" icon={Shield} />
-        <StatCard title="IPs bloquées" value={loading ? "…" : blocked.length} color="#a78bfa" icon={ShieldOff} />
+        <StatCard title="Alertes" value={loading ? "…" : alerts.length} variant="cyan" icon={Activity} />
+        <StatCard title="Critiques" value={loading ? "…" : alerts.filter((a) => a.severity === "high").length} variant="red" icon={AlertTriangle} />
+        <StatCard title="Incidents ouverts" value={loading ? "…" : openInc} variant="amber" icon={Shield} />
+        <StatCard title="IPs bloquées" value={loading ? "…" : blocked.length} variant="violet" icon={ShieldOff} />
       </div>
 
       {metrics && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { title: "F1-score", value: metrics.samples > 0 ? metrics.f1?.toFixed(3) : "N/A", color: "#10b981" },
-            { title: "Précision", value: metrics.samples > 0 ? metrics.precision?.toFixed(3) : "N/A", color: "#10b981" },
-            { title: "Rappel", value: metrics.samples > 0 ? metrics.recall?.toFixed(3) : "N/A", color: "#10b981" },
-            { title: "ROC-AUC", value: metrics.roc_auc != null ? metrics.roc_auc.toFixed(3) : "N/A", color: "#3b82f6" },
-          ].map(({ title, value, color }) => (
-            <StatCard key={title} title={title} value={value ?? "N/A"} color={color} icon={BarChart2} />
+            { title: "F1-score",  value: metrics.samples > 0 ? metrics.f1?.toFixed(3) : "N/A",         variant: "teal"   as StatVariant },
+            { title: "Précision", value: metrics.samples > 0 ? metrics.precision?.toFixed(3) : "N/A",  variant: "teal"   as StatVariant },
+            { title: "Rappel",    value: metrics.samples > 0 ? metrics.recall?.toFixed(3) : "N/A",      variant: "teal"   as StatVariant },
+            { title: "ROC-AUC",   value: metrics.roc_auc != null ? metrics.roc_auc.toFixed(3) : "N/A", variant: "violet" as StatVariant },
+          ].map(({ title, value, variant }) => (
+            <StatCard key={title} title={title} value={value ?? "N/A"} variant={variant} icon={BarChart2} />
           ))}
         </div>
       )}
@@ -236,13 +243,13 @@ export default function ReportsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" style={{ color: "#ef4444" }} />
-            Top 5 IPs attaquantes — {period}
+            <AlertTriangle className="h-4 w-4 text-accent-terra" />
+            Top 5 IPs attaquantes - {period}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {topIps.length === 0 ? (
-            <div className="text-center py-8 text-sm" style={{ color: "#334155" }}>Aucune alerte sur la période.</div>
+            <div className="text-center py-8 text-sm text-text-muted">Aucune alerte sur la période.</div>
           ) : (
             <table className="data-table w-full">
               <thead>
@@ -260,22 +267,20 @@ export default function ReportsPage() {
                   const isBlocked = blocked.some((b) => b.ip === ip.ip);
                   return (
                     <tr key={ip.ip}>
-                      <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#334155" }}>#{i + 1}</td>
-                      <td className="px-4 py-3 font-mono-cyber text-xs font-bold" style={{ color: "#22d3ee" }}>{ip.ip}</td>
-                      <td className="px-4 py-3 font-bold font-mono-cyber text-xs" style={{ color: "#e2e8f0" }}>{ip.count}</td>
+                      <td className="px-4 py-3 font-mono-cyber text-xs text-text-muted">#{i + 1}</td>
+                      <td className="px-4 py-3 font-mono-cyber text-xs font-bold text-text-mono">{ip.ip}</td>
+                      <td className="px-4 py-3 font-bold font-mono-cyber text-xs text-text-primary">{ip.count}</td>
                       <td className="px-4 py-3">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase font-mono-cyber"
-                          style={{ background: `${sevColor(ip.maxSev)}15`, border: `1px solid ${sevColor(ip.maxSev)}30`, color: sevColor(ip.maxSev) }}>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase font-mono-cyber border ${sevBadgeCls(ip.maxSev)}`}>
                           {ip.maxSev}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#64748b" }}>
+                      <td className="px-4 py-3 font-mono-cyber text-xs text-text-secondary">
                         {ip.last ? fmtDate(ip.last) : "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[10px] font-semibold font-mono-cyber"
-                          style={{ color: isBlocked ? "#ef4444" : "#10b981" }}>
-                          {isBlocked ? "🔴 Bloquée" : "🟢 Libre"}
+                        <span className={`text-[10px] font-semibold font-mono-cyber ${isBlocked ? "text-accent-terra" : "text-accent-sage"}`}>
+                          {isBlocked ? "Bloquee" : "Libre"}
                         </span>
                       </td>
                     </tr>
@@ -301,13 +306,13 @@ export default function ReportsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ShieldOff className="h-4 w-4" style={{ color: "#a78bfa" }} />
+            <ShieldOff className="h-4 w-4 text-accent-sage" />
             Historique des blocages
           </CardTitle>
         </CardHeader>
         <CardContent>
           {blockHistory.length === 0 ? (
-            <div className="text-center py-8 text-sm" style={{ color: "#334155" }}>Aucun blocage enregistré.</div>
+            <div className="text-center py-8 text-sm text-text-muted">Aucun blocage enregistré.</div>
           ) : (
             <table className="data-table w-full">
               <thead>
@@ -322,21 +327,18 @@ export default function ReportsPage() {
               <tbody>
                 {blockHistory.map((da) => (
                   <tr key={da.id}>
-                    <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#22d3ee" }}>{da.ip ?? "—"}</td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "#94a3b8" }}>{da.approved_by ?? da.created_by ?? "système"}</td>
-                    <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#64748b" }}>
+                    <td className="px-4 py-3 font-mono-cyber text-xs text-text-mono">{da.ip ?? "—"}</td>
+                    <td className="px-4 py-3 text-xs text-text-secondary">{da.approved_by ?? da.created_by ?? "système"}</td>
+                    <td className="px-4 py-3 font-mono-cyber text-xs text-text-secondary">
                       {da.created_at ? fmtDate(da.created_at) : "—"}
                     </td>
-                    <td className="px-4 py-3 font-mono-cyber text-xs" style={{ color: "#64748b" }}>
+                    <td className="px-4 py-3 font-mono-cyber text-xs text-text-secondary">
                       {da.expires_at ? fmtDate(da.expires_at) : "∞"}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-[10px] font-semibold font-mono-cyber"
-                        style={{
-                          color: da.revoked_at ? "#64748b"
-                            : da.active ? "#10b981"
-                            : "#334155",
-                        }}>
+                      <span className={`text-[10px] font-semibold font-mono-cyber ${
+                        da.revoked_at ? "text-text-secondary" : da.active ? "text-accent-sage" : "text-text-muted"
+                      }`}>
                         {da.revoked_at ? "Révoqué" : da.active ? "Actif" : "Expiré"}
                       </span>
                     </td>
@@ -352,30 +354,18 @@ export default function ReportsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Download className="h-4 w-4" style={{ color: "#22d3ee" }} />
-            Export des données
+            <Download className="h-4 w-4 text-accent-sage" />
+            Export des donnees
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
-          <button
-            onClick={() => exportCsv(alerts)}
-            disabled={loading || alerts.length === 0}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-            style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.25)", color: "#22d3ee" }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(34,211,238,0.15)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(34,211,238,0.08)"; }}
-          >
+          <button onClick={() => exportCsv(alerts)} disabled={loading || alerts.length === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all disabled:opacity-40 bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage hover:bg-[#D8EDE0]">
             <Download className="h-3.5 w-3.5" />
             Exporter alertes CSV ({alerts.length})
           </button>
-          <button
-            onClick={() => exportTxt(alerts, incidents, blocked, metrics)}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-            style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", color: "#10b981" }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.15)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.08)"; }}
-          >
+          <button onClick={() => exportTxt(alerts, incidents, blocked, metrics)} disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all disabled:opacity-40 bg-[#EAF2F8] border-[#A8C8E0] text-accent-slate hover:bg-[#D8E8F4]">
             <Download className="h-3.5 w-3.5" />
             Exporter rapport .txt
           </button>

@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, Request
+from starlette.responses import Response as StarletteResponse
+import gzip as _gzip
 from .routers.health import router as health_router
 from .routers.ingest import router as ingest_router
 from .routers.alerts import router as alerts_router
@@ -52,6 +55,23 @@ async def lifespan(app: FastAPI):
     from .models import chat as _chat  # noqa: F401
     from .models import defense_action as _def  # noqa: F401
     SQLModel.metadata.create_all(bind=engine)
+
+    # ── Optionnel : vider les tables au démarrage (CLEAR_DB_ON_START=true) ──
+    if settings.clear_db_on_start:
+        from sqlmodel import delete as _delete
+        from .models.alert import Alert as _Alert
+        from .models.incident import Incident as _Incident
+        from .models.llm_trace import LLMTrace as _LLMTrace
+        from .models.ip_enrichment import IPEnrichment as _IPEnrichment
+        from .models.defense_action import DefenseAction as _DefenseAction
+        try:
+            with SQLModelSession(engine) as _db:
+                for _model in (_LLMTrace, _DefenseAction, _IPEnrichment, _Incident, _Alert):
+                    _db.exec(_delete(_model))
+                _db.commit()
+            logger.info("[Startup] CLEAR_DB_ON_START=true — toutes les tables vidées.")
+        except Exception as _exc:
+            logger.warning("[Startup] Impossible de vider la DB : %s", _exc)
 
     # Migration SQLite : ajouter les colonnes absentes sur defenseaction
     _new_cols = [
@@ -155,10 +175,49 @@ async def lifespan(app: FastAPI):
         _warmup_executor = None
 
 
+class _SafeGZipMiddleware(BaseHTTPMiddleware):
+    """GZip pour les réponses REST, transparent pour text/event-stream."""
+
+    def __init__(self, app, minimum_size: int = 500) -> None:
+        super().__init__(app)
+        self.minimum_size = minimum_size
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        content_type = response.headers.get("content-type", "")
+        if "text/event-stream" in content_type:
+            return response
+        accept_enc = request.headers.get("accept-encoding", "")
+        if "gzip" not in accept_enc:
+            return response
+        body = b""
+        async for chunk in response.body_iterator:
+            body += chunk if isinstance(chunk, bytes) else chunk.encode()
+        if len(body) < self.minimum_size:
+            return StarletteResponse(
+                content=body,
+                status_code=response.status_code,
+                headers=dict(response.headers),
+                media_type=response.media_type,
+            )
+        compressed = _gzip.compress(body, compresslevel=6)
+        headers = dict(response.headers)
+        headers["content-encoding"] = "gzip"
+        headers["content-length"] = str(len(compressed))
+        headers.pop("transfer-encoding", None)
+        return StarletteResponse(
+            content=compressed,
+            status_code=response.status_code,
+            headers=headers,
+            media_type=response.media_type,
+        )
+
+
 # Application FastAPI principale
 app = FastAPI(title="CyberSentinel-LLM", version="0.1.0", lifespan=lifespan)
 
 # CORS – autoriser le frontend (origines configurables via env)
+app.add_middleware(_SafeGZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.allowed_origins.split(",") if o.strip()],

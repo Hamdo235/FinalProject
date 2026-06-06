@@ -16,62 +16,46 @@ const OVERVIEW_MARKER = "__CS_OVERVIEW__";
 // ── Composant de rendu des cartes alertes ──────────────────────────────────────
 function OverviewCards({ raw }: { raw: string }) {
   let alerts: Alert[] = [];
-  try { alerts = JSON.parse(raw); } catch { return <p style={{ color: "#ef4444" }}>Données invalides.</p>; }
+  try { alerts = JSON.parse(raw); } catch { return <p className="text-accent-red">Données invalides.</p>; }
 
-  const sevColor = (s: string) =>
-    s === "high" ? "#ef4444" : s === "medium" ? "#f59e0b" : "#10b981";
-  const sevLabel = (s: string) =>
-    s === "high" ? "CRITIQUE" : s === "medium" ? "MOYENNE" : "FAIBLE";
+  const SEV_OV: Record<string, { card: string; badge: string; label: string }> = {
+    high:   { card: "bg-[#FDF0E8] border-[#F0C4A8]",  badge: "bg-[#FBE2D0] border-[#F0C4A8] text-accent-terra", label: "CRITIQUE" },
+    medium: { card: "bg-[#FDF8E0] border-[#F0E090]",  badge: "bg-[#FAF3C0] border-[#F0E090] text-[#B8960A]",   label: "MOYENNE"  },
+    low:    { card: "bg-[#EBF3EE] border-[#B8D8C4]",  badge: "bg-[#D8EDE0] border-[#B8D8C4] text-accent-sage", label: "FAIBLE"   },
+  };
+  const ov = (s: string) => SEV_OV[s] ?? SEV_OV.low;
+  const scoreColor = (v: number) => v > 0.8 ? "text-accent-terra" : v > 0.5 ? "text-[#B8960A]" : "text-accent-sage";
 
   if (alerts.length === 0)
-    return <p style={{ color: "#64748b" }}>Aucune attaque détectée pour l&apos;instant.</p>;
+    return <p className="text-text-secondary">Aucune attaque détectée pour l&apos;instant.</p>;
 
   return (
     <div className="space-y-2 w-full">
-      <div className="text-[11px] uppercase tracking-wider font-semibold mb-3 font-mono-cyber"
-        style={{ color: "#22d3ee" }}>
-        ● {alerts.length} attaque{alerts.length > 1 ? "s" : ""} détectée{alerts.length > 1 ? "s" : ""} — données ML temps réel
+      <div className="text-[11px] uppercase tracking-wider font-semibold mb-3 font-mono-cyber text-accent-terra">
+        {alerts.length} attaque{alerts.length > 1 ? "s" : ""} detectee{alerts.length > 1 ? "s" : ""} - donnees ML temps reel
       </div>
       {alerts.map((a, i) => (
-        <div key={a.id} className="rounded-xl p-3"
-          style={{
-            background: `${sevColor(a.severity)}08`,
-            border: `1px solid ${sevColor(a.severity)}25`,
-          }}>
+        <div key={a.id} className={`rounded-xl p-3 border ${ov(a.severity).card}`}>
           <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold font-mono-cyber w-5 text-center"
-                style={{ color: "#334155" }}>
-                #{i + 1}
+              <span className="text-[10px] font-bold font-mono-cyber w-5 text-center text-text-muted">#{i + 1}</span>
+              <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold font-mono-cyber uppercase border ${ov(a.severity).badge}`}>
+                {ov(a.severity).label}
               </span>
-              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-mono-cyber uppercase"
-                style={{
-                  background: `${sevColor(a.severity)}18`,
-                  border: `1px solid ${sevColor(a.severity)}40`,
-                  color: sevColor(a.severity),
-                }}>
-                {sevLabel(a.severity)}
-              </span>
-              <span className="text-xs font-mono-cyber" style={{ color: "#22d3ee" }}>
-                {a.ip || "IP inconnue"}
-              </span>
+              <span className="text-xs font-mono-cyber text-text-mono">{a.ip || "IP inconnue"}</span>
             </div>
-            <span className="text-[10px] font-mono-cyber" style={{ color: "#334155" }}>
-              Score ML: <span style={{ color: a.score > 0.8 ? "#ef4444" : a.score > 0.5 ? "#f59e0b" : "#10b981" }}>
-                {a.score.toFixed(3)}
-              </span>
+            <span className="text-[10px] font-mono-cyber text-text-muted">
+              Score ML: <span className={scoreColor(a.score)}>{a.score.toFixed(3)}</span>
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] pl-7">
-            <span style={{ color: "#64748b" }}>Règle: <span style={{ color: "#94a3b8" }}>{a.rule || a.source || "N/A"}</span></span>
-            <span style={{ color: "#64748b" }}>Statut: <span style={{ color: "#94a3b8" }}>{a.status}</span></span>
-            <span style={{ color: "#64748b" }}>
-              Détectée: <span style={{ color: "#94a3b8" }}>{formatDateTimeLocal(a.ts)}</span>
-            </span>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] pl-7 text-text-secondary">
+            <span>Règle: <span className="text-text-primary">{a.rule || a.source || "N/A"}</span></span>
+            <span>Statut: <span className="text-text-primary">{a.status}</span></span>
+            <span>Détectée: <span className="text-text-primary">{formatDateTimeLocal(a.ts)}</span></span>
           </div>
         </div>
       ))}
-      <p className="text-[10px] mt-2" style={{ color: "#334155" }}>
+      <p className="text-[10px] mt-2 text-text-muted">
         Source: API /alerts · Modèle IsolationForest/LOF — aucune action automatique
       </p>
     </div>
@@ -253,7 +237,7 @@ export default function ChatPage() {
       const url = m.startsWith("http") ? m : `https://${m}`;
       parts.push(
         <a key={`${url}-${offset}`} href={url} target="_blank" rel="noreferrer"
-          style={{ color: "#22d3ee" }} className="underline">{m}</a>
+          className="underline text-accent-sage hover:text-[#4A7A5E]">{m}</a>
       );
       last = offset + m.length; return m;
     });
@@ -266,8 +250,7 @@ export default function ChatPage() {
     text.split(/`/).forEach((p, i) => {
       if (i % 2 === 1)
         tokens.push(
-          <code key={i} className="px-1.5 py-0.5 rounded text-[0.85em] font-mono-cyber"
-            style={{ background: "rgba(34,211,238,0.1)", color: "#67e8f9", border: "1px solid rgba(34,211,238,0.2)" }}>
+          <code key={i} className="px-1.5 py-0.5 rounded text-[0.85em] font-mono-cyber bg-[#EAF2F8] text-accent-slate border border-[#A8C8E0]">
             {p}
           </code>
         );
@@ -280,13 +263,11 @@ export default function ChatPage() {
     <div className="relative my-2 group">
       <button
         onClick={async () => { try { await navigator.clipboard.writeText(code); } catch {} }}
-        className="absolute top-2 right-2 text-xs px-2 py-1 rounded-lg font-mono-cyber opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ background: "rgba(34,211,238,0.1)", color: "#22d3ee", border: "1px solid rgba(34,211,238,0.2)" }}
+        className="absolute top-2 right-2 text-xs px-2 py-1 rounded-lg font-mono-cyber opacity-0 group-hover:opacity-100 transition-opacity bg-[#EAF2F8] text-accent-slate border border-[#A8C8E0]"
       >
         Copier
       </button>
-      <pre className="overflow-auto rounded-xl p-4 text-xs font-mono-cyber"
-        style={{ background: "#060c15", color: "#10b981", border: "1px solid rgba(34,211,238,0.1)" }}>
+      <pre className="overflow-auto rounded-xl p-4 text-xs font-mono-cyber bg-[#F5F3EE] text-accent-slate border border-[#E8E5E0]">
         <code>{code}</code>
       </pre>
     </div>
@@ -811,39 +792,23 @@ export default function ChatPage() {
     "Quelles IPs ont le plus d'alertes associées ?",
   ];
 
+  const lastAssistantMsg = React.useMemo(() => {
+    const last = [...messages].reverse().find((m) => m.role === "assistant" && m.id !== -1 && !m.content.startsWith(OVERVIEW_MARKER));
+    if (!last) return null;
+    const clean = last.content.replace(/```[\s\S]*?```/g, "").replace(/[*_#`]/g, "").trim();
+    return clean.length > 120 ? clean.slice(0, 118) + "…" : clean;
+  }, [messages]);
+
   return (
-    <div className="h-full flex overflow-hidden" style={{ background: "#080f1a", color: "#e2e8f0" }}>
+    <div className="h-full flex overflow-hidden bg-bg-base text-text-primary">
 
       {/* ── Conversations sidebar ── */}
-      <aside
-        className="hidden md:flex md:w-60 flex-col shrink-0"
-        style={{
-          background: "#060c15",
-          borderRight: "1px solid rgba(34,211,238,0.07)",
-        }}
-      >
+      <aside className="hidden md:flex md:w-60 flex-col shrink-0 bg-bg-card border-r border-bg-border">
         {/* Header */}
-        <div
-          className="p-3 flex items-center justify-between shrink-0"
-          style={{ borderBottom: "1px solid rgba(34,211,238,0.07)" }}
-        >
-          <span
-            className="text-[10px] uppercase tracking-widest font-bold"
-            style={{ color: "#334155" }}
-          >
-            Sessions
-          </span>
-          <button
-            onClick={() => createConv().catch((e) => setError(e.message))}
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition-all"
-            style={{
-              border: "1px solid rgba(34,211,238,0.2)",
-              color: "#22d3ee",
-              background: "rgba(34,211,238,0.06)",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(34,211,238,0.12)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(34,211,238,0.06)"; }}
-          >
+        <div className="p-3 flex items-center justify-between shrink-0 border-b border-bg-border">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-text-muted">Sessions</span>
+          <button onClick={() => createConv().catch((e) => setError(e.message))}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold border transition-all border-[#B8D8C4] text-accent-sage bg-[#EBF3EE] hover:bg-[#D8EDE0]">
             <Plus className="h-3 w-3" /> Nouvelle
           </button>
         </div>
@@ -851,46 +816,24 @@ export default function ChatPage() {
         {/* List */}
         <div className="flex-1 overflow-auto">
           {convs.length === 0 && (
-            <div className="p-4 text-xs text-center" style={{ color: "#334155" }}>
-              Aucune session.
-            </div>
+            <div className="p-4 text-xs text-center text-text-muted">Aucune session.</div>
           )}
           <ul>
             {convs.map((c) => {
               const isActive = activeId === c.id;
               return (
-                <li
-                  key={c.id}
-                  style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}
-                >
-                  <div
-                    className="flex items-center gap-1.5 px-2 py-2"
-                    style={isActive ? { background: "rgba(34,211,238,0.06)" } : {}}
-                  >
-                    {isActive && (
-                      <span
-                        className="h-1.5 w-1.5 rounded-full shrink-0"
-                        style={{ background: "#22d3ee" }}
-                      />
-                    )}
-                    <button
-                      className="flex-1 text-left text-xs truncate transition-all"
-                      style={{ color: isActive ? "#67e8f9" : "#64748b" }}
-                      onClick={() => setActiveId(c.id)}
-                    >
+                <li key={c.id} className="border-b border-bg-border">
+                  <div className={`flex items-center gap-1.5 px-2 py-2 ${isActive ? "bg-[#EBF3EE]" : ""}`}>
+                    {isActive && <span className="h-1.5 w-1.5 rounded-full shrink-0 bg-accent-sage" />}
+                    <button className={`flex-1 text-left text-xs truncate transition-all ${isActive ? "text-accent-sage font-semibold" : "text-text-secondary"}`}
+                      onClick={() => setActiveId(c.id)}>
                       {c.title}
                     </button>
-                    <button
-                      className="p-1 rounded-md hover:bg-white/5 transition-all shrink-0"
-                      onClick={() => renameConv(c.id)}
-                    >
-                      <Pencil className="h-3 w-3" style={{ color: "#334155" }} />
+                    <button className="p-1 rounded-md hover:bg-[#EBF3EE] transition-all shrink-0" onClick={() => renameConv(c.id)}>
+                      <Pencil className="h-3 w-3 text-text-muted" />
                     </button>
-                    <button
-                      className="p-1 rounded-md hover:bg-white/5 transition-all shrink-0"
-                      onClick={() => deleteConv(c.id)}
-                    >
-                      <Trash2 className="h-3 w-3" style={{ color: "#334155" }} />
+                    <button className="p-1 rounded-md hover:bg-[#FDF0E8] transition-all shrink-0" onClick={() => deleteConv(c.id)}>
+                      <Trash2 className="h-3 w-3 text-text-muted" />
                     </button>
                   </div>
                 </li>
@@ -904,76 +847,36 @@ export default function ChatPage() {
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
 
         {/* Header */}
-        <header
-          className="px-4 py-3 flex items-center justify-between shrink-0"
-          style={{
-            background: "#060c15",
-            borderBottom: "1px solid rgba(34,211,238,0.07)",
-          }}
-        >
+        <header className="px-4 py-3 flex items-center justify-between shrink-0 bg-bg-card border-b border-bg-border">
           <div className="flex items-center gap-3">
-            <Link href="/" style={{ color: "#64748b" }}
-              className="hover:text-slate-300 transition-colors">
+            <Link href="/" className="text-text-secondary hover:text-text-primary transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <div
-              className="h-8 w-8 rounded-xl flex items-center justify-center"
-              style={{
-                background: "linear-gradient(135deg, #22d3ee, #3b82f6)",
-                boxShadow: "0 0 14px rgba(34,211,238,0.3)",
-              }}
-            >
+            <div className="h-8 w-8 rounded-xl flex items-center justify-center bg-accent-sage">
               <Bot className="h-4 w-4 text-white" />
             </div>
             <div>
-              <span className="font-semibold text-sm" style={{ color: "#e2e8f0" }}>
-                Console SOC IA
-              </span>
-              <span className="text-xs ml-2" style={{ color: "#334155" }}>
-                — sans action automatique
-              </span>
+              <span className="font-semibold text-sm text-text-primary">Console SOC IA</span>
+              <span className="text-xs ml-2 text-text-muted">- sans action automatique</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => { setAutoSpeak((v) => { if (v) stopSpeaking(); return !v; }); }}
-              title={autoSpeak ? "Désactiver la voix" : "Activer la voix auto"}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl transition-all"
-              style={autoSpeak ? {
-                border: "1px solid rgba(34,211,238,0.4)",
-                color: "#22d3ee",
-                background: "rgba(34,211,238,0.14)",
-                boxShadow: "0 0 10px rgba(34,211,238,0.15)",
-              } : {
-                border: "1px solid rgba(100,116,139,0.2)",
-                color: "#64748b",
-                background: "rgba(100,116,139,0.05)",
-              }}
-            >
+            <button onClick={() => { setAutoSpeak((v) => { if (v) stopSpeaking(); return !v; }); }}
+              title={autoSpeak ? "Desactiver la voix" : "Activer la voix auto"}
+              className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-all ${
+                autoSpeak
+                  ? "border-[#B8D8C4] text-accent-sage bg-[#EBF3EE]"
+                  : "border-bg-border text-text-secondary bg-bg-base"
+              }`}>
               {autoSpeak ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
               {autoSpeak ? "Voix ON" : "Voix"}
             </button>
-            <button
-              disabled={loading || activeId == null}
-              onClick={handleOverview}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl transition-all disabled:opacity-40"
-              style={{
-                border: "1px solid rgba(34,211,238,0.2)",
-                color: "#22d3ee",
-                background: "rgba(34,211,238,0.06)",
-              }}
-            >
+            <button disabled={loading || activeId == null} onClick={handleOverview}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-all disabled:opacity-40 border-[#B8D8C4] text-accent-sage bg-[#EBF3EE] hover:bg-[#D8EDE0]">
               <Eye className="h-3 w-3" /> Vue d&apos;ensemble
             </button>
-            <button
-              onClick={copyLast}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl transition-all"
-              style={{
-                border: "1px solid rgba(100,116,139,0.2)",
-                color: "#64748b",
-                background: "rgba(100,116,139,0.05)",
-              }}
-            >
+            <button onClick={copyLast}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-all border-bg-border text-text-secondary bg-bg-base hover:bg-bg-card">
               <Copy className="h-3 w-3" /> Copier
             </button>
           </div>
@@ -982,7 +885,7 @@ export default function ChatPage() {
         {/* Messages */}
         <div className="flex-1 overflow-auto p-5 space-y-4 min-h-0">
           {activeId == null && (
-            <div className="text-sm text-center py-12" style={{ color: "#64748b" }}>
+            <div className="text-sm text-center py-12 text-text-secondary">
               Sélectionnez ou créez une session pour commencer.
             </div>
           )}
@@ -990,42 +893,17 @@ export default function ChatPage() {
           {activeId != null && messages.length === 0 && (
             <div className="py-8 max-w-2xl mx-auto w-full">
               <div className="text-center mb-6">
-                <div
-                  className="h-14 w-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(34,211,238,0.15), rgba(59,130,246,0.1))",
-                    border: "1px solid rgba(34,211,238,0.2)",
-                  }}
-                >
-                  <Zap className="h-7 w-7" style={{ color: "#22d3ee" }} />
+                <div className="h-14 w-14 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-[#EBF3EE] border border-[#B8D8C4]">
+                  <Zap className="h-7 w-7 text-accent-sage" />
                 </div>
-                <p className="text-sm" style={{ color: "#64748b" }}>
+                <p className="text-sm text-text-secondary">
                   Démarrez l&apos;analyse. Je répondrai sans action automatique.
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {QUICK.map((q) => (
-                  <button
-                    key={q}
-                    disabled={loading}
-                    onClick={() => sendQuick(q)}
-                    className="text-left p-3 rounded-xl text-xs transition-all disabled:opacity-40"
-                    style={{
-                      background: "rgba(34,211,238,0.04)",
-                      border: "1px solid rgba(34,211,238,0.1)",
-                      color: "#64748b",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(34,211,238,0.25)";
-                      (e.currentTarget as HTMLElement).style.color = "#e2e8f0";
-                      (e.currentTarget as HTMLElement).style.background = "rgba(34,211,238,0.08)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(34,211,238,0.1)";
-                      (e.currentTarget as HTMLElement).style.color = "#64748b";
-                      (e.currentTarget as HTMLElement).style.background = "rgba(34,211,238,0.04)";
-                    }}
-                  >
+                  <button key={q} disabled={loading} onClick={() => sendQuick(q)}
+                    className="text-left p-3 rounded-xl text-xs border transition-all disabled:opacity-40 bg-bg-base border-bg-border text-text-secondary hover:bg-[#EBF3EE] hover:border-[#B8D8C4] hover:text-text-primary">
                     {q.length > 68 ? q.slice(0, 66) + "…" : q}
                   </button>
                 ))}
@@ -1042,31 +920,15 @@ export default function ChatPage() {
               )}
             >
               {m.role === "assistant" && (
-                <div
-                  className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(135deg, #22d3ee, #3b82f6)",
-                    boxShadow: "0 0 10px rgba(34,211,238,0.25)",
-                  }}
-                >
+                <div className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center bg-accent-sage">
                   <Bot className="h-4 w-4 text-white" />
                 </div>
               )}
-              <div
-                className="rounded-2xl px-4 py-3 max-w-xl break-words"
-                style={
-                  m.role === "user"
-                    ? {
-                        background: "linear-gradient(135deg, rgba(34,211,238,0.12), rgba(59,130,246,0.08))",
-                        border: "1px solid rgba(34,211,238,0.2)",
-                        color: "#e2e8f0",
-                      }
-                    : {
-                        background: "#0c1628",
-                        border: "1px solid rgba(34,211,238,0.08)",
-                        color: "#cbd5e1",
-                      }
-                }
+              <div className={`rounded-2xl px-4 py-3 max-w-xl break-words ${
+                m.role === "user"
+                  ? "bg-[#EBF3EE] border border-[#B8D8C4] text-text-primary"
+                  : "bg-bg-card border border-bg-border text-text-secondary"
+              }`}
               >
                 {renderMsg(m.content)}
                 <div className="mt-2 flex items-center justify-between gap-2">
@@ -1074,12 +936,11 @@ export default function ChatPage() {
                     {formatRelative(m.created_at)}
                   </div>
                   {m.role === "assistant" && !m.content.startsWith(OVERVIEW_MARKER) && (
-                    <button
-                      onClick={() => speak(m.content, m.id)}
+                    <button onClick={() => speak(m.content, m.id)}
                       title={speakingId === m.id ? "Arrêter" : "Écouter"}
-                      className="flex items-center justify-center h-5 w-5 rounded-lg transition-all opacity-40 hover:opacity-100"
-                      style={speakingId === m.id ? { color: "#22d3ee" } : { color: "#64748b" }}
-                    >
+                      className={`flex items-center justify-center h-5 w-5 rounded-lg transition-all opacity-40 hover:opacity-100 ${
+                        speakingId === m.id ? "text-accent-sage" : "text-text-secondary"
+                      }`}>
                       {speakingId === m.id
                         ? <VolumeX className="h-3 w-3" />
                         : <Volume2 className="h-3 w-3" />}
@@ -1088,19 +949,8 @@ export default function ChatPage() {
                 </div>
               </div>
               {m.role === "user" && (
-                <div
-                  className="shrink-0 h-8 px-2.5 rounded-xl flex items-center"
-                  style={{
-                    background: "rgba(34,211,238,0.08)",
-                    border: "1px solid rgba(34,211,238,0.15)",
-                  }}
-                >
-                  <span
-                    className="text-xs font-bold font-mono-cyber"
-                    style={{ color: "#22d3ee" }}
-                  >
-                    moi
-                  </span>
+                <div className="shrink-0 h-8 px-2.5 rounded-xl flex items-center bg-[#EBF3EE] border border-[#B8D8C4]">
+                  <span className="text-xs font-bold font-mono-cyber text-accent-sage">moi</span>
                 </div>
               )}
             </div>
@@ -1109,54 +959,27 @@ export default function ChatPage() {
           {/* Thinking indicator */}
           {loading && (
             <div className="flex gap-3 text-sm justify-start max-w-2xl mx-auto">
-              <div
-                className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center animate-pulse-cyan"
-                style={{ background: "linear-gradient(135deg, #22d3ee, #3b82f6)" }}
-              >
+              <div className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center animate-pulse bg-accent-sage">
                 <Bot className="h-4 w-4 text-white" />
               </div>
-              <div
-                className="rounded-2xl px-4 py-3 flex items-center gap-3"
-                style={{
-                  background: "#0c1628",
-                  border: "1px solid rgba(34,211,238,0.1)",
-                }}
-              >
+              <div className="rounded-2xl px-4 py-3 flex items-center gap-3 bg-bg-card border border-bg-border">
                 <div className="flex gap-1">
                   {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{
-                        background: "#22d3ee",
-                        animation: `pulseLive 1.2s ease-in-out ${i * 0.2}s infinite`,
-                      }}
-                    />
+                    <span key={i} className="h-1.5 w-1.5 rounded-full bg-accent-sage"
+                      style={{ animation: `pulseLive 1.2s ease-in-out ${i * 0.2}s infinite` }} />
                   ))}
                 </div>
-                <span className="text-sm" style={{ color: "#64748b" }}>
-                  LLM analyse…
-                </span>
+                <span className="text-sm text-text-secondary">LLM analyse…</span>
               </div>
             </div>
           )}
 
           {error && (
             <div className="fixed right-4 bottom-20 z-50">
-              <div
-                className="text-sm px-4 py-3 rounded-xl flex items-center gap-3"
-                style={{
-                  background: "rgba(239,68,68,0.1)",
-                  border: "1px solid rgba(239,68,68,0.3)",
-                  color: "#ef4444",
-                }}
-              >
+              <div className="text-sm px-4 py-3 rounded-xl flex items-center gap-3 bg-[#FDF0E8] border border-[#F0C4A8] text-accent-terra">
                 {error}
-                <button
-                  onClick={() => setError(null)}
-                  className="text-xs px-2 py-0.5 rounded-lg"
-                  style={{ border: "1px solid rgba(239,68,68,0.3)" }}
-                >
+                <button onClick={() => setError(null)}
+                  className="text-xs px-2 py-0.5 rounded-lg border border-[#F0C4A8]">
                   ✕
                 </button>
               </div>
@@ -1168,32 +991,14 @@ export default function ChatPage() {
         {/* Input */}
         <form
           onSubmit={onSubmit}
-          className="shrink-0 p-4 flex items-center gap-2 max-w-2xl mx-auto w-full"
-          style={{ borderTop: "1px solid rgba(34,211,238,0.07)" }}
+          className="shrink-0 p-4 flex items-center gap-2 max-w-2xl mx-auto w-full border-t border-bg-border"
         >
           <input
-            className="flex-1 rounded-2xl px-4 py-2.5 text-sm font-mono-cyber focus:outline-none transition-all"
-            style={{
-              background: "#0a1220",
-              border: "1px solid rgba(34,211,238,0.15)",
-              color: "#e2e8f0",
-            }}
-            placeholder={
-              activeId == null
-                ? "Créez d'abord une session…"
-                : "Message au SOC IA…"
-            }
+            className="flex-1 rounded-2xl px-4 py-2.5 text-sm font-mono-cyber bg-bg-card border border-bg-border text-text-primary focus:outline-none focus:border-[#B8D8C4] focus:ring-1 focus:ring-[#B8D8C4]/30 transition-all disabled:opacity-50"
+            placeholder={activeId == null ? "Créez d'abord une session…" : "Message au SOC IA…"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={loading || activeId == null}
-            onFocus={(e) => {
-              (e.target as HTMLElement).style.borderColor = "rgba(34,211,238,0.4)";
-              (e.target as HTMLElement).style.boxShadow = "0 0 0 3px rgba(34,211,238,0.06)";
-            }}
-            onBlur={(e) => {
-              (e.target as HTMLElement).style.borderColor = "rgba(34,211,238,0.15)";
-              (e.target as HTMLElement).style.boxShadow = "none";
-            }}
           />
           {/* Mic button */}
           <button
@@ -1201,18 +1006,11 @@ export default function ChatPage() {
             disabled={loading || activeId == null}
             onClick={enterVoiceMode}
             title="Mode vocal — parler au SOC IA"
-            className="inline-flex items-center justify-center h-10 w-10 rounded-2xl transition-all disabled:opacity-40 shrink-0"
-            style={isListening ? {
-              background: "rgba(239,68,68,0.15)",
-              border: "1px solid rgba(239,68,68,0.5)",
-              color: "#ef4444",
-              boxShadow: "0 0 14px rgba(239,68,68,0.3)",
-              animation: "pulseLive 1s ease-in-out infinite",
-            } : {
-              background: "rgba(34,211,238,0.07)",
-              border: "1px solid rgba(34,211,238,0.2)",
-              color: "#64748b",
-            }}
+            className={`inline-flex items-center justify-center h-10 w-10 rounded-2xl border transition-all disabled:opacity-40 shrink-0 ${
+              isListening
+                ? "bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra"
+                : "bg-bg-base border-bg-border text-text-secondary"
+            }`}
           >
             <Mic className="h-4 w-4" />
           </button>
@@ -1221,12 +1019,7 @@ export default function ChatPage() {
             <button
               type="button"
               onClick={stopStream}
-              className="inline-flex items-center gap-1.5 rounded-2xl text-sm px-4 py-2.5 font-semibold transition-all"
-              style={{
-                background: "rgba(239,68,68,0.12)",
-                color: "#ef4444",
-                border: "1px solid rgba(239,68,68,0.3)",
-              }}
+              className="inline-flex items-center gap-1.5 rounded-2xl text-sm px-4 py-2.5 font-semibold border transition-all bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra"
             >
               <Square className="h-4 w-4" /> Stop
             </button>
@@ -1234,18 +1027,7 @@ export default function ChatPage() {
             <button
               type="submit"
               disabled={!input.trim() || activeId == null}
-              className="inline-flex items-center gap-1.5 rounded-2xl text-sm px-4 py-2.5 font-semibold transition-all disabled:opacity-40"
-              style={{
-                background: "linear-gradient(135deg, #22d3ee, #3b82f6)",
-                color: "#fff",
-                boxShadow: "0 0 16px rgba(34,211,238,0.25)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.boxShadow = "0 0 24px rgba(34,211,238,0.4)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.boxShadow = "0 0 16px rgba(34,211,238,0.25)";
-              }}
+              className="inline-flex items-center gap-1.5 rounded-2xl text-sm px-4 py-2.5 font-semibold transition-all disabled:opacity-40 bg-accent-sage text-white hover:bg-[#4A7A5E] active:scale-[0.98]"
             >
               <Send className="h-4 w-4" /> Envoyer
             </button>
@@ -1259,19 +1041,19 @@ export default function ChatPage() {
           <style>{`
             @keyframes voiceOrbBreath {
               0%, 100% { transform: scale(1); }
-              50%       { transform: scale(1.055); }
+              50%       { transform: scale(1.04); }
             }
             @keyframes voiceRing1 {
-              0%   { transform: scale(1);   opacity: 0.55; }
-              100% { transform: scale(1.9); opacity: 0; }
+              0%   { transform: scale(0.95); opacity: 0.7; }
+              100% { transform: scale(2.0);  opacity: 0; }
             }
             @keyframes voiceRing2 {
-              0%   { transform: scale(1);   opacity: 0.35; }
-              100% { transform: scale(2.5); opacity: 0; }
+              0%   { transform: scale(0.95); opacity: 0.45; }
+              100% { transform: scale(2.8);  opacity: 0; }
             }
             @keyframes voiceRing3 {
-              0%   { transform: scale(1);   opacity: 0.2; }
-              100% { transform: scale(3.2); opacity: 0; }
+              0%   { transform: scale(0.95); opacity: 0.25; }
+              100% { transform: scale(3.6);  opacity: 0; }
             }
             @keyframes voiceSpinCW  { to { transform: rotate(360deg);  } }
             @keyframes voiceSpinCCW { to { transform: rotate(-360deg); } }
@@ -1281,162 +1063,187 @@ export default function ChatPage() {
             }
             @keyframes voiceIdleFloat {
               0%, 100% { transform: translateY(0px); }
-              50%       { transform: translateY(-6px); }
+              50%       { transform: translateY(-5px); }
             }
-            @keyframes voiceSpotlight {
-              0%, 100% { opacity: 0.5; }
-              50%       { opacity: 0.85; }
+            @keyframes voiceGlow {
+              0%, 100% { opacity: 0.7; }
+              50%       { opacity: 1; }
             }
-            @keyframes voiceTranscriptIn {
-              from { opacity: 0; transform: translateY(10px); }
+            @keyframes voiceTextIn {
+              from { opacity: 0; transform: translateY(8px); }
               to   { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes voiceCardIn {
+              from { opacity: 0; transform: translateY(16px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes voiceScan {
+              0%   { transform: translateY(-100%); opacity: 0; }
+              10%  { opacity: 0.4; }
+              90%  { opacity: 0.4; }
+              100% { transform: translateY(100vh); opacity: 0; }
             }
           `}</style>
 
           {/* ── Full-screen overlay ── */}
           <div
             className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none overflow-hidden"
-            style={{ background: "#020810" }}
+            style={{ background: "linear-gradient(160deg, #010c1a 0%, #020912 50%, #010c1a 100%)" }}
           >
-            {/* ── Background layers ── */}
-            {/* Deep radial spotlight that changes color with state */}
+            {/* Hex grid */}
+            <div style={{
+              position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.055,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='56' height='48' viewBox='0 0 56 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M28 0 L56 16 L56 32 L28 48 L0 32 L0 16Z' fill='none' stroke='%2322d3ee' stroke-width='0.6'/%3E%3C/svg%3E")`,
+              backgroundSize: "56px 48px",
+            }} />
+
+            {/* Ambient glow behind orb */}
             <div style={{
               position: "absolute", inset: 0, pointerEvents: "none",
               background:
                 voiceStatus === "listening"
-                  ? "radial-gradient(ellipse 55% 45% at 50% 52%, rgba(239,68,68,0.09) 0%, transparent 70%)"
+                  ? "radial-gradient(ellipse 36% 32% at 50% 46%, rgba(239,68,68,0.14) 0%, transparent 70%)"
                   : voiceStatus === "speaking"
-                  ? "radial-gradient(ellipse 55% 45% at 50% 52%, rgba(34,211,238,0.08) 0%, transparent 70%)"
+                  ? "radial-gradient(ellipse 36% 32% at 50% 46%, rgba(34,211,238,0.11) 0%, transparent 70%)"
                   : voiceStatus === "processing"
-                  ? "radial-gradient(ellipse 55% 45% at 50% 52%, rgba(245,158,11,0.07) 0%, transparent 70%)"
-                  : "radial-gradient(ellipse 40% 35% at 50% 52%, rgba(30,41,59,0.6) 0%, transparent 70%)",
-              transition: "background 0.8s ease",
-              animation: "voiceSpotlight 4s ease-in-out infinite",
-            }} />
-            {/* Subtle dot-grid */}
-            <div style={{
-              position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.18,
-              backgroundImage: "radial-gradient(circle, #1e293b 1px, transparent 1px)",
-              backgroundSize: "32px 32px",
-            }} />
-            {/* Corner vignette */}
-            <div style={{
-              position: "absolute", inset: 0, pointerEvents: "none",
-              background: "radial-gradient(ellipse 110% 110% at 50% 50%, transparent 40%, #020810 100%)",
+                  ? "radial-gradient(ellipse 36% 32% at 50% 46%, rgba(245,158,11,0.1) 0%, transparent 70%)"
+                  : "none",
+              transition: "background 0.9s ease",
+              animation: "voiceGlow 3.5s ease-in-out infinite",
             }} />
 
+            {/* Vignette */}
+            <div style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              background: "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 35%, #010c1a 100%)",
+            }} />
+
+            {/* Scan line — speaking only */}
+            {voiceStatus === "speaking" && (
+              <div style={{
+                position: "absolute", left: 0, right: 0, height: 2, pointerEvents: "none",
+                background: "linear-gradient(90deg, transparent, rgba(34,211,238,0.35), transparent)",
+                animation: "voiceScan 4s linear infinite",
+              }} />
+            )}
+
             {/* ── Top bar ── */}
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-7 py-5">
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-2.5">
-                <div className="h-1.5 w-1.5 rounded-full"
-                  style={{
-                    background: voiceStatus === "idle" ? "#334155"
-                      : voiceStatus === "listening" ? "#ef4444"
-                      : voiceStatus === "speaking"  ? "#22d3ee"
-                      : "#f59e0b",
-                    boxShadow: voiceStatus !== "idle"
-                      ? `0 0 8px ${voiceStatus === "listening" ? "#ef4444" : voiceStatus === "speaking" ? "#22d3ee" : "#f59e0b"}`
-                      : "none",
-                    animation: voiceStatus !== "idle" ? "voiceSpotlight 1.5s ease-in-out infinite" : "none",
-                  }} />
-                <span className="text-[11px] font-mono-cyber tracking-widest" style={{ color: "#1e293b" }}>
-                  {convs.find((c) => c.id === activeId)?.title?.toUpperCase() ?? "SOC IA"}
+                <div style={{
+                  width: 7, height: 7, borderRadius: "50%",
+                  background: voiceStatus === "idle" ? "#1e293b"
+                    : voiceStatus === "listening"  ? "#ef4444"
+                    : voiceStatus === "speaking"   ? "#22d3ee"
+                    : "#f59e0b",
+                  boxShadow: voiceStatus !== "idle" ? `0 0 10px ${voiceStatus === "listening" ? "#ef4444" : voiceStatus === "speaking" ? "#22d3ee" : "#f59e0b"}` : "none",
+                  animation: voiceStatus !== "idle" ? "voiceGlow 1.4s ease-in-out infinite" : "none",
+                }} />
+                <span style={{ color: "#1e3a4a", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", textTransform: "uppercase" }}>
+                  CyberSentinel &nbsp;·&nbsp; Mode Vocal
                 </span>
               </div>
-              <button
-                onClick={exitVoiceMode}
-                className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all"
-                style={{
-                  background: "rgba(30,41,59,0.6)",
-                  border: "1px solid rgba(51,65,85,0.4)",
-                  color: "#475569",
-                  backdropFilter: "blur(8px)",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(100,116,139,0.6)";
-                  (e.currentTarget as HTMLElement).style.color = "#94a3b8";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(51,65,85,0.4)";
-                  (e.currentTarget as HTMLElement).style.color = "#475569";
-                }}
-              >
-                <X className="h-4.5 w-4.5" />
+              <button onClick={exitVoiceMode}
+                className="flex items-center justify-center w-9 h-9 rounded-xl border border-white/[0.08] text-text-muted bg-black/50 backdrop-blur-md hover:border-white/25 hover:text-text-secondary transition-all cursor-pointer">
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
 
-            {/* ── Status label ── */}
-            <div className="mb-16 flex flex-col items-center gap-2">
-              <p
-                className="text-[10px] font-mono-cyber font-black uppercase tracking-[0.35em] transition-all duration-500"
-                style={{
-                  color: voiceStatus === "listening"  ? "#ef4444"
-                       : voiceStatus === "speaking"   ? "#22d3ee"
-                       : voiceStatus === "processing" ? "#f59e0b"
-                       : "#1e293b",
-                  letterSpacing: "0.35em",
-                }}
-              >
-                {voiceStatus === "listening"  ? "en ecoute"
-                 : voiceStatus === "processing" ? "traitement"
-                 : voiceStatus === "speaking"   ? "assistant parle"
-                 : "pret"}
-              </p>
-              {/* Thin accent line */}
+            {/* ── Status chip ── */}
+            <div style={{ marginBottom: 36, animation: "voiceTextIn 0.3s ease-out" }}>
               <div style={{
-                width: voiceStatus === "idle" ? 24 : 48,
-                height: 1,
-                borderRadius: 1,
-                background:
-                  voiceStatus === "listening"  ? "#ef4444"
-                  : voiceStatus === "speaking" ? "#22d3ee"
-                  : voiceStatus === "processing" ? "#f59e0b"
-                  : "#1e293b",
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "6px 18px", borderRadius: 999,
+                background: voiceStatus === "idle" ? "rgba(15,23,42,0.5)"
+                  : voiceStatus === "listening"  ? "rgba(239,68,68,0.08)"
+                  : voiceStatus === "speaking"   ? "rgba(34,211,238,0.07)"
+                  : "rgba(245,158,11,0.07)",
+                border: `1px solid ${
+                  voiceStatus === "idle"       ? "rgba(30,58,74,0.3)"
+                  : voiceStatus === "listening"  ? "rgba(239,68,68,0.25)"
+                  : voiceStatus === "speaking"   ? "rgba(34,211,238,0.22)"
+                  : "rgba(245,158,11,0.22)"
+                }`,
+                backdropFilter: "blur(8px)",
                 transition: "all 0.5s ease",
-              }} />
+              }}>
+                <div style={{
+                  width: 5, height: 5, borderRadius: "50%",
+                  background: voiceStatus === "idle" ? "#1e293b"
+                    : voiceStatus === "listening"  ? "#ef4444"
+                    : voiceStatus === "speaking"   ? "#22d3ee"
+                    : "#f59e0b",
+                  animation: voiceStatus !== "idle" ? "voiceGlow 1s ease-in-out infinite" : "none",
+                }} />
+                <span style={{
+                  fontSize: 10, fontFamily: "monospace", letterSpacing: "0.3em",
+                  textTransform: "uppercase", fontWeight: 700,
+                  color: voiceStatus === "idle" ? "#1e3a4a"
+                    : voiceStatus === "listening"  ? "#ef4444"
+                    : voiceStatus === "speaking"   ? "#22d3ee"
+                    : "#f59e0b",
+                }}>
+                  {voiceStatus === "listening"  ? "En écoute"
+                   : voiceStatus === "processing" ? "Traitement…"
+                   : voiceStatus === "speaking"   ? "Assistant parle"
+                   : "Prêt"}
+                </span>
+              </div>
             </div>
 
-            {/* ── Orb container (rings + sphere) ── */}
-            <div style={{ position: "relative", width: 220, height: 220, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {/* ── Orb container ── */}
+            <div style={{ position: "relative", width: 230, height: 230, display: "flex", alignItems: "center", justifyContent: "center" }}>
 
-              {/* Expanding rings — listening & speaking */}
+              {/* Ripple rings */}
               {(voiceStatus === "listening" || voiceStatus === "speaking") && (<>
-                <div style={{
-                  position: "absolute", inset: 0, borderRadius: "50%",
-                  border: `1.5px solid ${voiceStatus === "listening" ? "rgba(239,68,68,0.5)" : "rgba(34,211,238,0.45)"}`,
-                  animation: "voiceRing1 2.2s ease-out infinite",
-                }} />
-                <div style={{
-                  position: "absolute", inset: 0, borderRadius: "50%",
-                  border: `1px solid ${voiceStatus === "listening" ? "rgba(239,68,68,0.3)" : "rgba(34,211,238,0.28)"}`,
-                  animation: "voiceRing2 2.2s ease-out 0.7s infinite",
-                }} />
-                <div style={{
-                  position: "absolute", inset: 0, borderRadius: "50%",
-                  border: `1px solid ${voiceStatus === "listening" ? "rgba(239,68,68,0.16)" : "rgba(34,211,238,0.15)"}`,
-                  animation: "voiceRing3 2.2s ease-out 1.4s infinite",
-                }} />
+                {[0, 0.75, 1.5].map((delay, i) => (
+                  <div key={i} style={{
+                    position: "absolute", inset: 0, borderRadius: "50%",
+                    border: `${i === 0 ? 1.5 : 1}px solid ${
+                      voiceStatus === "listening"
+                        ? `rgba(239,68,68,${[0.55,0.35,0.2][i]})`
+                        : `rgba(34,211,238,${[0.5,0.3,0.18][i]})`
+                    }`,
+                    animation: `voiceRing${i+1} 2.4s ease-out ${delay}s infinite`,
+                  }} />
+                ))}
               </>)}
 
-              {/* Processing: dual rotating arcs */}
+              {/* Processing arcs */}
               {voiceStatus === "processing" && (<>
                 <div style={{
-                  position: "absolute", inset: -14, borderRadius: "50%",
+                  position: "absolute", inset: -12, borderRadius: "50%",
                   border: "2px solid transparent",
-                  borderTopColor: "#f59e0b",
-                  borderRightColor: "rgba(245,158,11,0.25)",
-                  animation: "voiceSpinCW 1.1s linear infinite",
+                  borderTopColor: "#f59e0b", borderRightColor: "rgba(245,158,11,0.2)",
+                  animation: "voiceSpinCW 1s linear infinite",
                 }} />
                 <div style={{
-                  position: "absolute", inset: -26, borderRadius: "50%",
+                  position: "absolute", inset: -24, borderRadius: "50%",
                   border: "1px solid transparent",
-                  borderBottomColor: "rgba(245,158,11,0.4)",
-                  borderLeftColor: "rgba(245,158,11,0.15)",
-                  animation: "voiceSpinCCW 1.8s linear infinite",
+                  borderBottomColor: "rgba(245,158,11,0.35)", borderLeftColor: "rgba(245,158,11,0.12)",
+                  animation: "voiceSpinCCW 1.7s linear infinite",
+                }} />
+                <div style={{
+                  position: "absolute", inset: -38, borderRadius: "50%",
+                  border: "1px solid transparent",
+                  borderTopColor: "rgba(245,158,11,0.15)",
+                  animation: "voiceSpinCW 2.8s linear infinite",
                 }} />
               </>)}
 
-              {/* ── The sphere ── */}
+              {/* Outer static ring */}
+              <div style={{
+                position: "absolute", inset: -8, borderRadius: "50%",
+                border: `1px solid ${
+                  voiceStatus === "idle"       ? "rgba(30,58,74,0.25)"
+                  : voiceStatus === "listening"  ? "rgba(239,68,68,0.15)"
+                  : voiceStatus === "speaking"   ? "rgba(34,211,238,0.14)"
+                  : "rgba(245,158,11,0.14)"
+                }`,
+                transition: "border-color 0.6s ease",
+              }} />
+
+              {/* ── Main sphere ── */}
               <div
                 onClick={() => {
                   if (voiceStatus === "listening") {
@@ -1445,114 +1252,140 @@ export default function ChatPage() {
                   }
                 }}
                 style={{
-                  width: 200, height: 200, borderRadius: "50%",
+                  width: 210, height: 210, borderRadius: "50%",
                   position: "relative",
                   cursor: voiceStatus === "listening" ? "pointer" : "default",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   background:
                     voiceStatus === "listening"
-                      ? "radial-gradient(circle at 35% 30%, rgba(239,68,68,0.32) 0%, rgba(239,68,68,0.1) 45%, rgba(2,8,16,0.96) 100%)"
+                      ? "radial-gradient(circle at 32% 28%, rgba(239,68,68,0.38) 0%, rgba(239,68,68,0.12) 40%, rgba(1,12,26,0.97) 100%)"
                       : voiceStatus === "speaking"
-                      ? "radial-gradient(circle at 35% 30%, rgba(34,211,238,0.28) 0%, rgba(34,211,238,0.08) 45%, rgba(2,8,16,0.96) 100%)"
+                      ? "radial-gradient(circle at 32% 28%, rgba(34,211,238,0.3) 0%, rgba(34,211,238,0.09) 40%, rgba(1,12,26,0.97) 100%)"
                       : voiceStatus === "processing"
-                      ? "radial-gradient(circle at 35% 30%, rgba(245,158,11,0.22) 0%, rgba(245,158,11,0.06) 45%, rgba(2,8,16,0.96) 100%)"
-                      : "radial-gradient(circle at 35% 30%, rgba(30,41,59,0.5) 0%, rgba(15,23,42,0.3) 45%, rgba(2,8,16,0.96) 100%)",
+                      ? "radial-gradient(circle at 32% 28%, rgba(245,158,11,0.25) 0%, rgba(245,158,11,0.07) 40%, rgba(1,12,26,0.97) 100%)"
+                      : "radial-gradient(circle at 32% 28%, rgba(20,40,60,0.6) 0%, rgba(10,20,36,0.4) 45%, rgba(1,12,26,0.98) 100%)",
                   border: `1.5px solid ${
-                    voiceStatus === "listening"  ? "rgba(239,68,68,0.4)"
-                    : voiceStatus === "speaking" ? "rgba(34,211,238,0.38)"
-                    : voiceStatus === "processing" ? "rgba(245,158,11,0.35)"
-                    : "rgba(30,41,59,0.35)"
+                    voiceStatus === "listening"  ? "rgba(239,68,68,0.45)"
+                    : voiceStatus === "speaking" ? "rgba(34,211,238,0.4)"
+                    : voiceStatus === "processing" ? "rgba(245,158,11,0.38)"
+                    : "rgba(20,40,60,0.4)"
                   }`,
                   boxShadow:
                     voiceStatus === "listening"
-                      ? "0 0 80px rgba(239,68,68,0.22), 0 0 160px rgba(239,68,68,0.08), inset 0 1px 0 rgba(239,68,68,0.25), inset 0 0 50px rgba(239,68,68,0.06)"
+                      ? "0 0 60px rgba(239,68,68,0.2), 0 0 120px rgba(239,68,68,0.07), inset 0 1px 0 rgba(239,68,68,0.2), inset 0 0 40px rgba(239,68,68,0.05)"
                       : voiceStatus === "speaking"
-                      ? "0 0 80px rgba(34,211,238,0.2), 0 0 160px rgba(34,211,238,0.07), inset 0 1px 0 rgba(34,211,238,0.22), inset 0 0 50px rgba(34,211,238,0.05)"
+                      ? "0 0 60px rgba(34,211,238,0.18), 0 0 120px rgba(34,211,238,0.06), inset 0 1px 0 rgba(34,211,238,0.18), inset 0 0 40px rgba(34,211,238,0.04)"
                       : voiceStatus === "processing"
-                      ? "0 0 60px rgba(245,158,11,0.15), inset 0 1px 0 rgba(245,158,11,0.18)"
-                      : "0 0 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(51,65,85,0.15)",
+                      ? "0 0 50px rgba(245,158,11,0.14), inset 0 1px 0 rgba(245,158,11,0.15)"
+                      : "0 0 40px rgba(0,0,0,0.8), inset 0 1px 0 rgba(20,40,60,0.2)",
                   animation:
                     voiceStatus === "listening" || voiceStatus === "speaking"
-                      ? "voiceOrbBreath 2.5s ease-in-out infinite"
+                      ? "voiceOrbBreath 2.8s ease-in-out infinite"
                       : voiceStatus === "idle"
                       ? "voiceIdleFloat 5s ease-in-out infinite"
                       : "none",
-                  transition: "background 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease",
+                  transition: "background 0.7s ease, border-color 0.7s ease, box-shadow 0.7s ease",
                 }}
               >
-                {/* Inner highlight (glass top-left) */}
+                {/* Glass highlight top-left */}
                 <div style={{
-                  position: "absolute", top: "12%", left: "16%",
-                  width: "35%", height: "28%", borderRadius: "50%",
+                  position: "absolute", top: "10%", left: "14%",
+                  width: "38%", height: "26%", borderRadius: "50%",
                   background:
-                    voiceStatus === "listening"  ? "radial-gradient(circle, rgba(239,68,68,0.18) 0%, transparent 100%)"
-                    : voiceStatus === "speaking" ? "radial-gradient(circle, rgba(34,211,238,0.16) 0%, transparent 100%)"
-                    : voiceStatus === "processing" ? "radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 100%)"
-                    : "radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 100%)",
+                    voiceStatus === "listening"  ? "radial-gradient(ellipse, rgba(255,160,160,0.14) 0%, transparent 100%)"
+                    : voiceStatus === "speaking" ? "radial-gradient(ellipse, rgba(180,240,255,0.12) 0%, transparent 100%)"
+                    : voiceStatus === "processing" ? "radial-gradient(ellipse, rgba(255,220,100,0.1) 0%, transparent 100%)"
+                    : "radial-gradient(ellipse, rgba(255,255,255,0.03) 0%, transparent 100%)",
+                  pointerEvents: "none",
+                  transition: "background 0.7s ease",
+                }} />
+                {/* Bottom rim reflection */}
+                <div style={{
+                  position: "absolute", bottom: "12%", right: "14%",
+                  width: "28%", height: "12%", borderRadius: "50%",
+                  background: voiceStatus === "idle" ? "none"
+                    : voiceStatus === "listening"  ? "radial-gradient(ellipse, rgba(239,68,68,0.1) 0%, transparent 100%)"
+                    : voiceStatus === "speaking"   ? "radial-gradient(ellipse, rgba(34,211,238,0.08) 0%, transparent 100%)"
+                    : "radial-gradient(ellipse, rgba(245,158,11,0.07) 0%, transparent 100%)",
                   pointerEvents: "none",
                 }} />
                 {/* Icon */}
                 {voiceStatus === "listening" ? (
-                  <Mic style={{ width: 68, height: 68, color: "#ef4444", filter: "drop-shadow(0 0 18px rgba(239,68,68,0.6))" }} />
+                  <Mic style={{ width: 72, height: 72, color: "#ef4444", filter: "drop-shadow(0 0 20px rgba(239,68,68,0.65))" }} />
                 ) : voiceStatus === "speaking" ? (
-                  <Volume2 style={{ width: 68, height: 68, color: "#22d3ee", filter: "drop-shadow(0 0 18px rgba(34,211,238,0.6))" }} />
+                  <Volume2 style={{ width: 72, height: 72, color: "#22d3ee", filter: "drop-shadow(0 0 20px rgba(34,211,238,0.65))" }} />
                 ) : voiceStatus === "processing" ? (
-                  <VolumeX style={{ width: 68, height: 68, color: "#f59e0b", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.5))" }} />
+                  <Bot style={{ width: 72, height: 72, color: "#f59e0b", filter: "drop-shadow(0 0 16px rgba(245,158,11,0.55))" }} />
                 ) : (
-                  <Mic style={{ width: 68, height: 68, color: "#1e293b" }} />
+                  <Mic style={{ width: 72, height: 72, color: "#1e3a4a" }} />
                 )}
               </div>
             </div>
 
-            {/* ── Waveform bars (speaking) ── */}
-            <div style={{ height: 52, marginTop: 32, display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}>
+            {/* ── Equalizer / idle dots ── */}
+            <div style={{ height: 60, marginTop: 28, display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 3, paddingBottom: 4 }}>
               {voiceStatus === "speaking"
-                ? [22,36,52,44,60,40,56,48,38,60,42,28,48,32].map((maxH, i) => (
+                ? [14,22,38,30,52,44,56,48,60,52,44,36,54,46,58,40,52,44,36,28,42,34,48,30,22,38,26,18].map((maxH, i) => (
                     <div key={i} style={{
                       width: 3, borderRadius: 2,
-                      background: "linear-gradient(to top, rgba(34,211,238,0.9), rgba(34,211,238,0.3))",
-                      transformOrigin: "center bottom",
-                      animation: `voiceWave ${0.55 + (i % 5) * 0.12}s ease-in-out ${i * 0.055}s infinite`,
-                      ["--max-h" as any]: `${maxH}px`,
                       height: `${maxH}px`,
-                      boxShadow: "0 0 6px rgba(34,211,238,0.4)",
+                      background: `linear-gradient(to top, rgba(34,211,238,${0.7 + (maxH / 60) * 0.3}), rgba(34,211,238,0.25))`,
+                      transformOrigin: "center bottom",
+                      animation: `voiceWave ${0.5 + (i % 7) * 0.08}s ease-in-out ${i * 0.04}s infinite`,
+                      boxShadow: maxH > 45 ? "0 0 5px rgba(34,211,238,0.5)" : "none",
                     }} />
                   ))
-                : Array.from({ length: 14 }).map((_, i) => (
+                : voiceStatus === "listening"
+                ? [8,14,10,18,12,16,10,14,8,18,12,10,16,8,12,14,10,18,8,14,12,16,10,14,8,12,10,14].map((h, i) => (
                     <div key={i} style={{
-                      width: 3, height: 3, borderRadius: 2,
-                      background: "rgba(30,41,59,0.6)",
+                      width: 3, borderRadius: 2, height: `${h}px`,
+                      background: "rgba(239,68,68,0.25)",
+                      animation: `voiceWave ${0.8 + (i % 4) * 0.15}s ease-in-out ${i * 0.06}s infinite`,
+                      transformOrigin: "center bottom",
+                    }} />
+                  ))
+                : Array.from({ length: 28 }).map((_, i) => (
+                    <div key={i} style={{
+                      width: 3, height: 3, borderRadius: "50%",
+                      background: "rgba(20,40,60,0.8)",
                     }} />
                   ))
               }
             </div>
 
-            {/* ── Transcript / hint ── */}
-            <div style={{ marginTop: 28, maxWidth: 380, width: "100%", padding: "0 32px", textAlign: "center", minHeight: 60 }}>
+            {/* ── Transcript ── */}
+            <div style={{ marginTop: 24, maxWidth: 400, width: "100%", padding: "0 28px", textAlign: "center", minHeight: 56 }}>
               {voiceTranscript ? (
-                <div
-                  style={{
-                    animation: "voiceTranscriptIn 0.3s ease-out both",
-                    background: "rgba(15,23,42,0.7)",
-                    border: "1px solid rgba(51,65,85,0.5)",
-                    borderRadius: 16,
-                    padding: "12px 20px",
-                    backdropFilter: "blur(8px)",
-                  }}
-                >
-                  <p className="text-sm font-mono-cyber italic leading-relaxed" style={{ color: "#94a3b8" }}>
-                    &laquo;&nbsp;{voiceTranscript}&nbsp;&raquo;
+                <div className="rounded-[14px] px-[18px] py-[10px] bg-black/80 border border-accent-violet/12 backdrop-blur-xl"
+                  style={{ animation: "voiceTextIn 0.3s ease-out" }}>
+                  <p className="text-text-secondary text-[13px] font-mono italic leading-relaxed">
+                    « {voiceTranscript} »
                   </p>
                 </div>
               ) : (
-                <p className="text-[11px] font-mono-cyber" style={{ color: "#1e293b" }}>
-                  {voiceStatus === "listening"   ? "Parlez — cliquez sur l'orbe pour valider"
+                <p className="text-[11px] font-mono tracking-[0.05em] text-text-muted">
+                  {voiceStatus === "listening"   ? "Parlez — cliquez sur l'orbe pour envoyer"
                    : voiceStatus === "processing" ? "Envoi au LLM local…"
-                   : voiceStatus === "speaking"   ? "L'assistant repond — patientez"
-                   : "Appuyez sur le micro pour commencer"}
+                   : voiceStatus === "speaking"   ? "L'assistant répond — patientez"
+                   : "Cliquez sur le micro pour commencer"}
                 </p>
               )}
             </div>
+
+            {/* ── Last assistant message preview ── */}
+            {lastAssistantMsg && (
+              <div style={{
+                position: "absolute", bottom: 36, left: 0, right: 0,
+                display: "flex", justifyContent: "center",
+                padding: "0 32px",
+                animation: "voiceCardIn 0.5s ease-out",
+              }}>
+                <div className="max-w-[460px] w-full rounded-[14px] px-4 py-[10px] bg-bg-base/75 border border-white/[0.06] backdrop-blur-xl">
+                  <p className="text-[9px] font-mono tracking-[0.2em] uppercase text-text-muted mb-1">Dernière réponse</p>
+                  <p className="text-[12px] leading-relaxed italic text-text-muted">{lastAssistantMsg}</p>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}

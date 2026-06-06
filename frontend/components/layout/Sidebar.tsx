@@ -2,7 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import {
-  LayoutDashboard, BellRing, ShieldAlert, Play, Cpu, MessageCircle, Radar,
+  LayoutDashboard, BellRing, ShieldAlert, Play, Cpu, MessageCircle,
   ChevronRight, LogOut, User, BarChart2, Settings, X, Mail, Phone, Briefcase,
   Calendar, Shield,
 } from "lucide-react";
@@ -42,35 +42,17 @@ export default function Sidebar() {
   }
 
   return (
-    <aside
-      className="hidden md:flex w-56 flex-col sticky top-0 h-screen self-start shrink-0"
-      style={{
-        background: "#060c15",
-        borderRight: "1px solid rgba(34,211,238,0.08)",
-      }}
-    >
+    <aside className="hidden md:flex w-[260px] flex-col sticky top-0 h-screen self-start shrink-0 bg-bg-nav border-r border-bg-border">
       {/* ── Logo ── */}
-      <div
-        className="h-16 px-4 flex items-center gap-3 shrink-0"
-        style={{ borderBottom: "1px solid rgba(34,211,238,0.07)" }}
-      >
-        <div
-          className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{
-            background: "linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%)",
-            boxShadow: "0 0 18px rgba(34,211,238,0.35)",
-          }}
-        >
-          <Radar style={{ height: 17, width: 17, color: "#fff" }} />
+      <div className="h-16 px-4 flex items-center gap-3 shrink-0 border-b border-bg-border">
+        <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-accent-sage to-[#7AAF8E] shadow-[0_2px_12px_rgba(91,138,110,0.3)]">
+          <Shield className="h-[17px] w-[17px] text-white" />
         </div>
         <div className="min-w-0">
-          <div
-            className="text-[10px] uppercase tracking-[0.22em] font-bold truncate"
-            style={{ color: "#22d3ee" }}
-          >
+          <div className="text-[13px] font-bold truncate text-accent-sage">
             CyberSentinel
           </div>
-          <div className="text-[11px] font-medium truncate" style={{ color: "#64748b" }}>
+          <div className="text-[11px] font-medium truncate text-text-muted">
             SOC Platform
           </div>
         </div>
@@ -78,10 +60,7 @@ export default function Sidebar() {
 
       {/* ── Section label ── */}
       <div className="px-4 pt-5 pb-1.5">
-        <span
-          className="text-[9px] font-bold uppercase tracking-[0.2em]"
-          style={{ color: "#334155" }}
-        >
+        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-muted">
           Navigation
         </span>
       </div>
@@ -96,59 +75,33 @@ export default function Sidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all relative group ${active ? "nav-active" : ""}`}
-              style={
+              className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm transition-all relative group ${
                 active
-                  ? {}
-                  : { color: "#64748b", border: "1px solid transparent" }
-              }
-              onMouseEnter={(e) => {
-                if (!active) {
-                  (e.currentTarget as HTMLElement).style.background = "rgba(34,211,238,0.05)";
-                  (e.currentTarget as HTMLElement).style.color = "#94a3b8";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!active) {
-                  (e.currentTarget as HTMLElement).style.background = "transparent";
-                  (e.currentTarget as HTMLElement).style.color = "#64748b";
-                }
-              }}
+                  ? "nav-active font-semibold"
+                  : "text-text-secondary hover:bg-[#F0EDE8] hover:text-text-primary"
+              }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="font-medium flex-1 truncate">{label}</span>
               {showPendingBadge && (
                 <span
-                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full font-mono-cyber animate-pulse-badge"
-                  style={{
-                    background: "rgba(239,68,68,0.15)",
-                    color: "#ef4444",
-                    border: "1px solid rgba(239,68,68,0.4)",
-                    minWidth: 18,
-                    textAlign: "center",
-                  }}
-                  title={`${pendingCount} action(s) en attente d’approbation`}
+                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full font-mono-cyber animate-pulse-badge bg-[#FDF0E8] text-[#C4714A] border border-[#F0C4A8] min-w-[18px] text-center"
+                  title={`${pendingCount} action(s) en attente d'approbation`}
                 >
                   {pendingCount}
                 </span>
               )}
               {tag && !showPendingBadge && (
-                <span
-                  className="text-[9px] font-bold px-1.5 py-0.5 rounded font-mono-cyber"
-                  style={{
-                    background: active ? "rgba(34,211,238,0.15)" : "rgba(34,211,238,0.07)",
-                    color: active ? "#22d3ee" : "#334155",
-                    border: "1px solid rgba(34,211,238,0.15)",
-                  }}
-                >
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono-cyber ${
+                  active
+                    ? "bg-accent-sage-light text-accent-sage border border-[#B8D8C4]"
+                    : "bg-[#F0EDE8] text-text-muted border border-bg-border"
+                }`}>
                   {tag}
                 </span>
               )}
               {active && (
-                <ChevronRight
-                  className="h-3.5 w-3.5 shrink-0"
-                  style={{ color: "#22d3ee" }}
-                />
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-accent-sage" />
               )}
             </Link>
           );
@@ -159,20 +112,14 @@ export default function Sidebar() {
       <div className="p-3 shrink-0 space-y-2">
         {/* System status — dynamic */}
         {(() => {
-          // Three states: ok / degraded / unreachable
           const reachable = health !== null;
           const isDegraded = reachable && !healthOk;
-          const dotColor = healthOk ? "#10b981" : isDegraded ? "#f59e0b" : "#ef4444";
-          const bgColor = healthOk
-            ? "rgba(16,185,129,0.05)"
+          const dotColor = healthOk ? "#5B8A6E" : isDegraded ? "#E8C547" : "#C4714A";
+          const statusCls = healthOk
+            ? "bg-[#EBF3EE] border-[#B8D8C4] text-[#5B8A6E]"
             : isDegraded
-              ? "rgba(245,158,11,0.05)"
-              : "rgba(239,68,68,0.05)";
-          const borderColor = healthOk
-            ? "rgba(16,185,129,0.15)"
-            : isDegraded
-              ? "rgba(245,158,11,0.18)"
-              : "rgba(239,68,68,0.18)";
+              ? "bg-[#FDF8E8] border-[#F0E090] text-[#A07800]"
+              : "bg-[#FDF0E8] border-[#F0C4A8] text-[#C4714A]";
           const label = healthOk
             ? "Backend connecté"
             : isDegraded
@@ -190,71 +137,37 @@ export default function Sidebar() {
                   .join(", ") || "service inconnu"}`
               : "Backend injoignable — vérifiez que l'API tourne sur le port 8000";
           return (
-        <div
-          className="flex items-center gap-2 px-2 py-1.5 rounded-lg"
-          style={{ background: bgColor, border: `1px solid ${borderColor}` }}
-          title={tooltip}
-        >
-          <span
-            className={"h-2 w-2 rounded-full " + (reachable ? "animate-pulse-badge" : "")}
-            style={{ background: dotColor }}
-          />
-          <span
-            className="text-[10px] font-semibold flex-1"
-            style={{ color: dotColor }}
-          >
-            {label}
-          </span>
-          <span
-            className="text-[9px] font-mono-cyber"
-            style={{ color: sseConnected ? "#22d3ee" : "#334155" }}
-            title={sseConnected ? "Flux SSE actif" : "SSE inactif"}
-          >
-            {sseConnected ? "● SSE" : "○ SSE"}
-          </span>
-        </div>
+            <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border ${statusCls}`} title={tooltip}>
+              <span className={`h-2 w-2 rounded-full shrink-0 ${reachable ? "animate-pulse-badge" : ""}`} style={{ background: dotColor }} />
+              <span className="text-[10px] font-semibold flex-1">{label}</span>
+              <span
+                className={`text-[9px] font-mono-cyber ${sseConnected ? "text-accent-slate" : "text-text-muted"}`}
+                title={sseConnected ? "Flux SSE actif" : "SSE inactif"}
+              >
+                {sseConnected ? "● SSE" : "○ SSE"}
+              </span>
+            </div>
           );
         })()}
 
         {/* ── Profile button ── */}
         <button
           onClick={() => setProfileOpen(true)}
-          className="w-full rounded-xl p-3 text-left transition-all group"
-          style={{
-            background: "rgba(34,211,238,0.04)",
-            border: "1px solid rgba(34,211,238,0.08)",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.borderColor = "rgba(34,211,238,0.2)";
-            const chevron = (e.currentTarget as HTMLElement).querySelector(".profile-chevron") as HTMLElement | null;
-            if (chevron) chevron.style.color = "#22d3ee";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.borderColor = "rgba(34,211,238,0.08)";
-            const chevron = (e.currentTarget as HTMLElement).querySelector(".profile-chevron") as HTMLElement | null;
-            if (chevron) chevron.style.color = "#334155";
-          }}
+          className="w-full rounded-[10px] p-3 text-left transition-all bg-[#F5F3EE] border border-bg-border hover:border-[#B8D8C4] hover:bg-accent-sage-light group"
         >
           <div className="flex items-center gap-2.5">
-            <div
-              className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold"
-              style={{
-                background: "linear-gradient(135deg, #22d3ee22 0%, #3b82f622 100%)",
-                border: "1px solid rgba(34,211,238,0.25)",
-                color: "#22d3ee",
-              }}
-            >
-              {username ? initials : <User style={{ width: 14, height: 14 }} />}
+            <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold bg-accent-sage-light border border-[#B8D8C4] text-accent-sage">
+              {username ? initials : <User className="w-3.5 h-3.5" />}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[12px] font-semibold truncate" style={{ color: "#e2e8f0" }}>
+              <div className="text-[12px] font-semibold truncate text-text-primary">
                 {username || "—"}
               </div>
-              <div className="text-[10px]" style={{ color: "#334155" }}>
+              <div className="text-[10px] text-text-muted">
                 {profile?.role || "Analyste SOC"}
               </div>
             </div>
-            <ChevronRight className="profile-chevron" style={{ width: 12, height: 12, color: "#334155", flexShrink: 0, transition: "color 0.15s" }} />
+            <ChevronRight className="w-3 h-3 shrink-0 text-text-muted transition-colors group-hover:text-accent-sage" />
           </div>
         </button>
       </div>
@@ -267,32 +180,28 @@ export default function Sidebar() {
           onClick={() => setProfileOpen(false)}
         >
           <div
-            className="w-72 rounded-2xl overflow-hidden animate-slide-in-right"
-            style={{ background: "#0a1220", border: "1px solid rgba(34,211,238,0.2)", boxShadow: "0 0 40px rgba(34,211,238,0.1)" }}
+            className="w-72 rounded-2xl overflow-hidden animate-slide-in-right bg-bg-card border border-bg-border shadow-modal"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal header */}
-            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(34,211,238,0.1)", background: "rgba(34,211,238,0.04)" }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-bg-border bg-bg-nav">
               <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4" style={{ color: "#22d3ee" }} />
-                <span className="text-sm font-bold font-mono-cyber" style={{ color: "#22d3ee" }}>Profil Analyste</span>
+                <Shield className="h-4 w-4 text-accent-sage" />
+                <span className="text-sm font-bold text-accent-sage">Profil Analyste</span>
               </div>
-              <button onClick={() => setProfileOpen(false)} className="rounded-lg p-1 transition-all" style={{ color: "#64748b" }}>
-                <X style={{ width: 14, height: 14 }} />
+              <button onClick={() => setProfileOpen(false)} className="rounded-lg p-1 transition-all text-text-muted hover:text-text-primary hover:bg-bg-elevated">
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Avatar + name */}
             <div className="flex items-center gap-3 px-4 pt-4 pb-3">
-              <div
-                className="h-12 w-12 rounded-xl flex items-center justify-center text-lg font-bold shrink-0"
-                style={{ background: "linear-gradient(135deg, rgba(34,211,238,0.15), rgba(59,130,246,0.15))", border: "1px solid rgba(34,211,238,0.3)", color: "#22d3ee" }}
-              >
-                {username ? username.slice(0, 2).toUpperCase() : <User style={{ width: 20, height: 20 }} />}
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center text-lg font-bold shrink-0 bg-accent-sage-light border border-[#B8D8C4] text-accent-sage">
+                {username ? username.slice(0, 2).toUpperCase() : <User className="w-5 h-5" />}
               </div>
               <div>
-                <p className="text-sm font-bold" style={{ color: "#e2e8f0" }}>{profile?.username || username}</p>
-                <p className="text-[11px] font-mono-cyber" style={{ color: "#22d3ee" }}>{profile?.role || "Analyste SOC"}</p>
+                <p className="text-sm font-bold text-text-primary">{profile?.username || username}</p>
+                <p className="text-[11px] text-accent-sage font-medium">{profile?.role || "Analyste SOC"}</p>
               </div>
             </div>
 
@@ -304,10 +213,10 @@ export default function Sidebar() {
                 { icon: Briefcase,label: "Rôle",     value: profile?.role      || "Analyste SOC" },
                 { icon: Calendar, label: "Membre depuis", value: profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString("fr-FR") : "—" },
               ].map(({ icon: Icon, label, value }) => (
-                <div key={label} className="flex items-center gap-2.5 rounded-lg px-3 py-2" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#475569" }} />
-                  <span className="text-[10px] font-mono-cyber w-20 shrink-0" style={{ color: "#475569" }}>{label}</span>
-                  <span className="text-[11px] font-medium truncate" style={{ color: value === "—" ? "#334155" : "#94a3b8" }}>{value}</span>
+                <div key={label} className="flex items-center gap-2.5 rounded-lg px-3 py-2 bg-bg-elevated border border-bg-border">
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-text-muted" />
+                  <span className="text-[10px] font-mono-cyber w-20 shrink-0 text-text-muted">{label}</span>
+                  <span className={`text-[11px] font-medium truncate ${value === "—" ? "text-text-muted" : "text-text-secondary"}`}>{value}</span>
                 </div>
               ))}
             </div>
@@ -316,10 +225,7 @@ export default function Sidebar() {
             <div className="px-4 pb-4">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.16)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)"; }}
+                className="w-full flex items-center justify-center gap-2 rounded-[10px] px-3 py-2 text-xs font-bold transition-all bg-[#FDF0E8] border border-[#F0C4A8] text-[#C4714A] hover:bg-[#FAE4D4]"
               >
                 <LogOut style={{ width: 13, height: 13 }} />
                 Déconnexion

@@ -28,5 +28,6 @@ class Settings(BaseModel):
     rag_enabled: bool = _env_bool("RAG_ENABLED", True)
     rag_init_mode: str = os.getenv("RAG_INIT_MODE", "lazy")  # off | background | lazy
     rag_init_max_workers: int = int(os.getenv("RAG_INIT_MAX_WORKERS", "1"))
+    clear_db_on_start: bool = _env_bool("CLEAR_DB_ON_START", False)
 
 settings = Settings()

@@ -4,16 +4,22 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-[10px] text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base disabled:pointer-events-none disabled:opacity-40 active:scale-[0.98]',
   {
     variants: {
       variant: {
-        default:     'text-white focus-visible:ring-cyan-400',
-        destructive: 'focus-visible:ring-red-500',
-        outline:     'focus-visible:ring-cyan-400',
-        secondary:   'focus-visible:ring-cyan-400',
-        ghost:       'focus-visible:ring-cyan-400',
-        link:        'underline-offset-4 hover:underline focus-visible:ring-cyan-400',
+        default:
+          'bg-accent-sage text-white shadow-[0_2px_12px_rgba(91,138,110,0.25)] hover:bg-[#4A7A5E] hover:shadow-[0_4px_16px_rgba(91,138,110,0.35)] hover:-translate-y-[1px] focus-visible:ring-accent-sage',
+        destructive:
+          'bg-accent-terra text-white shadow-[0_2px_8px_rgba(196,113,74,0.2)] hover:bg-[#B4613A] hover:-translate-y-[1px] focus-visible:ring-accent-terra',
+        outline:
+          'bg-transparent border-[1.5px] border-accent-sage text-accent-sage hover:bg-accent-sage-light focus-visible:ring-accent-sage',
+        secondary:
+          'bg-accent-sage-light border border-[#B8D8C4] text-accent-sage hover:bg-[#DFF0E8] focus-visible:ring-accent-sage',
+        ghost:
+          'bg-transparent text-text-secondary hover:bg-bg-elevated hover:text-text-primary focus-visible:ring-accent-sage',
+        link:
+          'bg-transparent text-accent-sage underline-offset-4 hover:underline hover:text-[#4A7A5E] focus-visible:ring-accent-sage p-0',
       },
       size: {
         default: 'h-10 px-4 py-2',
@@ -26,38 +32,6 @@ const buttonVariants = cva(
   }
 );
 
-const variantStyles: Record<string, React.CSSProperties> = {
-  default: {
-    background: 'linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%)',
-    boxShadow: '0 0 18px rgba(34,211,238,0.3)',
-    color: '#fff',
-  },
-  destructive: {
-    background: 'rgba(239,68,68,0.12)',
-    border: '1px solid rgba(239,68,68,0.3)',
-    color: '#ef4444',
-  },
-  outline: {
-    background: 'transparent',
-    border: '1px solid rgba(34,211,238,0.25)',
-    color: '#67e8f9',
-  },
-  secondary: {
-    background: 'rgba(34,211,238,0.08)',
-    border: '1px solid rgba(34,211,238,0.15)',
-    color: '#22d3ee',
-  },
-  ghost: {
-    background: 'transparent',
-    color: '#67e8f9',
-  },
-  link: {
-    background: 'transparent',
-    color: '#22d3ee',
-    padding: 0,
-  },
-};
-
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
@@ -65,13 +39,11 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'default', size, asChild = false, style, ...props }, ref) => {
+  ({ className, variant = 'default', size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
-    const vs = variantStyles[variant ?? 'default'] ?? {};
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
-        style={{ ...vs, ...style }}
         ref={ref}
         {...props}
       />

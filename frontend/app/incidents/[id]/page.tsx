@@ -59,11 +59,11 @@ function parseLlmView(llm: { response: string; confidence: number; parsed?: Reco
 }
 
 const TIMELINE_STEPS = [
-  { label: "Détection",      color: "#22d3ee" },
-  { label: "Enrichissement", color: "#3b82f6" },
-  { label: "Incident",       color: "#f59e0b" },
-  { label: "LLM",            color: "#10b981" },
-  { label: "Décision",       color: "#ef4444" },
+  { label: "Detection",      activeCls: "bg-[#EAF2F8] border-accent-slate  text-accent-slate",  doneCls: "bg-[#D8E8F4] border-[#A8C8E0] text-accent-slate",  lineCls: "bg-[#A8C8E0]" },
+  { label: "Enrichissement", activeCls: "bg-[#EBF3EE] border-accent-sage   text-accent-sage",   doneCls: "bg-[#D8EDE0] border-[#B8D8C4] text-accent-sage",   lineCls: "bg-[#B8D8C4]" },
+  { label: "Incident",       activeCls: "bg-[#FDF8E0] border-[#E8C547]    text-[#B8960A]",      doneCls: "bg-[#F5F0C0] border-[#F0E090] text-[#B8960A]",      lineCls: "bg-[#F0E090]" },
+  { label: "LLM",            activeCls: "bg-[#EBF3EE] border-accent-sage   text-accent-sage",   doneCls: "bg-[#D8EDE0] border-[#B8D8C4] text-accent-sage",   lineCls: "bg-[#B8D8C4]" },
+  { label: "Decision",       activeCls: "bg-[#FDF0E8] border-[#F0C4A8]    text-accent-terra",   doneCls: "bg-[#F8E0D0] border-[#F0C4A8] text-accent-terra",   lineCls: "bg-[#F0C4A8]" },
 ];
 
 function getRecommendations(incident: Incident) {
@@ -136,51 +136,46 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
 
   const isOpen  = incident?.status === "open";
   const risk    = (incident?.risk || "").toLowerCase();
-  const riskColor =
-    risk === "high"   ? "#ef4444" :
-    risk === "medium" ? "#f59e0b" :
-    "#10b981";
+  const riskTextCls = risk === "high" ? "text-accent-terra" : risk === "medium" ? "text-[#B8960A]" : "text-accent-sage";
+  const riskBadgeCls = risk === "high"
+    ? "bg-[#FDF0E8] text-accent-terra border-[#F0C4A8]"
+    : risk === "medium"
+    ? "bg-[#FDF8E0] text-[#B8960A] border-[#F0E090]"
+    : "bg-[#EBF3EE] text-accent-sage border-[#B8D8C4]";
   const confidence = incident ? (incident.confidence * 100).toFixed(1) : "0";
 
   return (
     <div className="space-y-6 animate-fade-in">
 
       {/* ── Breadcrumb ── */}
-      <div className="flex items-center gap-2 text-sm" style={{ color: "#64748b" }}>
-        <Link href="/incidents" className="flex items-center gap-1.5 hover:text-slate-300 transition-colors">
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Incidents
+      <div className="flex items-center gap-2 text-sm text-text-secondary">
+        <Link href="/incidents" className="flex items-center gap-1.5 hover:text-text-primary transition-colors">
+          <ArrowLeft className="h-3.5 w-3.5" />Incidents
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" style={{ color: "#334155" }} />
-        <span style={{ color: "#e2e8f0" }}>Incident #{id}</span>
+        <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
+        <span className="text-text-primary">Incident #{id}</span>
       </div>
 
       {!incident ? (
         <div className="flex items-center gap-3 py-12 justify-center">
-          <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#22d3ee" }} />
-          <span style={{ color: "#64748b" }}>Chargement…</span>
+          <Loader2 className="h-5 w-5 animate-spin text-accent-sage" />
+          <span className="text-text-secondary">Chargement…</span>
         </div>
       ) : (
         <>
           {/* ── Header card ── */}
-          <Card style={{ borderColor: isOpen ? "rgba(245,158,11,0.2)" : "rgba(16,185,129,0.15)" }}>
+          <Card accentColor={isOpen ? "amber" : "teal"}>
             <CardContent className="pt-5">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
-                    style={{
-                      background: isOpen ? "rgba(245,158,11,0.1)" : "rgba(16,185,129,0.1)",
-                      border: `1px solid ${isOpen ? "rgba(245,158,11,0.25)" : "rgba(16,185,129,0.25)"}`,
-                    }}
-                  >
-                    <Shield className="h-5 w-5" style={{ color: isOpen ? "#f59e0b" : "#10b981" }} />
+                  <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 border ${
+                    isOpen ? "bg-[#FDF8E0] border-[#F0E090]" : "bg-[#EBF3EE] border-[#B8D8C4]"
+                  }`}>
+                    <Shield className={`h-5 w-5 ${isOpen ? "text-[#B8960A]" : "text-accent-sage"}`} />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold" style={{ color: "#e2e8f0" }}>
-                      Incident #{incident.id}
-                    </h1>
-                    <div className="text-sm mt-0.5 font-mono-cyber" style={{ color: "#64748b" }}>
+                    <h1 className="text-xl font-bold text-text-primary">Incident #{incident.id}</h1>
+                    <div className="text-sm mt-0.5 font-mono-cyber text-text-secondary">
                       {formatDateTimeLocal(incident.created_at)}
                     </div>
                   </div>
@@ -191,14 +186,7 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
                     {incident.status}
                   </Badge>
                   {incident.risk && (
-                    <span
-                      className="cyber-badge font-mono-cyber"
-                      style={{
-                        background: `${riskColor}12`,
-                        color: riskColor,
-                        border: `1px solid ${riskColor}30`,
-                      }}
-                    >
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.06em] font-mono border ${riskBadgeCls}`}>
                       Risque {incident.risk}
                     </span>
                   )}
@@ -208,27 +196,21 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
               {/* Confidence bar */}
               <div className="mt-5">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs" style={{ color: "#64748b" }}>Score de confiance</span>
-                  <span className="text-sm font-bold font-mono-cyber" style={{ color: riskColor }}>
-                    {confidence}%
-                  </span>
+                  <span className="text-xs text-text-secondary">Score de confiance</span>
+                  <span className={`text-sm font-bold font-mono-cyber ${riskTextCls}`}>{confidence}%</span>
                 </div>
-                <div className="h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.05)" }}>
+                <div className="h-1.5 rounded-full bg-bg-border">
                   <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${confidence}%`,
-                      background: `linear-gradient(90deg, ${riskColor}99, ${riskColor})`,
-                      boxShadow: `0 0 8px ${riskColor}50`,
-                    }}
+                    className={`h-full rounded-full transition-all ${
+                      risk === "high" ? "bg-accent-terra" : risk === "medium" ? "bg-[#E8C547]" : "bg-accent-sage"
+                    }`}
+                    style={{ width: `${confidence}%` }}
                   />
                 </div>
               </div>
 
               {incident.summary && (
-                <p className="mt-4 text-sm leading-relaxed" style={{ color: "#94a3b8" }}>
-                  {incident.summary}
-                </p>
+                <p className="mt-4 text-sm leading-relaxed text-text-secondary">{incident.summary}</p>
               )}
 
               {/* Quick links */}
@@ -262,28 +244,19 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
                 {TIMELINE_STEPS.map((step, idx) => {
                   const isDone = idx < (llm ? 4 : 3);
                   const isActive = idx === (llm ? 4 : 3);
+                  const dotCls = isDone ? step.doneCls : isActive ? step.activeCls : "bg-text-muted/[0.06] border-text-muted/12 text-text-muted";
                   return (
                     <div key={step.label} className="flex items-center flex-1 min-w-0">
                       <div className="flex flex-col items-center gap-1.5 flex-1">
-                        <div
-                          className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold font-mono-cyber shrink-0"
-                          style={
-                            isDone
-                              ? { background: `${step.color}15`, border: `2px solid ${step.color}50`, color: step.color }
-                              : isActive
-                              ? { background: `${step.color}18`, border: `2px solid ${step.color}`, color: step.color, boxShadow: `0 0 12px ${step.color}30` }
-                              : { background: "rgba(100,116,139,0.06)", border: "2px solid rgba(100,116,139,0.12)", color: "#334155" }
-                          }
-                        >
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold font-mono-cyber shrink-0 border-2 ${dotCls}`}>
                           {isDone ? <CheckCircle className="h-3.5 w-3.5" /> : idx + 1}
                         </div>
-                        <span className="text-[10px] text-center font-mono-cyber whitespace-nowrap"
-                          style={{ color: isDone || isActive ? step.color : "#334155" }}>
-                          {step.label}
-                        </span>
+                        <span className={`text-[10px] text-center font-mono-cyber whitespace-nowrap ${
+                          isDone || isActive ? dotCls.split(" ").find(c => c.startsWith("text-")) : "text-text-muted"
+                        }`}>{step.label}</span>
                       </div>
                       {idx < TIMELINE_STEPS.length - 1 && (
-                        <div className="h-px flex-1 mx-1 mb-4" style={{ background: isDone ? `${step.color}40` : "rgba(255,255,255,0.04)" }} />
+                        <div className={`h-px flex-1 mx-1 mb-4 ${isDone ? step.lineCls : "bg-bg-border"}`} />
                       )}
                     </div>
                   );
@@ -296,24 +269,19 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" style={{ color: riskColor }} />
+                <AlertTriangle className={`h-4 w-4 ${riskTextCls}`} />
                 Recommandations
-                <span className="text-xs font-normal ml-1" style={{ color: "#64748b" }}>— validation humaine requise</span>
+                <span className="text-xs font-normal ml-1 text-text-secondary">— validation humaine requise</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 {getRecommendations(incident).map((rec, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 p-3 rounded-xl"
-                    style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}
-                  >
-                    <span
-                      className="mt-0.5 h-1.5 w-1.5 rounded-full shrink-0"
-                      style={{ background: riskColor }}
-                    />
-                    <span className="text-sm" style={{ color: "#94a3b8" }}>{rec}</span>
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-bg-base border border-bg-border">
+                    <span className={`mt-0.5 h-1.5 w-1.5 rounded-full shrink-0 ${
+                      risk === "high" ? "bg-accent-terra" : risk === "medium" ? "bg-[#E8C547]" : "bg-accent-sage"
+                    }`} />
+                    <span className="text-sm text-text-secondary">{rec}</span>
                   </div>
                 ))}
               </div>
@@ -326,50 +294,21 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
               <CardTitle>Décision humaine</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm" style={{ color: "#64748b" }}>
+              <p className="text-sm text-text-secondary">
                 Labellise les {relatedAlertIds().length} alerte{relatedAlertIds().length !== 1 ? "s" : ""} liée{relatedAlertIds().length !== 1 ? "s" : ""} à cet incident.
               </p>
               <div className="flex flex-wrap gap-3">
-                <button
-                  disabled={decisionBusy}
-                  onClick={() => applyDecision("true_attack")}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-                  style={{
-                    background: "rgba(239,68,68,0.1)",
-                    border: "1px solid rgba(239,68,68,0.3)",
-                    color: "#ef4444",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.18)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.1)"; }}
-                >
-                  <AlertTriangle className="h-4 w-4" />
-                  Confirmer attaque
+                <button disabled={decisionBusy} onClick={() => applyDecision("true_attack")}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border disabled:opacity-40 bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra hover:bg-[#F8E0D0]">
+                  <AlertTriangle className="h-4 w-4" />Confirmer attaque
                 </button>
-                <button
-                  disabled={decisionBusy}
-                  onClick={() => applyDecision("false_positive")}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-                  style={{
-                    background: "rgba(16,185,129,0.08)",
-                    border: "1px solid rgba(16,185,129,0.25)",
-                    color: "#10b981",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.15)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.08)"; }}
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  Faux positif
+                <button disabled={decisionBusy} onClick={() => applyDecision("false_positive")}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border disabled:opacity-40 bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage hover:bg-[#D8EDE0]">
+                  <CheckCircle className="h-4 w-4" />Faux positif
                 </button>
               </div>
               {decisionMsg && (
-                <div
-                  className="text-sm px-3 py-2 rounded-xl"
-                  style={{
-                    background: "rgba(34,211,238,0.07)",
-                    border: "1px solid rgba(34,211,238,0.15)",
-                    color: "#22d3ee",
-                  }}
-                >
+                <div className="text-sm px-3 py-2 rounded-xl bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
                   {decisionMsg}
                 </div>
               )}
@@ -380,7 +319,7 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Brain className="h-4 w-4" style={{ color: "#22d3ee" }} />
+                <Brain className="h-4 w-4 text-accent-sage" />
                 Explication LLM + RAG MITRE ATT&amp;CK
               </CardTitle>
             </CardHeader>
@@ -401,70 +340,43 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
               </Button>
 
               {msg && (
-                <div
-                  className="text-sm px-3 py-2 rounded-xl"
-                  style={{
-                    background: "rgba(16,185,129,0.07)",
-                    border: "1px solid rgba(16,185,129,0.2)",
-                    color: "#10b981",
-                  }}
-                >
+                <div className="text-sm px-3 py-2 rounded-xl bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
                   {msg}
                 </div>
               )}
 
               {llm && (
-                <div
-                  className="rounded-2xl p-5 space-y-4"
-                  style={{
-                    background: "rgba(34,211,238,0.06)",
-                    border: "1px solid rgba(34,211,238,0.18)",
-                  }}
-                >
+                <div className="rounded-2xl p-5 space-y-4 bg-[#EBF3EE] border border-[#B8D8C4]">
                   {(() => {
                     const view = parseLlmView(llm);
                     return (
                       <>
                   <div className="flex items-center justify-between">
-                    <div
-                      className="text-[10px] uppercase tracking-widest font-bold font-mono-cyber"
-                      style={{ color: "#22d3ee" }}
-                    >
-                      Réponse LLM
+                    <div className="text-[10px] uppercase tracking-widest font-bold font-mono-cyber text-accent-sage">
+                      Reponse LLM
                     </div>
-                    <span
-                      className="cyber-badge font-mono-cyber"
-                      style={{
-                        background: "rgba(34,211,238,0.08)",
-                        color: "#22d3ee",
-                        border: "1px solid rgba(34,211,238,0.2)",
-                      }}
-                    >
+                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold font-mono border bg-white text-accent-sage border-[#B8D8C4]">
                       confiance {(llm.confidence * 100).toFixed(1)}%
                     </span>
                   </div>
                   {(view.attackType || view.mitreTechnique) && (
                     <div className="flex flex-wrap gap-2">
                       {view.attackType && (
-                        <span className="px-2 py-1 rounded-lg text-xs font-semibold" style={{ background: "rgba(239,68,68,0.12)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.3)" }}>
-                          {view.attackType}
-                        </span>
+                        <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-[#FDF0E8] text-accent-terra border border-[#F0C4A8]">{view.attackType}</span>
                       )}
                       {view.mitreTechnique && (
-                        <span className="px-2 py-1 rounded-lg text-xs font-mono-cyber" style={{ background: "rgba(139,92,246,0.12)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }}>
-                          {view.mitreTechnique}{view.mitreName ? ` — ${view.mitreName}` : ""}
+                        <span className="px-2 py-1 rounded-lg text-xs font-mono-cyber bg-[#EAF2F8] text-accent-slate border border-[#A8C8E0]">
+                          {view.mitreTechnique}{view.mitreName ? ` - ${view.mitreName}` : ""}
                         </span>
                       )}
                     </div>
                   )}
-                  <div className="text-sm leading-relaxed" style={{ color: "#cbd5e1" }}>
-                    {view.summary}
-                  </div>
+                  <div className="text-sm leading-relaxed text-text-secondary">{view.summary}</div>
                   {view.actions.length > 0 && (
                     <ul className="space-y-1.5 text-sm">
                       {view.actions.map((action, idx) => (
-                        <li key={`${action}-${idx}`} className="flex items-start gap-2" style={{ color: "#cbd5e1" }}>
-                          <span style={{ color: "#22d3ee" }}>•</span>
+                        <li key={`${action}-${idx}`} className="flex items-start gap-2 text-text-secondary">
+                          <span className="text-accent-sage">•</span>
                           <span>{action}</span>
                         </li>
                       ))}

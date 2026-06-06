@@ -1,4 +1,5 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 interface MetricCardProps {
@@ -7,64 +8,61 @@ interface MetricCardProps {
   subtitle?: string;
   loading?: boolean;
   icon?: React.ReactNode;
-  accent?: "cyan" | "amber" | "red" | "green" | "blue";
+  accent?: "violet" | "cyan" | "amber" | "red" | "green" | "blue";
   trend?: "up" | "down" | "neutral";
   trendValue?: string;
 }
 
-const accentMap = {
-  cyan:  { top: "stat-cyan",  icon: "rgba(34,211,238,0.1)",  iconBorder: "rgba(34,211,238,0.2)",  val: "#67e8f9" },
-  amber: { top: "stat-amber", icon: "rgba(245,158,11,0.1)",  iconBorder: "rgba(245,158,11,0.25)", val: "#fbbf24" },
-  red:   { top: "stat-red",   icon: "rgba(239,68,68,0.1)",   iconBorder: "rgba(239,68,68,0.25)",  val: "#f87171" },
-  green: { top: "stat-green", icon: "rgba(16,185,129,0.1)",  iconBorder: "rgba(16,185,129,0.25)", val: "#34d399" },
-  blue:  { top: "stat-blue",  icon: "rgba(59,130,246,0.1)",  iconBorder: "rgba(59,130,246,0.25)", val: "#93c5fd" },
+const accentMap: Record<string, { top: string; iconBg: string; val: string }> = {
+  violet: { top: "stat-sage",   iconBg: "bg-[#EBF3EE] border-[#B8D8C4]",  val: "text-accent-sage" },
+  sage:   { top: "stat-sage",   iconBg: "bg-[#EBF3EE] border-[#B8D8C4]",  val: "text-accent-sage" },
+  cyan:   { top: "stat-slate",  iconBg: "bg-[#EAF2F8] border-[#A8C8E0]",  val: "text-accent-slate" },
+  slate:  { top: "stat-slate",  iconBg: "bg-[#EAF2F8] border-[#A8C8E0]",  val: "text-accent-slate" },
+  amber:  { top: "stat-amber",  iconBg: "bg-[#FDF8E8] border-[#F0E090]",  val: "text-[#A07800]" },
+  red:    { top: "stat-terra",  iconBg: "bg-[#FDF0E8] border-[#F0C4A8]",  val: "text-accent-terra" },
+  terra:  { top: "stat-terra",  iconBg: "bg-[#FDF0E8] border-[#F0C4A8]",  val: "text-accent-terra" },
+  green:  { top: "stat-sage",   iconBg: "bg-[#EBF3EE] border-[#B8D8C4]",  val: "text-accent-sage" },
+  blue:   { top: "stat-slate",  iconBg: "bg-[#EAF2F8] border-[#A8C8E0]",  val: "text-accent-slate" },
 };
 
 export default function MetricCard({
-  title, value, subtitle, loading, icon, accent = "cyan", trend, trendValue,
+  title, value, subtitle, loading, icon, accent = "violet", trend, trendValue,
 }: MetricCardProps) {
-  const a = accentMap[accent];
+  const a = accentMap[accent] ?? accentMap.violet;
   return (
-    <div
-      className={`cyber-card ${a.top} p-4 flex flex-col gap-3`}
-    >
+    <div className={cn("cyber-card p-4 flex flex-col gap-3", a.top)}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#64748b" }}>
+        <span className="text-[0.68rem] font-bold uppercase tracking-widest text-text-secondary">
           {title}
         </span>
         {icon && (
-          <div
-            className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: a.icon, border: `1px solid ${a.iconBorder}` }}
-          >
+          <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border", a.iconBg)}>
             {icon}
           </div>
         )}
       </div>
+
       {loading ? (
         <Skeleton className="h-8 w-24" />
       ) : (
-        <div className="text-2xl font-bold font-mono-cyber" style={{ color: a.val }}>
+        <div className={cn("text-2xl font-bold font-mono-cyber", a.val)}>
           {value ?? "N/A"}
         </div>
       )}
+
       <div className="flex items-center justify-between">
         {subtitle && (
-          <div className="text-[11px] font-mono-cyber" style={{ color: "#334155" }}>
+          <div className="text-[11px] font-mono-cyber text-text-muted">
             {subtitle}
           </div>
         )}
         {trend && trendValue && (
-          <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold font-mono-cyber"
-            style={
-              trend === "up"
-                ? { background: "rgba(16,185,129,0.1)", color: "#10b981" }
-                : trend === "down"
-                ? { background: "rgba(239,68,68,0.1)", color: "#ef4444" }
-                : { background: "rgba(100,116,139,0.1)", color: "#64748b" }
-            }
-          >
+          <span className={cn(
+            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold font-mono-cyber",
+            trend === "up"      ? "bg-accent-teal/10 text-accent-teal-bright"
+            : trend === "down"  ? "bg-accent-red/10 text-accent-red"
+            : "bg-text-muted/10 text-text-secondary",
+          )}>
             {trendValue}
           </span>
         )}
