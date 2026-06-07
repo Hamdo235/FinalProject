@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <body
         className={`${inter.variable} ${jetbrains.variable} h-screen overflow-hidden antialiased`}
-        style={{ background: "#FAFAF8", color: "#1A1A1A" }}
+        style={{ background: "#0D1117", color: "#E6E9EF" }}
       >
         <AuthProvider>{children}</AuthProvider>
       </body>

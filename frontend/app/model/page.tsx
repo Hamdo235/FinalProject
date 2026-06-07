@@ -33,7 +33,7 @@ export default async function ModelPage() {
       value: detector,
       sub: "iforest / lof / hybrid",
       valCls: "text-accent-slate",
-      iconCls: "bg-[#EAF2F8] border-[#A8C8E0] text-accent-slate",
+      iconCls: "bg-[#13202C] border-[#2A4357] text-accent-slate",
       topCls: "border-t-accent-slate",
     },
     {
@@ -42,7 +42,7 @@ export default async function ModelPage() {
       value: val(metrics?.threshold),
       sub: "SCORE_THRESHOLD",
       valCls: "text-accent-sage",
-      iconCls: "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage",
+      iconCls: "bg-[#15241C] border-[#2C4A39] text-accent-sage",
       topCls: "border-t-accent-sage",
     },
     {
@@ -60,7 +60,7 @@ export default async function ModelPage() {
       value: hasLabels ? fmt(metrics?.f1) : "N/A",
       sub: "Sur alertes labellisées",
       valCls: hasLabels ? "text-accent-sage" : "text-text-muted",
-      iconCls: hasLabels ? "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage" : "bg-text-muted/10 border-text-muted/15 text-text-muted",
+      iconCls: hasLabels ? "bg-[#15241C] border-[#2C4A39] text-accent-sage" : "bg-text-muted/10 border-text-muted/15 text-text-muted",
       topCls: hasLabels ? "border-t-accent-sage" : "border-t-text-muted",
     },
     {
@@ -69,7 +69,7 @@ export default async function ModelPage() {
       value: hasLabels ? fmt(metrics?.precision) : "N/A",
       sub: "Vrai positifs / predits positifs",
       valCls: hasLabels ? "text-accent-sage" : "text-text-muted",
-      iconCls: hasLabels ? "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage" : "bg-text-muted/10 border-text-muted/15 text-text-muted",
+      iconCls: hasLabels ? "bg-[#15241C] border-[#2C4A39] text-accent-sage" : "bg-text-muted/10 border-text-muted/15 text-text-muted",
       topCls: hasLabels ? "border-t-accent-sage" : "border-t-text-muted",
     },
     {
@@ -78,7 +78,7 @@ export default async function ModelPage() {
       value: hasLabels ? fmt(metrics?.recall) : "N/A",
       sub: "Vrai positifs / positifs reels",
       valCls: hasLabels ? "text-accent-sage" : "text-text-muted",
-      iconCls: hasLabels ? "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage" : "bg-text-muted/10 border-text-muted/15 text-text-muted",
+      iconCls: hasLabels ? "bg-[#15241C] border-[#2C4A39] text-accent-sage" : "bg-text-muted/10 border-text-muted/15 text-text-muted",
       topCls: hasLabels ? "border-t-accent-sage" : "border-t-text-muted",
     },
     {
@@ -87,7 +87,7 @@ export default async function ModelPage() {
       value: val(metrics?.samples),
       sub: "Exemples considérés",
       valCls: "text-accent-sage",
-      iconCls: "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage",
+      iconCls: "bg-[#15241C] border-[#2C4A39] text-accent-sage",
       topCls: "border-t-accent-sage",
     },
     {
@@ -96,7 +96,7 @@ export default async function ModelPage() {
       value: String(labeled),
       sub: `${metrics?.positives ?? 0} pos. / ${metrics?.negatives ?? 0} nég.`,
       valCls: labeled > 0 ? "text-accent-slate" : "text-text-muted",
-      iconCls: labeled > 0 ? "bg-[#EAF2F8] border-[#A8C8E0] text-accent-slate" : "bg-text-muted/10 border-text-muted/15 text-text-muted",
+      iconCls: labeled > 0 ? "bg-[#13202C] border-[#2A4357] text-accent-slate" : "bg-text-muted/10 border-text-muted/15 text-text-muted",
       topCls: labeled > 0 ? "border-t-accent-slate" : "border-t-text-muted",
     },
   ];
@@ -113,7 +113,7 @@ export default async function ModelPage() {
       {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {STATS.map(({ icon: Icon, label, value, sub, valCls, iconCls, topCls }) => (
-          <div key={label} className={`cyber-card p-5 flex flex-col gap-3 border-t-2 transition-shadow hover:ring-1 hover:ring-[#B8D8C4] ${topCls}`}>
+          <div key={label} className={`cyber-card p-5 flex flex-col gap-3 border-t-2 transition-shadow hover:ring-1 hover:ring-[#2C4A39] ${topCls}`}>
             <div className="flex items-center justify-between">
               <span className="text-[0.68rem] font-bold uppercase tracking-widest text-text-secondary">{label}</span>
               <div className={`h-7 w-7 rounded-lg flex items-center justify-center border ${iconCls}`}>
@@ -133,7 +133,7 @@ export default async function ModelPage() {
           <div className="text-sm text-text-secondary">
             Les métriques (F1, précision, rappel) nécessitent des alertes labellisées.
             Rendez-vous sur la page{" "}
-            <a href="/alerts" className="underline text-accent-sage hover:text-[#4A7A5E]">Alertes</a>{" "}
+            <a href="/alerts" className="underline text-accent-sage hover:text-[#5CA37F]">Alertes</a>{" "}
             pour labelliser des alertes en vrai positif ou faux positif.
           </div>
         </div>
@@ -144,7 +144,7 @@ export default async function ModelPage() {
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-accent-red" />
           <div className="text-sm text-text-secondary">
             Impossible de récupérer les métriques. Vérifiez que le backend est démarré
-            et que <code className="font-mono-cyber text-xs px-1.5 py-0.5 rounded bg-[#FDF0E8] text-accent-terra">/metrics/model</code> est accessible.
+            et que <code className="font-mono-cyber text-xs px-1.5 py-0.5 rounded bg-[#2A1A12] text-accent-terra">/metrics/model</code> est accessible.
           </div>
         </div>
       )}

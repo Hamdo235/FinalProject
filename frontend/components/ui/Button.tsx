@@ -9,17 +9,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-accent-sage text-white shadow-[0_2px_12px_rgba(91,138,110,0.25)] hover:bg-[#4A7A5E] hover:shadow-[0_4px_16px_rgba(91,138,110,0.35)] hover:-translate-y-[1px] focus-visible:ring-accent-sage',
+          'bg-accent-sage text-white shadow-[0_2px_12px_rgba(91,138,110,0.25)] hover:bg-[#5CA37F] hover:shadow-[0_4px_16px_rgba(91,138,110,0.35)] hover:-translate-y-[1px] focus-visible:ring-accent-sage',
         destructive:
-          'bg-accent-terra text-white shadow-[0_2px_8px_rgba(196,113,74,0.2)] hover:bg-[#B4613A] hover:-translate-y-[1px] focus-visible:ring-accent-terra',
+          'bg-accent-terra text-white shadow-[0_2px_8px_rgba(196,113,74,0.2)] hover:bg-[#C47550] hover:-translate-y-[1px] focus-visible:ring-accent-terra',
         outline:
           'bg-transparent border-[1.5px] border-accent-sage text-accent-sage hover:bg-accent-sage-light focus-visible:ring-accent-sage',
         secondary:
-          'bg-accent-sage-light border border-[#B8D8C4] text-accent-sage hover:bg-[#DFF0E8] focus-visible:ring-accent-sage',
+          'bg-accent-sage-light border border-[#2C4A39] text-accent-sage hover:bg-[#15241C] focus-visible:ring-accent-sage',
         ghost:
           'bg-transparent text-text-secondary hover:bg-bg-elevated hover:text-text-primary focus-visible:ring-accent-sage',
         link:
-          'bg-transparent text-accent-sage underline-offset-4 hover:underline hover:text-[#4A7A5E] focus-visible:ring-accent-sage p-0',
+          'bg-transparent text-accent-sage underline-offset-4 hover:underline hover:text-[#5CA37F] focus-visible:ring-accent-sage p-0',
       },
       size: {
         default: 'h-10 px-4 py-2',

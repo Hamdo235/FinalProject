@@ -38,7 +38,7 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
       });
 
       L.tileLayer(
-        "https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png",
         {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
           subdomains: "abcd",
@@ -75,8 +75,8 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
       for (const pt of points) {
         if (pt.lat == null || pt.lon == null) continue;
         const isHighlighted = !!highlightIp && pt.ip === highlightIp;
-        const sevColor = pt.severity === "high" ? "#C4714A" : pt.severity === "medium" ? "#E8C547" : "#5B8A6E";
-        const markerColor = isHighlighted ? "#5B8A6E" : sevColor;
+        const sevColor = pt.severity === "high" ? "#D98862" : pt.severity === "medium" ? "#E8C547" : "#6FB894";
+        const markerColor = isHighlighted ? "#6FB894" : sevColor;
         const marker = L.circleMarker([pt.lat, pt.lon], {
           color: markerColor,
           weight: 2,
@@ -85,11 +85,11 @@ export default function WorldMapInner({ height = "400px", refreshInterval = 6000
           radius: isHighlighted ? 10 : 7,
         })
           .bindPopup(
-            `<div style="background:#FFFFFF;color:#1A1A1A;padding:8px 10px;border-radius:10px;font-size:12px;border:1px solid #E8E5E0;box-shadow:0 4px 12px rgba(0,0,0,0.10)">
-              <div><strong style="color:#5B8A6E">IP:</strong> ${pt.ip}</div>
-              ${pt.country ? `<div><strong style="color:#5B8A6E">Pays:</strong> ${pt.country}</div>` : ""}
-              <div><strong style="color:#5B8A6E">Alertes:</strong> ${pt.count}</div>
-              <a href="/alerts" style="color:#4A7B9D">Voir les alertes</a>
+            `<div style="background:#161B22;color:#E6E9EF;padding:8px 10px;border-radius:10px;font-size:12px;border:1px solid #262D38;box-shadow:0 4px 12px rgba(0,0,0,0.10)">
+              <div><strong style="color:#6FB894">IP:</strong> ${pt.ip}</div>
+              ${pt.country ? `<div><strong style="color:#6FB894">Pays:</strong> ${pt.country}</div>` : ""}
+              <div><strong style="color:#6FB894">Alertes:</strong> ${pt.count}</div>
+              <a href="/alerts" style="color:#6BA3C9">Voir les alertes</a>
             </div>`
           )
           .addTo(mapRef.current!);

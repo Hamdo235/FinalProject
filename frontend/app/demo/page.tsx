@@ -39,31 +39,31 @@ const STEPS = [
     icon: Activity,
     label: "Generation des logs reseau",
     desc: "Simulation de trafic SSH, HTTP et port-scan suspects via le generateur synthetique.",
-    color: "#4A7B9D",
+    color: "#6BA3C9",
   },
   {
     icon: Cpu,
     label: "Detection ML - IsolationForest / LOF",
     desc: "Classification des evenements par le modele entraine. Chaque anomalie recoit un score de confiance.",
-    color: "#5B8A6E",
+    color: "#6FB894",
   },
   {
     icon: Globe,
     label: "Enrichissement GeoIP",
     desc: "Localisation des IP sources, detection de noeuds Tor, ASN et reputation reseau.",
-    color: "#B8960A",
+    color: "#E0B83A",
   },
   {
     icon: Brain,
     label: "Analyse LLM + RAG MITRE ATT&CK",
     desc: "Ollama (LLM local) correle les alertes avec la base MITRE ATT&CK via RAG et explique l'attaque.",
-    color: "#5B8A6E",
+    color: "#6FB894",
   },
   {
     icon: Shield,
     label: "Neutralisation - Blocage Applicatif",
     desc: "Decision humaine requise. Approuvez chaque IP depuis la notification ou la page Alertes. La commande iptables est affichee apres validation.",
-    color: "#5B8A6E",
+    color: "#6FB894",
   },
 ];
 
@@ -118,16 +118,16 @@ function parseIncidentExplanation(explanation: IncidentExplanation): {
 }
 
 function sevColor(s: string) {
-  if (s === "high")   return "#C4714A";
-  if (s === "medium") return "#B8960A";
-  return "#5B8A6E";
+  if (s === "high")   return "#D98862";
+  if (s === "medium") return "#E0B83A";
+  return "#6FB894";
 }
 
 function actionColor(a: string) {
-  if (a.includes("block")) return "#C4714A";
-  if (a === "monitor")     return "#B8960A";
-  if (a === "review")      return "#4A7B9D";
-  return "#5B8A6E";
+  if (a.includes("block")) return "#D98862";
+  if (a === "monitor")     return "#E0B83A";
+  if (a === "review")      return "#6BA3C9";
+  return "#6FB894";
 }
 
 const DEMO_STATE_KEY = "cs_demo_state";
@@ -451,7 +451,7 @@ export default function DemoPage() {
 
       {/* ── SSE toast ──────────────────────────────────────────────────────── */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-[2000] w-72 rounded-2xl p-4 animate-alert-in bg-white border border-[#B8D8C4] shadow-lg">
+        <div className="fixed bottom-6 right-6 z-[2000] w-72 rounded-2xl p-4 animate-alert-in bg-bg-card border border-[#2C4A39] shadow-lg">
           <div className="text-xs font-semibold font-mono-cyber mb-1 text-accent-sage">Nouvelle alerte SSE</div>
           <div className="font-semibold text-text-primary">Alerte #{toast.id}</div>
           <div className="text-xs mt-0.5 text-text-secondary">
@@ -502,8 +502,8 @@ export default function DemoPage() {
             style={{
               width: `${progress}%`,
               background: done
-                ? "linear-gradient(90deg, #5B8A6E, #4A7B9D)"
-                : "linear-gradient(90deg, #5B8A6E, #4A7B9D)",
+                ? "linear-gradient(90deg, #6FB894, #6BA3C9)"
+                : "linear-gradient(90deg, #6FB894, #6BA3C9)",
             }}
           />
         </div>
@@ -545,10 +545,10 @@ export default function DemoPage() {
                     <div
                       className="h-10 w-10 rounded-full shrink-0 flex items-center justify-center transition-all duration-500"
                       style={
-                        isDone   ? { background: "rgba(91,138,110,0.12)",  border: "2px solid rgba(91,138,110,0.5)",  color: "#5B8A6E" }
-                        : isError  ? { background: "rgba(196,113,74,0.1)",   border: "2px solid rgba(196,113,74,0.4)",  color: "#C4714A" }
+                        isDone   ? { background: "rgba(91,138,110,0.12)",  border: "2px solid rgba(91,138,110,0.5)",  color: "#6FB894" }
+                        : isError  ? { background: "rgba(196,113,74,0.1)",   border: "2px solid rgba(196,113,74,0.4)",  color: "#D98862" }
                         : isActive ? { background: `${step.color}20`,       border: `2px solid ${step.color}80`,      color: step.color }
-                        :            { background: "rgba(232,228,220,0.5)",  border: "2px solid rgba(180,175,165,0.3)", color: "#9CA3A0" }
+                        :            { background: "rgba(232,228,220,0.5)",  border: "2px solid rgba(180,175,165,0.3)", color: "#7B838F" }
                       }
                     >
                       {isDone   ? <CheckCircle className="h-4 w-4" />
@@ -562,7 +562,7 @@ export default function DemoPage() {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span
                           className="text-sm font-semibold transition-colors"
-                          style={{ color: isDone ? "#5B8A6E" : isActive ? step.color : isError ? "#C4714A" : "#9CA3A0" }}
+                          style={{ color: isDone ? "#6FB894" : isActive ? step.color : isError ? "#D98862" : "#7B838F" }}
                         >
                           {step.label}
                         </span>
@@ -580,7 +580,7 @@ export default function DemoPage() {
                           style={{
                             background: isDone ? "rgba(91,138,110,0.1)" : "rgba(196,113,74,0.1)",
                             border: `1px solid ${isDone ? "rgba(91,138,110,0.3)" : "rgba(196,113,74,0.3)"}`,
-                            color: isDone ? "#5B8A6E" : "#C4714A",
+                            color: isDone ? "#6FB894" : "#D98862",
                           }}
                         >
                           <CheckCircle className="h-2.5 w-2.5" />
@@ -607,41 +607,41 @@ export default function DemoPage() {
         {/* Terminal */}
         <div className="lg:col-span-3 cyber-card p-5 flex flex-col">
           <div className="flex items-center gap-2 mb-4">
-            <Terminal className="h-4 w-4" style={{ color: "#5B8A6E" }} />
+            <Terminal className="h-4 w-4" style={{ color: "#6FB894" }} />
             <span className="text-xs font-semibold font-mono-cyber uppercase tracking-wider text-accent-sage">
               Sortie systeme - temps reel
             </span>
             <div className="ml-auto flex gap-1.5">
-              <div className="h-2.5 w-2.5 rounded-full" style={{ background: "#ef4444" }} />
-              <div className="h-2.5 w-2.5 rounded-full" style={{ background: "#f59e0b" }} />
-              <div className="h-2.5 w-2.5 rounded-full" style={{ background: "#10b981" }} />
+              <div className="h-2.5 w-2.5 rounded-full" style={{ background: "#D98862" }} />
+              <div className="h-2.5 w-2.5 rounded-full" style={{ background: "#E8C547" }} />
+              <div className="h-2.5 w-2.5 rounded-full" style={{ background: "#6FB894" }} />
             </div>
           </div>
           <div
             className="flex-1 rounded-xl p-4 font-mono-cyber text-xs overflow-y-auto"
             style={{
-              background: "#060c15",
+              background: "#0D1117",
               border: "1px solid rgba(34,211,238,0.07)",
               minHeight: "340px",
               maxHeight: "400px",
             }}
           >
             {logs.length === 0 ? (
-              <div style={{ color: "#334155" }}>
-                <span style={{ color: "#22d3ee" }}>$</span> En attente du lancement du pipeline…
+              <div style={{ color: "#9BA3AF" }}>
+                <span style={{ color: "#6BA3C9" }}>$</span> En attente du lancement du pipeline…
               </div>
             ) : (
               logs.map((line) => (
                 <div key={line.id} className="flex gap-2 mb-0.5 leading-relaxed">
-                  <span className="shrink-0" style={{ color: "#334155" }}>{line.ts}</span>
+                  <span className="shrink-0" style={{ color: "#9BA3AF" }}>{line.ts}</span>
                   <span
                     style={{
                       color:
-                        line.type === "success" ? "#10b981"
-                        : line.type === "error"   ? "#ef4444"
-                        : line.type === "warn"    ? "#f59e0b"
-                        : line.type === "data"    ? "#22d3ee"
-                        :                           "#94a3b8",
+                        line.type === "success" ? "#6FB894"
+                        : line.type === "error"   ? "#D98862"
+                        : line.type === "warn"    ? "#E8C547"
+                        : line.type === "data"    ? "#6BA3C9"
+                        :                           "#9BA3AF",
                     }}
                   >
                     {line.type === "success" ? "✓ " : line.type === "error" ? "✗ " : line.type === "data" ? "→ " : "  "}
@@ -651,7 +651,7 @@ export default function DemoPage() {
               ))
             )}
             {running && (
-              <div className="mt-1" style={{ color: "#22d3ee" }}>
+              <div className="mt-1" style={{ color: "#6BA3C9" }}>
                 <span className="animate-blink">▌</span>
               </div>
             )}
@@ -662,9 +662,9 @@ export default function DemoPage() {
 
       {/* ── LLM live progress (visible during generation) ────────────── */}
       {llmProgress.active && (
-        <div className="rounded-2xl p-5 animate-fade-in bg-white border border-[#B8D8C4] shadow-sm">
+        <div className="rounded-2xl p-5 animate-fade-in bg-bg-card border border-[#2C4A39] shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-[#EBF3EE] border border-[#B8D8C4]">
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-[#15241C] border border-[#2C4A39]">
               <Brain className="h-5 w-5 animate-pulse text-accent-sage" />
             </div>
             <div className="flex-1">
@@ -682,7 +682,7 @@ export default function DemoPage() {
                 {llmProgress.elapsed}s ecoulees - le modele local prend generalement 30 a 90 s sur CPU
               </div>
             </div>
-            <div className="px-3 py-1 rounded-full text-xs font-bold font-mono-cyber bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
+            <div className="px-3 py-1 rounded-full text-xs font-bold font-mono-cyber bg-[#15241C] border border-[#2C4A39] text-accent-sage">
               {llmProgress.elapsed < 30 ? "debut" : llmProgress.elapsed < 60 ? "en cours" : llmProgress.elapsed < 90 ? "presque" : "etendu"}
             </div>
           </div>
@@ -697,7 +697,7 @@ export default function DemoPage() {
 
       {/* ── LLM Explanation panel ───────────────────────────────────── */}
       {explanation && (
-        <div className="rounded-2xl p-6 animate-fade-in bg-white border border-[#B8D8C4] shadow-sm">
+        <div className="rounded-2xl p-6 animate-fade-in bg-bg-card border border-[#2C4A39] shadow-sm">
           {(() => {
             const view = parseIncidentExplanation(explanation);
             return (
@@ -705,7 +705,7 @@ export default function DemoPage() {
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-[#EBF3EE] border border-[#B8D8C4]">
+                    <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-[#15241C] border border-[#2C4A39]">
                       <Brain className="h-5 w-5 text-accent-sage" />
                     </div>
                     <div>
@@ -723,7 +723,7 @@ export default function DemoPage() {
                     style={{
                       background: explanation.confidence > 0.7 ? "rgba(91,138,110,0.1)" : "rgba(184,150,10,0.1)",
                       border: `1px solid ${explanation.confidence > 0.7 ? "rgba(91,138,110,0.35)" : "rgba(184,150,10,0.35)"}`,
-                      color: explanation.confidence > 0.7 ? "#5B8A6E" : "#B8960A",
+                      color: explanation.confidence > 0.7 ? "#6FB894" : "#E0B83A",
                     }}
                   >
                     Confiance {(explanation.confidence * 100).toFixed(0)}%
@@ -740,7 +740,7 @@ export default function DemoPage() {
                       {explanation.sources.map((src, i) => (
                         <span
                           key={i}
-                          className="px-2.5 py-1 rounded-lg text-xs font-mono-cyber font-semibold bg-[#EAF2F8] border border-[#A8C8E0] text-accent-slate"
+                          className="px-2.5 py-1 rounded-lg text-xs font-mono-cyber font-semibold bg-[#13202C] border border-[#2A4357] text-accent-slate"
                         >
                           {src}
                         </span>
@@ -750,16 +750,16 @@ export default function DemoPage() {
                 )}
 
                 {/* LLM response text */}
-                <div className="rounded-xl p-4 space-y-3 bg-[#F5F7F2] border border-bg-border">
+                <div className="rounded-xl p-4 space-y-3 bg-[#15241C] border border-bg-border">
                   {(view.attackType || view.mitreTechnique) && (
                     <div className="flex flex-wrap gap-2">
                       {view.attackType && (
-                        <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-[#FDF0E8] text-accent-terra border border-[#F0C4A8]">
+                        <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-[#2A1A12] text-accent-terra border border-[#4D3122]">
                           {view.attackType}
                         </span>
                       )}
                       {view.mitreTechnique && (
-                        <span className="px-2 py-1 rounded-lg text-xs font-mono-cyber bg-[#EAF2F8] text-accent-slate border border-[#A8C8E0]">
+                        <span className="px-2 py-1 rounded-lg text-xs font-mono-cyber bg-[#13202C] text-accent-slate border border-[#2A4357]">
                           {view.mitreTechnique}{view.mitreName ? ` - ${view.mitreName}` : ""}
                         </span>
                       )}
@@ -784,7 +784,7 @@ export default function DemoPage() {
 
                 {/* Footer note */}
                 <div className="flex items-center gap-1.5 mt-3">
-                  <AlertTriangle className="h-3 w-3 shrink-0 text-[#B8960A]" />
+                  <AlertTriangle className="h-3 w-3 shrink-0 text-[#E0B83A]" />
                   <p className="text-xs text-text-secondary">
                     L&apos;analyste reste décisionnaire — aucune action n&apos;est exécutée automatiquement.
                   </p>
@@ -803,7 +803,7 @@ export default function DemoPage() {
             <span className="font-semibold text-text-primary">
               Neutralisation - Actions defensives
             </span>
-            <span className="ml-auto px-2 py-0.5 rounded-full text-xs font-bold font-mono-cyber bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
+            <span className="ml-auto px-2 py-0.5 rounded-full text-xs font-bold font-mono-cyber bg-[#15241C] border border-[#2C4A39] text-accent-sage">
               {defActions.length} actions
             </span>
           </div>
@@ -843,7 +843,7 @@ export default function DemoPage() {
                   {da.active ? "IP bloquee" : "En attente"}
                 </div>
                 {da.active && da.iptables_command && (
-                  <div className="mt-1.5 rounded-lg px-2 py-1 font-mono-cyber text-[9px] flex items-center gap-1 bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
+                  <div className="mt-1.5 rounded-lg px-2 py-1 font-mono-cyber text-[9px] flex items-center gap-1 bg-[#15241C] border border-[#2C4A39] text-accent-sage">
                     <span>$</span>
                     <span>{da.iptables_command}</span>
                   </div>
@@ -860,7 +860,7 @@ export default function DemoPage() {
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="h-4 w-4 text-accent-terra" />
             <span className="font-semibold text-text-primary">Alertes detectees</span>
-            <span className="ml-auto px-2 py-0.5 rounded-full text-xs font-bold font-mono-cyber bg-[#FDF0E8] border border-[#F0C4A8] text-accent-terra">
+            <span className="ml-auto px-2 py-0.5 rounded-full text-xs font-bold font-mono-cyber bg-[#2A1A12] border border-[#4D3122] text-accent-terra">
               {alerts.length} alertes
             </span>
           </div>
@@ -893,7 +893,7 @@ export default function DemoPage() {
                         {a.severity}
                       </span>
                     </td>
-                    <td className="font-mono-cyber" style={{ color: a.score > 0.8 ? "#C4714A" : a.score > 0.5 ? "#B8960A" : "#5B8A6E" }}>
+                    <td className="font-mono-cyber" style={{ color: a.score > 0.8 ? "#D98862" : a.score > 0.5 ? "#E0B83A" : "#6FB894" }}>
                       {a.score.toFixed(3)}
                     </td>
                     <td className="text-text-secondary">{a.source}</td>
@@ -917,7 +917,7 @@ export default function DemoPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="cyber-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Globe className="h-4 w-4 text-[#B8960A]" />
+            <Globe className="h-4 w-4 text-[#E0B83A]" />
             <span className="font-semibold text-text-primary">Carte GeoIP - origines des attaques</span>
           </div>
           <div className="h-64">
@@ -936,13 +936,13 @@ export default function DemoPage() {
         message={(
           <div className="space-y-2">
             <p>Cette action va :</p>
-            <ul className="list-disc list-inside text-xs space-y-1" style={{ color: "#94a3b8" }}>
+            <ul className="list-disc list-inside text-xs space-y-1" style={{ color: "#9BA3AF" }}>
               <li>Supprimer toutes les alertes, incidents et traces LLM</li>
               <li>Révoquer toutes les actions défensives en cours</li>
               <li>Vider la liste noire en mémoire</li>
               <li>Effacer l’historique du pipeline de démo</li>
             </ul>
-            <p className="text-xs pt-1" style={{ color: "#fbbf24" }}>⚠ Cette opération est irréversible.</p>
+            <p className="text-xs pt-1" style={{ color: "#F0CC52" }}>⚠ Cette opération est irréversible.</p>
           </div>
         )}
         confirmLabel="Réinitialiser"
@@ -954,7 +954,7 @@ export default function DemoPage() {
       />
 
       {/* ── Pedagogical footer ─────────────────────────────────────────────── */}
-      <div className="rounded-2xl p-5 bg-[#F0F5F2] border border-[#B8D8C4]">
+      <div className="rounded-2xl p-5 bg-[#15241C] border border-[#2C4A39]">
         <div className="text-xs font-semibold uppercase tracking-wider mb-3 text-accent-sage">
           Comment fonctionne ce pipeline ?
         </div>

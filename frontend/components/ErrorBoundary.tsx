@@ -30,17 +30,17 @@ export default class ErrorBoundary extends React.Component<Props, State> {
       return (
         <div
           className="min-h-screen flex items-center justify-center p-6"
-          style={{ background: "#060c15" }}
+          style={{ background: "#0D1117" }}
         >
           <div
             className="max-w-md w-full rounded-2xl p-6 text-center"
-            style={{ background: "#0c1628", border: "1px solid rgba(239,68,68,0.3)" }}
+            style={{ background: "#161B22", border: "1px solid rgba(239,68,68,0.3)" }}
           >
             <div className="text-4xl mb-3">⚠️</div>
-            <h2 className="text-lg font-bold mb-2" style={{ color: "#ef4444" }}>
+            <h2 className="text-lg font-bold mb-2" style={{ color: "#D98862" }}>
               Erreur inattendue
             </h2>
-            <p className="text-sm mb-5 font-mono-cyber" style={{ color: "#64748b" }}>
+            <p className="text-sm mb-5 font-mono-cyber" style={{ color: "#6B7280" }}>
               {this.state.error.message || "Une erreur est survenue dans l'interface."}
             </p>
             <div className="flex gap-2 justify-center">
@@ -50,7 +50,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
                 style={{
                   background: "rgba(34,211,238,0.1)",
                   border: "1px solid rgba(34,211,238,0.3)",
-                  color: "#22d3ee",
+                  color: "#6BA3C9",
                 }}
               >
                 Réessayer
@@ -61,7 +61,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
                 style={{
                   background: "rgba(100,116,139,0.08)",
                   border: "1px solid rgba(100,116,139,0.2)",
-                  color: "#94a3b8",
+                  color: "#9BA3AF",
                 }}
               >
                 Recharger la page

@@ -112,8 +112,30 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     return <ErrorBoundary>{children}</ErrorBoundary>;
   }
 
-  // Other pages: wait for auth check before rendering shell
-  if (!checked) return null;
+  // Other pages: show a dark loading screen while auth fires client-side
+  if (!checked) return (
+    <div
+      style={{
+        position: "fixed", inset: 0, background: "#0D1117",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 9999,
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+        <div
+          style={{
+            width: 36, height: 36, borderRadius: "50%",
+            border: "3px solid #262D38",
+            borderTopColor: "#6FB894",
+            animation: "spin 0.7s linear infinite",
+          }}
+        />
+        <span style={{ color: "#6B7280", fontSize: "0.75rem", fontFamily: "var(--font-mono)" }}>
+          Chargement…
+        </span>
+      </div>
+    </div>
+  );
 
   return (
     <ErrorBoundary>

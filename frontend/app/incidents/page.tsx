@@ -86,7 +86,7 @@ export default function IncidentsPage() {
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: "Total",   value: incidents.length, cls: "text-accent-slate",  card: "border-t-2 border-t-accent-slate" },
-            { label: "Ouverts", value: openCount,         cls: "text-[#B8960A]",       card: "border-t-2 border-t-[#E8C547]"   },
+            { label: "Ouverts", value: openCount,         cls: "text-[#E0B83A]",       card: "border-t-2 border-t-[#E8C547]"   },
             { label: "Fermes",  value: closedCount,       cls: "text-accent-sage",    card: "border-t-2 border-t-accent-sage"  },
           ].map(({ label, value, cls, card }) => (
             <div key={label} className={`cyber-card p-4 text-center ${card}`}>
@@ -103,7 +103,7 @@ export default function IncidentsPage() {
           <CardTitle className="flex items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-accent-amber" />
             Liste des incidents
-            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-bold font-mono border bg-[#EBF3EE] text-accent-sage border-[#B8D8C4]">
+            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-bold font-mono border bg-[#15241C] text-accent-sage border-[#2C4A39]">
               {incidents.length}
             </span>
           </CardTitle>

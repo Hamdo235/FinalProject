@@ -126,8 +126,8 @@ export default function LoginPage() {
               <line x1="0"   y1="160" x2="320" y2="160" stroke="rgba(91,138,110,0.08)" strokeWidth="1" />
               <defs>
                 <radialGradient id="sweepGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%"   stopColor="#5B8A6E" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#5B8A6E" stopOpacity="0"    />
+                  <stop offset="0%"   stopColor="#6FB894" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#6FB894" stopOpacity="0"    />
                 </radialGradient>
                 <mask id="sweepMask">
                   <path d="M160 160 L160 0 A160 160 0 0 1 317 213 Z" fill="white" />
@@ -135,11 +135,11 @@ export default function LoginPage() {
               </defs>
               <circle cx="160" cy="160" r="160" fill="url(#sweepGrad)" mask="url(#sweepMask)"
                 className="radar-sweep" />
-              <circle cx="220" cy="100" r="3" fill="#5B8A6E" className="blip blip-1" />
-              <circle cx="100" cy="195" r="2" fill="#4A7B9D" className="blip blip-2" />
-              <circle cx="190" cy="215" r="2.5" fill="#5B8A6E" className="blip blip-3" />
-              <circle cx="130" cy="110" r="2" fill="#B8960A" className="blip blip-4" />
-              <circle cx="160" cy="160" r="4" fill="#5B8A6E" style={{ filter: "drop-shadow(0 0 6px rgba(91,138,110,0.6))" }} />
+              <circle cx="220" cy="100" r="3" fill="#6FB894" className="blip blip-1" />
+              <circle cx="100" cy="195" r="2" fill="#6BA3C9" className="blip blip-2" />
+              <circle cx="190" cy="215" r="2.5" fill="#6FB894" className="blip blip-3" />
+              <circle cx="130" cy="110" r="2" fill="#E0B83A" className="blip blip-4" />
+              <circle cx="160" cy="160" r="4" fill="#6FB894" style={{ filter: "drop-shadow(0 0 6px rgba(91,138,110,0.6))" }} />
             </svg>
           </div>
 

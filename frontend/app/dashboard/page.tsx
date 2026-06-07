@@ -130,7 +130,7 @@ export default function DashboardPage() {
           <p className="text-sm mt-0.5 text-text-secondary">Alertes, incidents et ML en temps réel.</p>
         </div>
         {live && (
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono-cyber animate-pulse-badge bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono-cyber animate-pulse-badge bg-[#15241C] border border-[#2C4A39] text-accent-sage">
             <span className="h-1.5 w-1.5 rounded-full bg-accent-sage animate-pulse" />
             LIVE
           </span>
@@ -139,8 +139,8 @@ export default function DashboardPage() {
 
       {/* ── First-time CTA ── */}
       {!loading && alerts.length === 0 && !error && (
-        <div className="rounded-2xl p-5 flex items-center gap-4 animate-fade-in bg-[#EBF3EE] border border-[#B8D8C4]">
-          <div className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0 bg-white border border-[#B8D8C4]">
+        <div className="rounded-2xl p-5 flex items-center gap-4 animate-fade-in bg-[#15241C] border border-[#2C4A39]">
+          <div className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0 bg-bg-card border border-[#2C4A39]">
             <Play className="h-5 w-5 text-accent-sage" />
           </div>
           <div className="flex-1 min-w-0">
@@ -163,7 +163,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <MetricCard title="Alertes 24h"      value={loading ? "…" : totalAlerts}    subtitle="Toutes severites" loading={loading} accent="slate" icon={<Activity      className="h-4 w-4 text-accent-slate" />} />
         <MetricCard title="Critiques"         value={loading ? "…" : criticalAlerts} subtitle="Severite haute"   loading={loading} accent="red"   icon={<AlertTriangle className="h-4 w-4 text-accent-terra" />} />
-        <MetricCard title="Incidents ouverts" value={loading ? "…" : openIncidents}  subtitle="En cours"         loading={loading} accent="amber" icon={<Shield        className="h-4 w-4 text-[#B8960A]" />} />
+        <MetricCard title="Incidents ouverts" value={loading ? "…" : openIncidents}  subtitle="En cours"         loading={loading} accent="amber" icon={<Shield        className="h-4 w-4 text-[#E0B83A]" />} />
         <MetricCard title="F1-score"          value={loading ? "…" : f1Display}      subtitle="Modele ML"        loading={loading} accent="green" icon={<TrendingUp    className="h-4 w-4 text-accent-sage" />} />
         <MetricCard title="Blocages actifs"   value={loading ? "…" : activeBlocks}   subtitle="Defense"          loading={loading} accent="sage"  icon={<Zap           className="h-4 w-4 text-accent-sage" />} />
       </div>
@@ -171,10 +171,10 @@ export default function DashboardPage() {
       {/* ── Quick actions ── */}
       <div className="flex flex-wrap gap-2">
         {[
-          { href: "/alerts",    label: "Voir les alertes",    cls: "border-[#B8D8C4] text-accent-sage   bg-[#EBF3EE] hover:bg-[#D8EDE0]" },
-          { href: "/incidents", label: "Voir les incidents",   cls: "border-[#F0E090] text-[#B8960A]    bg-[#FDF8E0] hover:bg-[#F5F0C0]" },
-          { href: "/chat",      label: "Interroger le SOC IA", cls: "border-[#A8C8E0] text-accent-slate  bg-[#EAF2F8] hover:bg-[#D8E8F4]" },
-          { href: "/demo",      label: "Lancer une demo",      cls: "border-[#B8D8C4] text-accent-sage   bg-[#EBF3EE] hover:bg-[#D8EDE0]" },
+          { href: "/alerts",    label: "Voir les alertes",    cls: "border-[#2C4A39] text-accent-sage   bg-[#15241C] hover:bg-[#1C3025]" },
+          { href: "/incidents", label: "Voir les incidents",   cls: "border-[#4A3F1C] text-[#E0B83A]    bg-[#262017] hover:bg-[#262017]" },
+          { href: "/chat",      label: "Interroger le SOC IA", cls: "border-[#2A4357] text-accent-slate  bg-[#13202C] hover:bg-[#1A2C3A]" },
+          { href: "/demo",      label: "Lancer une demo",      cls: "border-[#2C4A39] text-accent-sage   bg-[#15241C] hover:bg-[#1C3025]" },
         ].map(({ href, label, cls }) => (
           <Link key={label} href={href}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border ${cls}`}
@@ -227,7 +227,7 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Dernières alertes</span>
-            <Link href="/alerts" className="text-xs font-medium flex items-center gap-1 transition-all text-accent-sage hover:text-[#4A7A5E]">
+            <Link href="/alerts" className="text-xs font-medium flex items-center gap-1 transition-all text-accent-sage hover:text-[#5CA37F]">
               Voir tout <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </CardTitle>

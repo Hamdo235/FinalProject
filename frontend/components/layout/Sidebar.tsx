@@ -45,7 +45,7 @@ export default function Sidebar() {
     <aside className="hidden md:flex w-[260px] flex-col sticky top-0 h-screen self-start shrink-0 bg-bg-nav border-r border-bg-border">
       {/* ── Logo ── */}
       <div className="h-16 px-4 flex items-center gap-3 shrink-0 border-b border-bg-border">
-        <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-accent-sage to-[#7AAF8E] shadow-[0_2px_12px_rgba(91,138,110,0.3)]">
+        <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-accent-sage to-[#8FCBA8] shadow-[0_2px_12px_rgba(91,138,110,0.3)]">
           <Shield className="h-[17px] w-[17px] text-white" />
         </div>
         <div className="min-w-0">
@@ -78,14 +78,14 @@ export default function Sidebar() {
               className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm transition-all relative group ${
                 active
                   ? "nav-active font-semibold"
-                  : "text-text-secondary hover:bg-[#F0EDE8] hover:text-text-primary"
+                  : "text-text-secondary hover:bg-[#1E242E] hover:text-text-primary"
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="font-medium flex-1 truncate">{label}</span>
               {showPendingBadge && (
                 <span
-                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full font-mono-cyber animate-pulse-badge bg-[#FDF0E8] text-[#C4714A] border border-[#F0C4A8] min-w-[18px] text-center"
+                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full font-mono-cyber animate-pulse-badge bg-[#2A1A12] text-[#D98862] border border-[#4D3122] min-w-[18px] text-center"
                   title={`${pendingCount} action(s) en attente d'approbation`}
                 >
                   {pendingCount}
@@ -94,8 +94,8 @@ export default function Sidebar() {
               {tag && !showPendingBadge && (
                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono-cyber ${
                   active
-                    ? "bg-accent-sage-light text-accent-sage border border-[#B8D8C4]"
-                    : "bg-[#F0EDE8] text-text-muted border border-bg-border"
+                    ? "bg-accent-sage-light text-accent-sage border border-[#2C4A39]"
+                    : "bg-[#1E242E] text-text-muted border border-bg-border"
                 }`}>
                   {tag}
                 </span>
@@ -114,12 +114,12 @@ export default function Sidebar() {
         {(() => {
           const reachable = health !== null;
           const isDegraded = reachable && !healthOk;
-          const dotColor = healthOk ? "#5B8A6E" : isDegraded ? "#E8C547" : "#C4714A";
+          const dotColor = healthOk ? "#6FB894" : isDegraded ? "#E8C547" : "#D98862";
           const statusCls = healthOk
-            ? "bg-[#EBF3EE] border-[#B8D8C4] text-[#5B8A6E]"
+            ? "bg-[#15241C] border-[#2C4A39] text-[#6FB894]"
             : isDegraded
-              ? "bg-[#FDF8E8] border-[#F0E090] text-[#A07800]"
-              : "bg-[#FDF0E8] border-[#F0C4A8] text-[#C4714A]";
+              ? "bg-[#262017] border-[#4A3F1C] text-[#C9A02E]"
+              : "bg-[#2A1A12] border-[#4D3122] text-[#D98862]";
           const label = healthOk
             ? "Backend connecté"
             : isDegraded
@@ -153,10 +153,10 @@ export default function Sidebar() {
         {/* ── Profile button ── */}
         <button
           onClick={() => setProfileOpen(true)}
-          className="w-full rounded-[10px] p-3 text-left transition-all bg-[#F5F3EE] border border-bg-border hover:border-[#B8D8C4] hover:bg-accent-sage-light group"
+          className="w-full rounded-[10px] p-3 text-left transition-all bg-[#1C222B] border border-bg-border hover:border-[#2C4A39] hover:bg-accent-sage-light group"
         >
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold bg-accent-sage-light border border-[#B8D8C4] text-accent-sage">
+            <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold bg-accent-sage-light border border-[#2C4A39] text-accent-sage">
               {username ? initials : <User className="w-3.5 h-3.5" />}
             </div>
             <div className="min-w-0 flex-1">
@@ -196,7 +196,7 @@ export default function Sidebar() {
 
             {/* Avatar + name */}
             <div className="flex items-center gap-3 px-4 pt-4 pb-3">
-              <div className="h-12 w-12 rounded-xl flex items-center justify-center text-lg font-bold shrink-0 bg-accent-sage-light border border-[#B8D8C4] text-accent-sage">
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center text-lg font-bold shrink-0 bg-accent-sage-light border border-[#2C4A39] text-accent-sage">
                 {username ? username.slice(0, 2).toUpperCase() : <User className="w-5 h-5" />}
               </div>
               <div>
@@ -225,7 +225,7 @@ export default function Sidebar() {
             <div className="px-4 pb-4">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 rounded-[10px] px-3 py-2 text-xs font-bold transition-all bg-[#FDF0E8] border border-[#F0C4A8] text-[#C4714A] hover:bg-[#FAE4D4]"
+                className="w-full flex items-center justify-center gap-2 rounded-[10px] px-3 py-2 text-xs font-bold transition-all bg-[#2A1A12] border border-[#4D3122] text-[#D98862] hover:bg-[#2A1A12]"
               >
                 <LogOut style={{ width: 13, height: 13 }} />
                 Déconnexion

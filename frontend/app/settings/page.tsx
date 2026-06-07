@@ -18,7 +18,7 @@ type StatusLevel = 'ok' | 'warn' | 'error';
 
 const STATUS_CLS: Record<StatusLevel, { text: string; dot: string }> = {
   ok:    { text: "text-accent-sage",  dot: "bg-accent-sage"  },
-  warn:  { text: "text-[#B8960A]",   dot: "bg-[#E8C547]"    },
+  warn:  { text: "text-[#E0B83A]",   dot: "bg-[#E8C547]"    },
   error: { text: "text-accent-terra", dot: "bg-accent-terra" },
 };
 
@@ -41,7 +41,7 @@ function ServiceRow({
   chip: string;
   hint?: string;
 }) {
-  const iconCls = level === 'ok' ? 'text-accent-sage' : level === 'warn' ? 'text-[#B8960A]' : 'text-text-secondary';
+  const iconCls = level === 'ok' ? 'text-accent-sage' : level === 'warn' ? 'text-[#E0B83A]' : 'text-text-secondary';
   return (
     <div className="flex flex-col gap-1 rounded-xl p-3 bg-bg-base border border-bg-border">
       <div className="flex items-center justify-between">
@@ -65,8 +65,8 @@ function CopyBtn({ text }: { text: string }) {
       onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       className={`text-[10px] font-mono-cyber px-2 py-0.5 rounded border transition-all ${
         copied
-          ? "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage"
-          : "bg-[#EAF2F8] border-[#A8C8E0] text-accent-slate"
+          ? "bg-[#15241C] border-[#2C4A39] text-accent-sage"
+          : "bg-[#13202C] border-[#2A4357] text-accent-slate"
       }`}
     >
       {copied ? "✓ Copié" : "Copier"}
@@ -159,9 +159,9 @@ export default function SettingsPage() {
 
   const modeCls: Record<string, string> = {
     off:     "bg-bg-base border-bg-border text-text-secondary",
-    monitor: "bg-[#FDF8E0] border-[#F0E090] text-[#B8960A]",
-    assist:  "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage",
-    auto:    "bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra",
+    monitor: "bg-[#262017] border-[#4A3F1C] text-[#E0B83A]",
+    assist:  "bg-[#15241C] border-[#2C4A39] text-accent-sage",
+    auto:    "bg-[#2A1A12] border-[#4D3122] text-accent-terra",
   };
 
   return (
@@ -288,12 +288,12 @@ export default function SettingsPage() {
             <span className="flex items-center gap-2">
               <ShieldOff className="h-4 w-4 text-accent-terra" />
               IPs actuellement bloquees
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold font-mono-cyber bg-[#FDF0E8] border border-[#F0C4A8] text-accent-terra">
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold font-mono-cyber bg-[#2A1A12] border border-[#4D3122] text-accent-terra">
                 {blocked.length}
               </span>
             </span>
             <button onClick={() => setShowManualBlock(!showManualBlock)}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-semibold transition-all border bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage hover:bg-[#D8EDE0]">
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-semibold transition-all border bg-[#15241C] border-[#2C4A39] text-accent-sage hover:bg-[#1C3025]">
               <Plus className="h-3.5 w-3.5" /> Bloquer une IP
             </button>
           </CardTitle>
@@ -301,16 +301,16 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           {/* Formulaire blocage manuel */}
           {showManualBlock && (
-            <div className="rounded-xl p-4 space-y-3 animate-fade-in bg-[#EBF3EE] border border-[#B8D8C4]">
+            <div className="rounded-xl p-4 space-y-3 animate-fade-in bg-[#15241C] border border-[#2C4A39]">
               <div className="text-xs font-semibold text-accent-sage">Blocage manuel</div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <input
-                  className="rounded-lg px-3 py-1.5 text-sm font-mono-cyber col-span-1 bg-white border border-[#B8D8C4] text-text-primary outline-none focus:border-accent-sage"
+                  className="rounded-lg px-3 py-1.5 text-sm font-mono-cyber col-span-1 bg-bg-card border border-[#2C4A39] text-text-primary outline-none focus:border-accent-sage"
                   placeholder="IP (ex: 1.2.3.4)"
                   value={manualIp} onChange={(e) => setManualIp(e.target.value)}
                 />
                 <input
-                  className="rounded-lg px-3 py-1.5 text-sm col-span-1 sm:col-span-2 bg-white border border-[#B8D8C4] text-text-primary outline-none focus:border-accent-sage"
+                  className="rounded-lg px-3 py-1.5 text-sm col-span-1 sm:col-span-2 bg-bg-card border border-[#2C4A39] text-text-primary outline-none focus:border-accent-sage"
                   placeholder="Raison du blocage"
                   value={manualReason} onChange={(e) => setManualReason(e.target.value)}
                 />
@@ -325,7 +325,7 @@ export default function SettingsPage() {
                 />
               </div>
               <button onClick={handleManualBlock} disabled={manualBusy || !manualIp.trim()}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-sm font-bold border transition-all disabled:opacity-40 bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra hover:bg-[#F8E0D0]">
+                className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-sm font-bold border transition-all disabled:opacity-40 bg-[#2A1A12] border-[#4D3122] text-accent-terra hover:bg-[#35241A]">
                 {manualBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldOff className="h-3.5 w-3.5" />}
                 Bloquer l&apos;IP
               </button>
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                     <div className="text-xs font-mono-cyber text-accent-sage">{manualResult.msg}</div>
                   )}
                   {manualResult.cmd && (
-                    <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-[#EBF3EE] border border-[#B8D8C4]">
+                    <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-[#15241C] border border-[#2C4A39]">
                       <Terminal className="h-3 w-3 shrink-0 text-accent-sage" />
                       <span className="text-[10px] font-mono-cyber flex-1 text-accent-sage">{manualResult.cmd}</span>
                       <CopyBtn text={manualResult.cmd} />

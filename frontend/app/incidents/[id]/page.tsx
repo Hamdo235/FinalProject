@@ -59,11 +59,11 @@ function parseLlmView(llm: { response: string; confidence: number; parsed?: Reco
 }
 
 const TIMELINE_STEPS = [
-  { label: "Detection",      activeCls: "bg-[#EAF2F8] border-accent-slate  text-accent-slate",  doneCls: "bg-[#D8E8F4] border-[#A8C8E0] text-accent-slate",  lineCls: "bg-[#A8C8E0]" },
-  { label: "Enrichissement", activeCls: "bg-[#EBF3EE] border-accent-sage   text-accent-sage",   doneCls: "bg-[#D8EDE0] border-[#B8D8C4] text-accent-sage",   lineCls: "bg-[#B8D8C4]" },
-  { label: "Incident",       activeCls: "bg-[#FDF8E0] border-[#E8C547]    text-[#B8960A]",      doneCls: "bg-[#F5F0C0] border-[#F0E090] text-[#B8960A]",      lineCls: "bg-[#F0E090]" },
-  { label: "LLM",            activeCls: "bg-[#EBF3EE] border-accent-sage   text-accent-sage",   doneCls: "bg-[#D8EDE0] border-[#B8D8C4] text-accent-sage",   lineCls: "bg-[#B8D8C4]" },
-  { label: "Decision",       activeCls: "bg-[#FDF0E8] border-[#F0C4A8]    text-accent-terra",   doneCls: "bg-[#F8E0D0] border-[#F0C4A8] text-accent-terra",   lineCls: "bg-[#F0C4A8]" },
+  { label: "Detection",      activeCls: "bg-[#13202C] border-accent-slate  text-accent-slate",  doneCls: "bg-[#1A2C3A] border-[#2A4357] text-accent-slate",  lineCls: "bg-[#2A4357]" },
+  { label: "Enrichissement", activeCls: "bg-[#15241C] border-accent-sage   text-accent-sage",   doneCls: "bg-[#1C3025] border-[#2C4A39] text-accent-sage",   lineCls: "bg-[#2C4A39]" },
+  { label: "Incident",       activeCls: "bg-[#262017] border-[#E8C547]    text-[#E0B83A]",      doneCls: "bg-[#262017] border-[#4A3F1C] text-[#E0B83A]",      lineCls: "bg-[#4A3F1C]" },
+  { label: "LLM",            activeCls: "bg-[#15241C] border-accent-sage   text-accent-sage",   doneCls: "bg-[#1C3025] border-[#2C4A39] text-accent-sage",   lineCls: "bg-[#2C4A39]" },
+  { label: "Decision",       activeCls: "bg-[#2A1A12] border-[#4D3122]    text-accent-terra",   doneCls: "bg-[#35241A] border-[#4D3122] text-accent-terra",   lineCls: "bg-[#4D3122]" },
 ];
 
 function getRecommendations(incident: Incident) {
@@ -136,12 +136,12 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
 
   const isOpen  = incident?.status === "open";
   const risk    = (incident?.risk || "").toLowerCase();
-  const riskTextCls = risk === "high" ? "text-accent-terra" : risk === "medium" ? "text-[#B8960A]" : "text-accent-sage";
+  const riskTextCls = risk === "high" ? "text-accent-terra" : risk === "medium" ? "text-[#E0B83A]" : "text-accent-sage";
   const riskBadgeCls = risk === "high"
-    ? "bg-[#FDF0E8] text-accent-terra border-[#F0C4A8]"
+    ? "bg-[#2A1A12] text-accent-terra border-[#4D3122]"
     : risk === "medium"
-    ? "bg-[#FDF8E0] text-[#B8960A] border-[#F0E090]"
-    : "bg-[#EBF3EE] text-accent-sage border-[#B8D8C4]";
+    ? "bg-[#262017] text-[#E0B83A] border-[#4A3F1C]"
+    : "bg-[#15241C] text-accent-sage border-[#2C4A39]";
   const confidence = incident ? (incident.confidence * 100).toFixed(1) : "0";
 
   return (
@@ -169,9 +169,9 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3">
                   <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 border ${
-                    isOpen ? "bg-[#FDF8E0] border-[#F0E090]" : "bg-[#EBF3EE] border-[#B8D8C4]"
+                    isOpen ? "bg-[#262017] border-[#4A3F1C]" : "bg-[#15241C] border-[#2C4A39]"
                   }`}>
-                    <Shield className={`h-5 w-5 ${isOpen ? "text-[#B8960A]" : "text-accent-sage"}`} />
+                    <Shield className={`h-5 w-5 ${isOpen ? "text-[#E0B83A]" : "text-accent-sage"}`} />
                   </div>
                   <div>
                     <h1 className="text-xl font-bold text-text-primary">Incident #{incident.id}</h1>
@@ -299,16 +299,16 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
               </p>
               <div className="flex flex-wrap gap-3">
                 <button disabled={decisionBusy} onClick={() => applyDecision("true_attack")}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border disabled:opacity-40 bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra hover:bg-[#F8E0D0]">
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border disabled:opacity-40 bg-[#2A1A12] border-[#4D3122] text-accent-terra hover:bg-[#35241A]">
                   <AlertTriangle className="h-4 w-4" />Confirmer attaque
                 </button>
                 <button disabled={decisionBusy} onClick={() => applyDecision("false_positive")}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border disabled:opacity-40 bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage hover:bg-[#D8EDE0]">
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border disabled:opacity-40 bg-[#15241C] border-[#2C4A39] text-accent-sage hover:bg-[#1C3025]">
                   <CheckCircle className="h-4 w-4" />Faux positif
                 </button>
               </div>
               {decisionMsg && (
-                <div className="text-sm px-3 py-2 rounded-xl bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
+                <div className="text-sm px-3 py-2 rounded-xl bg-[#15241C] border border-[#2C4A39] text-accent-sage">
                   {decisionMsg}
                 </div>
               )}
@@ -340,13 +340,13 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
               </Button>
 
               {msg && (
-                <div className="text-sm px-3 py-2 rounded-xl bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
+                <div className="text-sm px-3 py-2 rounded-xl bg-[#15241C] border border-[#2C4A39] text-accent-sage">
                   {msg}
                 </div>
               )}
 
               {llm && (
-                <div className="rounded-2xl p-5 space-y-4 bg-[#EBF3EE] border border-[#B8D8C4]">
+                <div className="rounded-2xl p-5 space-y-4 bg-[#15241C] border border-[#2C4A39]">
                   {(() => {
                     const view = parseLlmView(llm);
                     return (
@@ -355,17 +355,17 @@ export default function IncidentPage({ params }: { params: Promise<{ id: string 
                     <div className="text-[10px] uppercase tracking-widest font-bold font-mono-cyber text-accent-sage">
                       Reponse LLM
                     </div>
-                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold font-mono border bg-white text-accent-sage border-[#B8D8C4]">
+                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold font-mono border bg-bg-card text-accent-sage border-[#2C4A39]">
                       confiance {(llm.confidence * 100).toFixed(1)}%
                     </span>
                   </div>
                   {(view.attackType || view.mitreTechnique) && (
                     <div className="flex flex-wrap gap-2">
                       {view.attackType && (
-                        <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-[#FDF0E8] text-accent-terra border border-[#F0C4A8]">{view.attackType}</span>
+                        <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-[#2A1A12] text-accent-terra border border-[#4D3122]">{view.attackType}</span>
                       )}
                       {view.mitreTechnique && (
-                        <span className="px-2 py-1 rounded-lg text-xs font-mono-cyber bg-[#EAF2F8] text-accent-slate border border-[#A8C8E0]">
+                        <span className="px-2 py-1 rounded-lg text-xs font-mono-cyber bg-[#13202C] text-accent-slate border border-[#2A4357]">
                           {view.mitreTechnique}{view.mitreName ? ` - ${view.mitreName}` : ""}
                         </span>
                       )}

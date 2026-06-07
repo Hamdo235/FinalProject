@@ -19,22 +19,22 @@ export interface SimpleChartProps {
   height?: number;
 }
 
-const BAR_COLORS = ["#ef4444", "#22d3ee", "#10b981", "#f59e0b", "#3b82f6"];
+const BAR_COLORS = ["#D98862", "#6BA3C9", "#6FB894", "#E8C547", "#6BA3C9"];
 
 const tooltipStyle: React.CSSProperties = {
-  backgroundColor: "#111f35",
+  backgroundColor: "#1C222B",
   border: "1px solid rgba(34,211,238,0.2)",
   borderRadius: "10px",
   fontSize: "12px",
-  color: "#e2e8f0",
+  color: "#E6E9EF",
   boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
 };
 
-const axisStyle = { fontSize: 11, fill: "#64748b" };
+const axisStyle = { fontSize: 11, fill: "#6B7280" };
 
 export default function SimpleChartInner({
   title, data, type = "line", xKey, yKey,
-  color = "#22d3ee", loading, height = 250,
+  color = "#6BA3C9", loading, height = 250,
 }: SimpleChartProps) {
   if (loading) {
     return (
@@ -56,8 +56,8 @@ export default function SimpleChartInner({
             <LineChart data={data}>
               <defs>
                 <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#22d3ee" />
-                  <stop offset="100%" stopColor="#3b82f6" />
+                  <stop offset="0%" stopColor="#6BA3C9" />
+                  <stop offset="100%" stopColor="#6BA3C9" />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
@@ -70,7 +70,7 @@ export default function SimpleChartInner({
                 stroke="url(#lineGrad)"
                 strokeWidth={2.5}
                 dot={false}
-                activeDot={{ r: 5, fill: "#22d3ee", strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: "#6BA3C9", strokeWidth: 0 }}
               />
             </LineChart>
           ) : (

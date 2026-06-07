@@ -12,54 +12,54 @@ const NAV_CARDS = [
     icon: BarChart3,
     label: "Dashboard",
     desc: "Vue d'ensemble, KPI, timeline, carte GeoIP.",
-    color: "#4A7B9D",
-    bg: "#EAF2F8",
-    border: "#A8C8E0",
+    color: "#6BA3C9",
+    bg: "#13202C",
+    border: "#2A4357",
   },
   {
     href: "/alerts",
     icon: AlertTriangle,
     label: "Alertes",
     desc: "Flux temps réel, labellisation, défense.",
-    color: "#C4714A",
-    bg: "#FDF0E8",
-    border: "#F0C4A8",
+    color: "#D98862",
+    bg: "#2A1A12",
+    border: "#4D3122",
   },
   {
     href: "/incidents",
     icon: Shield,
     label: "Incidents",
     desc: "Groupement d'alertes, explication LLM.",
-    color: "#B8960A",
-    bg: "#FDF8E0",
-    border: "#F0E090",
+    color: "#E0B83A",
+    bg: "#262017",
+    border: "#4A3F1C",
   },
   {
     href: "/chat",
     icon: MessageCircle,
     label: "Chat SOC",
     desc: "Interroger le LLM sur l'activité en cours.",
-    color: "#4A7B9D",
-    bg: "#EAF2F8",
-    border: "#A8C8E0",
+    color: "#6BA3C9",
+    bg: "#13202C",
+    border: "#2A4357",
   },
   {
     href: "/demo",
     icon: Play,
     label: "Demo",
     desc: "Pipeline complet ML LLM en action.",
-    color: "#5B8A6E",
-    bg: "#EBF3EE",
-    border: "#B8D8C4",
+    color: "#6FB894",
+    bg: "#15241C",
+    border: "#2C4A39",
   },
   {
     href: "/model",
     icon: Cpu,
     label: "Modele ML",
     desc: "Metriques F1, precision, rappel.",
-    color: "#4A7B9D",
-    bg: "#EAF2F8",
-    border: "#A8C8E0",
+    color: "#6BA3C9",
+    bg: "#13202C",
+    border: "#2A4357",
   },
 ];
 
@@ -68,22 +68,22 @@ const CYCLE = [
     step: "01",
     title: "Detection",
     desc: "Les logs reseau sont classes par le modele ML. Les anomalies generent des alertes avec un score de confiance.",
-    color: "#4A7B9D",
-    bg: "#EAF2F8",
+    color: "#6BA3C9",
+    bg: "#13202C",
   },
   {
     step: "02",
     title: "Decision humaine",
     desc: "L'analyste SOC labellise les alertes (vraie attaque / faux positif) assiste par le LLM explicatif.",
-    color: "#B8960A",
-    bg: "#FDF8E0",
+    color: "#E0B83A",
+    bg: "#262017",
   },
   {
     step: "03",
     title: "Apprentissage",
     desc: "Le modele est reentraine hors-ligne avec les labels valides. Le cycle s'ameliore continuellement.",
-    color: "#5B8A6E",
-    bg: "#EBF3EE",
+    color: "#6FB894",
+    bg: "#15241C",
   },
 ];
 
@@ -98,13 +98,13 @@ export default function HomePage() {
           style={{ background: "radial-gradient(ellipse 60% 40% at 50% 0%, rgba(91,138,110,0.06) 0%, transparent 70%)" }}
         />
         <div className="relative">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono-cyber mb-6 bg-[#EBF3EE] border border-[#B8D8C4] text-accent-sage">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono-cyber mb-6 bg-[#15241C] border border-[#2C4A39] text-accent-sage">
             <Radar className="h-3.5 w-3.5" />
             IDS Cognitif - 100% local, zero cloud
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4">
-            <span style={{ color: "#5B8A6E" }}>CyberSentinel</span>
+            <span style={{ color: "#6FB894" }}>CyberSentinel</span>
             <span className="text-text-primary">-LLM</span>
           </h1>
 
@@ -140,21 +140,21 @@ export default function HomePage() {
             label: "Flux temps reel",
             value: "SSE actif",
             sub: "Alertes en streaming",
-            color: "#5B8A6E", bg: "#EBF3EE", border: "#B8D8C4",
+            color: "#6FB894", bg: "#15241C", border: "#2C4A39",
           },
           {
             icon: <Cpu className="h-5 w-5 text-accent-slate" />,
             label: "Modele ML",
             value: "RandomForest",
             sub: "Detection d'anomalies",
-            color: "#4A7B9D", bg: "#EAF2F8", border: "#A8C8E0",
+            color: "#6BA3C9", bg: "#13202C", border: "#2A4357",
           },
           {
-            icon: <Lock className="h-5 w-5 text-[#B8960A]" />,
+            icon: <Lock className="h-5 w-5 text-[#E0B83A]" />,
             label: "Assistant LLM",
             value: "Explicatif",
             sub: "Aucune action automatique",
-            color: "#B8960A", bg: "#FDF8E0", border: "#F0E090",
+            color: "#E0B83A", bg: "#262017", border: "#4A3F1C",
           },
         ].map(({ icon, label, value, sub, color, bg, border }) => (
           <div key={label} className="cyber-card p-5 flex items-center gap-4">

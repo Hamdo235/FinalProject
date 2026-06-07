@@ -99,6 +99,7 @@ export interface MapPoint {
   lat: number;
   lon: number;
   count: number;
+  severity?: "high" | "medium" | "low" | string | null;
 }
 
 export interface IncidentExplanation {

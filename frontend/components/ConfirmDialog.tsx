@@ -36,7 +36,7 @@ export default function ConfirmDialog({
   }, [open, busy, onCancel, onConfirm]);
 
   if (!open) return null;
-  const accent = danger ? "#ef4444" : "#22d3ee";
+  const accent = danger ? "#D98862" : "#6BA3C9";
 
   return (
     <div
@@ -50,7 +50,7 @@ export default function ConfirmDialog({
       <div
         className="w-full max-w-md rounded-2xl overflow-hidden animate-fade-in"
         style={{
-          background: "#0a1220",
+          background: "#161B22",
           border: `1px solid ${accent}40`,
           boxShadow: `0 12px 48px rgba(0,0,0,0.7), 0 0 32px ${accent}22`,
         }}
@@ -73,7 +73,7 @@ export default function ConfirmDialog({
             onClick={onCancel}
             disabled={busy}
             className="rounded-md p-1 transition-all disabled:opacity-40"
-            style={{ color: "#64748b" }}
+            style={{ color: "#6B7280" }}
             aria-label="Fermer"
           >
             <X className="h-4 w-4" />
@@ -81,7 +81,7 @@ export default function ConfirmDialog({
         </div>
         <div className="px-5 py-4">
           {message && (
-            <div className="text-sm leading-relaxed" style={{ color: "#cbd5e1" }}>
+            <div className="text-sm leading-relaxed" style={{ color: "#C2C8D2" }}>
               {message}
             </div>
           )}
@@ -95,7 +95,7 @@ export default function ConfirmDialog({
             style={{
               background: "rgba(100,116,139,0.08)",
               border: "1px solid rgba(100,116,139,0.2)",
-              color: "#94a3b8",
+              color: "#9BA3AF",
             }}
           >
             {cancelLabel}

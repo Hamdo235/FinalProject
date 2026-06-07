@@ -18,7 +18,7 @@ export default function IncidentCard({ incident }: { incident: Incident }) {
   const confCls =
     incident.confidence >= 0.75 ? "text-accent-red bg-accent-red"
     : incident.confidence >= 0.5 ? "text-accent-amber bg-accent-amber"
-    : "text-accent-teal-bright bg-accent-teal";
+    : "text-accent-sage bg-accent-sage";
 
   const [confTextCls, confBarCls] = confCls.split(" ");
 
@@ -30,7 +30,7 @@ export default function IncidentCard({ incident }: { incident: Incident }) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <ShieldAlert className={`h-4 w-4 shrink-0 ${isOpen ? "text-accent-amber" : "text-accent-teal-bright"}`} />
+            <ShieldAlert className={`h-4 w-4 shrink-0 ${isOpen ? "text-accent-amber" : "text-accent-sage"}`} />
             <Link
               href={`/incidents/${incident.id}`}
               className="hover:underline font-semibold text-text-primary"

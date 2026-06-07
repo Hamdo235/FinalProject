@@ -12,35 +12,35 @@ export default function ChatbotDock() {
         <div
           className="flex items-center gap-2.5 rounded-2xl px-4 py-2.5 transition-all"
           style={{
-            background: "rgba(12, 22, 40, 0.95)",
-            border: "1px solid rgba(34,211,238,0.3)",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,211,238,0.06)",
+            background: "rgba(15, 20, 26, 0.97)",
+            border: "1px solid rgba(107,163,201,0.3)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(107,163,201,0.06)",
             backdropFilter: "blur(12px)",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.borderColor = "rgba(34,211,238,0.55)";
+            (e.currentTarget as HTMLElement).style.borderColor = "rgba(107,163,201,0.55)";
             (e.currentTarget as HTMLElement).style.boxShadow =
-              "0 4px 32px rgba(0,0,0,0.6), 0 0 20px rgba(34,211,238,0.15)";
+              "0 4px 32px rgba(0,0,0,0.6), 0 0 20px rgba(107,163,201,0.15)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.borderColor = "rgba(34,211,238,0.3)";
+            (e.currentTarget as HTMLElement).style.borderColor = "rgba(107,163,201,0.3)";
             (e.currentTarget as HTMLElement).style.boxShadow =
-              "0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,211,238,0.06)";
+              "0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(107,163,201,0.06)";
           }}
         >
           <div
             className="w-7 h-7 rounded-xl flex items-center justify-center"
             style={{
-              background: "linear-gradient(135deg, #22d3ee, #3b82f6)",
-              boxShadow: "0 0 12px rgba(34,211,238,0.4)",
+              background: "linear-gradient(135deg, #6BA3C9, #8BBDD9)",
+              boxShadow: "0 0 12px rgba(107,163,201,0.4)",
             }}
           >
             <Bot className="h-4 w-4 text-white" />
           </div>
-          <span className="text-sm font-semibold" style={{ color: "#67e8f9" }}>
+          <span className="text-sm font-semibold" style={{ color: "#8BB8D6" }}>
             Assistant SOC
           </span>
-          <Zap className="h-3.5 w-3.5" style={{ color: "#f59e0b" }} />
+          <Zap className="h-3.5 w-3.5" style={{ color: "#E8C547" }} />
         </div>
       </Link>
     </div>

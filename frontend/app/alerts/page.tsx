@@ -15,9 +15,9 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 
 const SEV_CLS: Record<string, string> = {
-  high:   "bg-[#FDF0E8] text-accent-terra border-[#F0C4A8]",
-  medium: "bg-[#FDF8E0] text-[#B8960A]    border-[#F0E090]",
-  low:    "bg-[#EBF3EE] text-accent-sage  border-[#B8D8C4]",
+  high:   "bg-[#2A1A12] text-accent-terra border-[#4D3122]",
+  medium: "bg-[#262017] text-[#E0B83A]    border-[#4A3F1C]",
+  low:    "bg-[#15241C] text-accent-sage  border-[#2C4A39]",
 };
 
 function SevBadge({ s }: { s: string }) {
@@ -31,8 +31,8 @@ function SevBadge({ s }: { s: string }) {
 
 type BtnColor = "red" | "teal" | "muted";
 const BTN_CLS: Record<BtnColor, string> = {
-  red:   "border-[#F0C4A8] text-accent-terra bg-[#FDF0E8] hover:bg-[#F8E0D0]",
-  teal:  "border-[#B8D8C4] text-accent-sage  bg-[#EBF3EE] hover:bg-[#D8EDE0]",
+  red:   "border-[#4D3122] text-accent-terra bg-[#2A1A12] hover:bg-[#35241A]",
+  teal:  "border-[#2C4A39] text-accent-sage  bg-[#15241C] hover:bg-[#1C3025]",
   muted: "border-bg-border text-text-secondary bg-bg-base hover:bg-bg-card",
 };
 
@@ -178,7 +178,7 @@ export default function AlertsPage() {
         </div>
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.06em] font-mono border ${
           live
-            ? "bg-[#EBF3EE] text-accent-sage border-[#B8D8C4]"
+            ? "bg-[#15241C] text-accent-sage border-[#2C4A39]"
             : "bg-bg-base text-text-muted border-bg-border"
         }`}>
           <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-accent-sage animate-pulse" : "bg-text-muted"}`} />
@@ -189,11 +189,11 @@ export default function AlertsPage() {
       {/* ── Toolbar ── */}
       <div className="flex flex-wrap gap-2">
         <button onClick={createIncident} disabled={!selected.size || busy}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border disabled:opacity-40 border-[#B8D8C4] text-accent-sage bg-[#EBF3EE] hover:bg-[#D8EDE0]">
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border disabled:opacity-40 border-[#2C4A39] text-accent-sage bg-[#15241C] hover:bg-[#1C3025]">
           <CheckSquare className="h-3.5 w-3.5" />Creer incident ({selected.size})
         </button>
         <button onClick={() => bulkDecision("true_attack")} disabled={!selected.size || bulkBusy}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border disabled:opacity-40 border-[#F0C4A8] text-accent-terra bg-[#FDF0E8] hover:bg-[#F8E0D0]">
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border disabled:opacity-40 border-[#4D3122] text-accent-terra bg-[#2A1A12] hover:bg-[#35241A]">
           <AlertTriangle className="h-3.5 w-3.5" />Confirmer attaque
         </button>
         <button onClick={() => bulkDecision("false_positive")} disabled={!selected.size || bulkBusy}
@@ -201,11 +201,11 @@ export default function AlertsPage() {
           Faux positif
         </button>
         <Link href="/dashboard#map"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border border-[#A8C8E0] text-accent-slate bg-[#EAF2F8] hover:bg-[#D8E8F4]">
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border border-[#2A4357] text-accent-slate bg-[#13202C] hover:bg-[#1A2C3A]">
           <MapPin className="h-3.5 w-3.5" />Carte
         </Link>
         <Link href="/chat"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border border-[#F0E090] text-[#B8960A] bg-[#FDF8E0] hover:bg-[#F5F0C0]">
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all border border-[#4A3F1C] text-[#E0B83A] bg-[#262017] hover:bg-[#262017]">
           <MessageCircle className="h-3.5 w-3.5" />Chat SOC
         </Link>
       </div>
@@ -257,8 +257,8 @@ export default function AlertsPage() {
                     <div className="space-y-1.5">
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide font-mono border ${
                         a.defense.action === "block_temp"
-                          ? "bg-[#FDF0E8] text-accent-terra border-[#F0C4A8]"
-                          : "bg-[#FDF8E0] text-[#B8960A] border-[#F0E090]"
+                          ? "bg-[#2A1A12] text-accent-terra border-[#4D3122]"
+                          : "bg-[#262017] text-[#E0B83A] border-[#4A3F1C]"
                       }`}>
                         {a.defense.action}
                       </span>
@@ -291,7 +291,7 @@ export default function AlertsPage() {
                     {a.ip && (
                       <Link
                         href={`/dashboard?ip=${encodeURIComponent(a.ip)}#map`}
-                        className="text-xs underline font-mono-cyber text-accent-slate hover:text-[#3A6B8D]"
+                        className="text-xs underline font-mono-cyber text-accent-slate hover:text-[#5A93B9]"
                       >
                         Carte
                       </Link>

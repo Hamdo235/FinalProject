@@ -23,19 +23,19 @@ function fmtDate(iso: string): string {
 
 type SevClass = { badge: string };
 const SEV_CLS: Record<string, SevClass> = {
-  high:   { badge: "bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra" },
-  medium: { badge: "bg-[#FDF8E0] border-[#F0E090] text-[#B8960A]"   },
-  low:    { badge: "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage"  },
+  high:   { badge: "bg-[#2A1A12] border-[#4D3122] text-accent-terra" },
+  medium: { badge: "bg-[#262017] border-[#4A3F1C] text-[#E0B83A]"   },
+  low:    { badge: "bg-[#15241C] border-[#2C4A39] text-accent-sage"  },
 };
 const sevBadgeCls = (s: string) => SEV_CLS[s]?.badge ?? SEV_CLS.low.badge;
 
 type StatVariant = "cyan" | "red" | "amber" | "violet" | "teal";
 const STAT_VAR: Record<StatVariant, { val: string; icon: string; top: string }> = {
-  cyan:   { val: "text-accent-slate",  icon: "bg-[#EAF2F8] border-[#A8C8E0] text-accent-slate",  top: "border-t-accent-slate"  },
-  red:    { val: "text-accent-terra",  icon: "bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra",  top: "border-t-accent-terra"  },
-  amber:  { val: "text-[#B8960A]",    icon: "bg-[#FDF8E0] border-[#F0E090] text-[#B8960A]",      top: "border-t-[#E8C547]"     },
-  violet: { val: "text-accent-sage",  icon: "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage",   top: "border-t-accent-sage"  },
-  teal:   { val: "text-accent-sage",  icon: "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage",   top: "border-t-accent-sage"  },
+  cyan:   { val: "text-accent-slate",  icon: "bg-[#13202C] border-[#2A4357] text-accent-slate",  top: "border-t-accent-slate"  },
+  red:    { val: "text-accent-terra",  icon: "bg-[#2A1A12] border-[#4D3122] text-accent-terra",  top: "border-t-accent-terra"  },
+  amber:  { val: "text-[#E0B83A]",    icon: "bg-[#262017] border-[#4A3F1C] text-[#E0B83A]",      top: "border-t-[#E8C547]"     },
+  violet: { val: "text-accent-sage",  icon: "bg-[#15241C] border-[#2C4A39] text-accent-sage",   top: "border-t-accent-sage"  },
+  teal:   { val: "text-accent-sage",  icon: "bg-[#15241C] border-[#2C4A39] text-accent-sage",   top: "border-t-accent-sage"  },
 };
 
 function StatCard({ title, value, variant, icon: Icon }: { title: string; value: string | number; variant: StatVariant; icon: React.ElementType }) {
@@ -201,7 +201,7 @@ export default function ReportsPage() {
               onClick={() => setPeriod(p)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono-cyber border transition-all ${
                 period === p
-                  ? "bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage"
+                  ? "bg-[#15241C] border-[#2C4A39] text-accent-sage"
                   : "bg-bg-base border-bg-border text-text-secondary hover:text-text-primary"
               }`}
             >
@@ -360,12 +360,12 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           <button onClick={() => exportCsv(alerts)} disabled={loading || alerts.length === 0}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all disabled:opacity-40 bg-[#EBF3EE] border-[#B8D8C4] text-accent-sage hover:bg-[#D8EDE0]">
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all disabled:opacity-40 bg-[#15241C] border-[#2C4A39] text-accent-sage hover:bg-[#1C3025]">
             <Download className="h-3.5 w-3.5" />
             Exporter alertes CSV ({alerts.length})
           </button>
           <button onClick={() => exportTxt(alerts, incidents, blocked, metrics)} disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all disabled:opacity-40 bg-[#EAF2F8] border-[#A8C8E0] text-accent-slate hover:bg-[#D8E8F4]">
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all disabled:opacity-40 bg-[#13202C] border-[#2A4357] text-accent-slate hover:bg-[#1A2C3A]">
             <Download className="h-3.5 w-3.5" />
             Exporter rapport .txt
           </button>

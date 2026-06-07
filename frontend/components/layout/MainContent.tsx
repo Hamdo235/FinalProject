@@ -14,7 +14,7 @@ export default function MainContent({ children }: { children: React.ReactNode })
           ? "flex-1 min-w-0 min-h-0 overflow-hidden"
           : "flex-1 p-5 md:p-7 lg:p-8 min-w-0 min-h-0 overflow-y-auto"
       }
-      style={{ background: "#080f1a" }}
+      style={{ background: "#0D1117" }}
     >
       <div className={isChat ? "w-full h-full" : "mx-auto max-w-7xl w-full h-full"}>
         {!isChat && (
@@ -22,7 +22,7 @@ export default function MainContent({ children }: { children: React.ReactNode })
             <div>
               <div
                 className="text-[10px] uppercase tracking-[0.22em] font-semibold font-mono-cyber mb-1"
-                style={{ color: "#334155" }}
+                style={{ color: "#9BA3AF" }}
               >
                 CyberSentinel LLM
               </div>
@@ -35,12 +35,12 @@ export default function MainContent({ children }: { children: React.ReactNode })
               style={{
                 background: "rgba(16,185,129,0.08)",
                 border: "1px solid rgba(16,185,129,0.2)",
-                color: "#10b981",
+                color: "#6FB894",
               }}
             >
               <span
                 className="h-1.5 w-1.5 rounded-full animate-pulse-badge"
-                style={{ background: "#10b981" }}
+                style={{ background: "#6FB894" }}
               />
               Flux temps réel actif
             </div>

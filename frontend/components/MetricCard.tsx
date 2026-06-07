@@ -8,21 +8,21 @@ interface MetricCardProps {
   subtitle?: string;
   loading?: boolean;
   icon?: React.ReactNode;
-  accent?: "violet" | "cyan" | "amber" | "red" | "green" | "blue";
+  accent?: "violet" | "cyan" | "amber" | "red" | "green" | "blue" | "sage" | "slate" | "terra";
   trend?: "up" | "down" | "neutral";
   trendValue?: string;
 }
 
 const accentMap: Record<string, { top: string; iconBg: string; val: string }> = {
-  violet: { top: "stat-sage",   iconBg: "bg-[#EBF3EE] border-[#B8D8C4]",  val: "text-accent-sage" },
-  sage:   { top: "stat-sage",   iconBg: "bg-[#EBF3EE] border-[#B8D8C4]",  val: "text-accent-sage" },
-  cyan:   { top: "stat-slate",  iconBg: "bg-[#EAF2F8] border-[#A8C8E0]",  val: "text-accent-slate" },
-  slate:  { top: "stat-slate",  iconBg: "bg-[#EAF2F8] border-[#A8C8E0]",  val: "text-accent-slate" },
-  amber:  { top: "stat-amber",  iconBg: "bg-[#FDF8E8] border-[#F0E090]",  val: "text-[#A07800]" },
-  red:    { top: "stat-terra",  iconBg: "bg-[#FDF0E8] border-[#F0C4A8]",  val: "text-accent-terra" },
-  terra:  { top: "stat-terra",  iconBg: "bg-[#FDF0E8] border-[#F0C4A8]",  val: "text-accent-terra" },
-  green:  { top: "stat-sage",   iconBg: "bg-[#EBF3EE] border-[#B8D8C4]",  val: "text-accent-sage" },
-  blue:   { top: "stat-slate",  iconBg: "bg-[#EAF2F8] border-[#A8C8E0]",  val: "text-accent-slate" },
+  violet: { top: "stat-sage",   iconBg: "bg-[#15241C] border-[#2C4A39]",  val: "text-accent-sage" },
+  sage:   { top: "stat-sage",   iconBg: "bg-[#15241C] border-[#2C4A39]",  val: "text-accent-sage" },
+  cyan:   { top: "stat-slate",  iconBg: "bg-[#13202C] border-[#2A4357]",  val: "text-accent-slate" },
+  slate:  { top: "stat-slate",  iconBg: "bg-[#13202C] border-[#2A4357]",  val: "text-accent-slate" },
+  amber:  { top: "stat-amber",  iconBg: "bg-[#262017] border-[#4A3F1C]",  val: "text-[#C9A02E]" },
+  red:    { top: "stat-terra",  iconBg: "bg-[#2A1A12] border-[#4D3122]",  val: "text-accent-terra" },
+  terra:  { top: "stat-terra",  iconBg: "bg-[#2A1A12] border-[#4D3122]",  val: "text-accent-terra" },
+  green:  { top: "stat-sage",   iconBg: "bg-[#15241C] border-[#2C4A39]",  val: "text-accent-sage" },
+  blue:   { top: "stat-slate",  iconBg: "bg-[#13202C] border-[#2A4357]",  val: "text-accent-slate" },
 };
 
 export default function MetricCard({
@@ -59,7 +59,7 @@ export default function MetricCard({
         {trend && trendValue && (
           <span className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold font-mono-cyber",
-            trend === "up"      ? "bg-accent-teal/10 text-accent-teal-bright"
+            trend === "up"      ? "bg-accent-sage/10 text-accent-sage"
             : trend === "down"  ? "bg-accent-red/10 text-accent-red"
             : "bg-text-muted/10 text-text-secondary",
           )}>

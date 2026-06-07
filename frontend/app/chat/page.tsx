@@ -19,12 +19,12 @@ function OverviewCards({ raw }: { raw: string }) {
   try { alerts = JSON.parse(raw); } catch { return <p className="text-accent-red">Données invalides.</p>; }
 
   const SEV_OV: Record<string, { card: string; badge: string; label: string }> = {
-    high:   { card: "bg-[#FDF0E8] border-[#F0C4A8]",  badge: "bg-[#FBE2D0] border-[#F0C4A8] text-accent-terra", label: "CRITIQUE" },
-    medium: { card: "bg-[#FDF8E0] border-[#F0E090]",  badge: "bg-[#FAF3C0] border-[#F0E090] text-[#B8960A]",   label: "MOYENNE"  },
-    low:    { card: "bg-[#EBF3EE] border-[#B8D8C4]",  badge: "bg-[#D8EDE0] border-[#B8D8C4] text-accent-sage", label: "FAIBLE"   },
+    high:   { card: "bg-[#2A1A12] border-[#4D3122]",  badge: "bg-[#2A1A12] border-[#4D3122] text-accent-terra", label: "CRITIQUE" },
+    medium: { card: "bg-[#262017] border-[#4A3F1C]",  badge: "bg-[#262017] border-[#4A3F1C] text-[#E0B83A]",   label: "MOYENNE"  },
+    low:    { card: "bg-[#15241C] border-[#2C4A39]",  badge: "bg-[#1C3025] border-[#2C4A39] text-accent-sage", label: "FAIBLE"   },
   };
   const ov = (s: string) => SEV_OV[s] ?? SEV_OV.low;
-  const scoreColor = (v: number) => v > 0.8 ? "text-accent-terra" : v > 0.5 ? "text-[#B8960A]" : "text-accent-sage";
+  const scoreColor = (v: number) => v > 0.8 ? "text-accent-terra" : v > 0.5 ? "text-[#E0B83A]" : "text-accent-sage";
 
   if (alerts.length === 0)
     return <p className="text-text-secondary">Aucune attaque détectée pour l&apos;instant.</p>;
@@ -237,7 +237,7 @@ export default function ChatPage() {
       const url = m.startsWith("http") ? m : `https://${m}`;
       parts.push(
         <a key={`${url}-${offset}`} href={url} target="_blank" rel="noreferrer"
-          className="underline text-accent-sage hover:text-[#4A7A5E]">{m}</a>
+          className="underline text-accent-sage hover:text-[#5CA37F]">{m}</a>
       );
       last = offset + m.length; return m;
     });
@@ -250,7 +250,7 @@ export default function ChatPage() {
     text.split(/`/).forEach((p, i) => {
       if (i % 2 === 1)
         tokens.push(
-          <code key={i} className="px-1.5 py-0.5 rounded text-[0.85em] font-mono-cyber bg-[#EAF2F8] text-accent-slate border border-[#A8C8E0]">
+          <code key={i} className="px-1.5 py-0.5 rounded text-[0.85em] font-mono-cyber bg-[#13202C] text-accent-slate border border-[#2A4357]">
             {p}
           </code>
         );
@@ -263,11 +263,11 @@ export default function ChatPage() {
     <div className="relative my-2 group">
       <button
         onClick={async () => { try { await navigator.clipboard.writeText(code); } catch {} }}
-        className="absolute top-2 right-2 text-xs px-2 py-1 rounded-lg font-mono-cyber opacity-0 group-hover:opacity-100 transition-opacity bg-[#EAF2F8] text-accent-slate border border-[#A8C8E0]"
+        className="absolute top-2 right-2 text-xs px-2 py-1 rounded-lg font-mono-cyber opacity-0 group-hover:opacity-100 transition-opacity bg-[#13202C] text-accent-slate border border-[#2A4357]"
       >
         Copier
       </button>
-      <pre className="overflow-auto rounded-xl p-4 text-xs font-mono-cyber bg-[#F5F3EE] text-accent-slate border border-[#E8E5E0]">
+      <pre className="overflow-auto rounded-xl p-4 text-xs font-mono-cyber bg-[#1C222B] text-accent-slate border border-[#262D38]">
         <code>{code}</code>
       </pre>
     </div>
@@ -808,7 +808,7 @@ export default function ChatPage() {
         <div className="p-3 flex items-center justify-between shrink-0 border-b border-bg-border">
           <span className="text-[10px] uppercase tracking-widest font-bold text-text-muted">Sessions</span>
           <button onClick={() => createConv().catch((e) => setError(e.message))}
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold border transition-all border-[#B8D8C4] text-accent-sage bg-[#EBF3EE] hover:bg-[#D8EDE0]">
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold border transition-all border-[#2C4A39] text-accent-sage bg-[#15241C] hover:bg-[#1C3025]">
             <Plus className="h-3 w-3" /> Nouvelle
           </button>
         </div>
@@ -823,16 +823,16 @@ export default function ChatPage() {
               const isActive = activeId === c.id;
               return (
                 <li key={c.id} className="border-b border-bg-border">
-                  <div className={`flex items-center gap-1.5 px-2 py-2 ${isActive ? "bg-[#EBF3EE]" : ""}`}>
+                  <div className={`flex items-center gap-1.5 px-2 py-2 ${isActive ? "bg-[#15241C]" : ""}`}>
                     {isActive && <span className="h-1.5 w-1.5 rounded-full shrink-0 bg-accent-sage" />}
                     <button className={`flex-1 text-left text-xs truncate transition-all ${isActive ? "text-accent-sage font-semibold" : "text-text-secondary"}`}
                       onClick={() => setActiveId(c.id)}>
                       {c.title}
                     </button>
-                    <button className="p-1 rounded-md hover:bg-[#EBF3EE] transition-all shrink-0" onClick={() => renameConv(c.id)}>
+                    <button className="p-1 rounded-md hover:bg-[#15241C] transition-all shrink-0" onClick={() => renameConv(c.id)}>
                       <Pencil className="h-3 w-3 text-text-muted" />
                     </button>
-                    <button className="p-1 rounded-md hover:bg-[#FDF0E8] transition-all shrink-0" onClick={() => deleteConv(c.id)}>
+                    <button className="p-1 rounded-md hover:bg-[#2A1A12] transition-all shrink-0" onClick={() => deleteConv(c.id)}>
                       <Trash2 className="h-3 w-3 text-text-muted" />
                     </button>
                   </div>
@@ -865,14 +865,14 @@ export default function ChatPage() {
               title={autoSpeak ? "Desactiver la voix" : "Activer la voix auto"}
               className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-all ${
                 autoSpeak
-                  ? "border-[#B8D8C4] text-accent-sage bg-[#EBF3EE]"
+                  ? "border-[#2C4A39] text-accent-sage bg-[#15241C]"
                   : "border-bg-border text-text-secondary bg-bg-base"
               }`}>
               {autoSpeak ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
               {autoSpeak ? "Voix ON" : "Voix"}
             </button>
             <button disabled={loading || activeId == null} onClick={handleOverview}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-all disabled:opacity-40 border-[#B8D8C4] text-accent-sage bg-[#EBF3EE] hover:bg-[#D8EDE0]">
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-all disabled:opacity-40 border-[#2C4A39] text-accent-sage bg-[#15241C] hover:bg-[#1C3025]">
               <Eye className="h-3 w-3" /> Vue d&apos;ensemble
             </button>
             <button onClick={copyLast}
@@ -893,7 +893,7 @@ export default function ChatPage() {
           {activeId != null && messages.length === 0 && (
             <div className="py-8 max-w-2xl mx-auto w-full">
               <div className="text-center mb-6">
-                <div className="h-14 w-14 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-[#EBF3EE] border border-[#B8D8C4]">
+                <div className="h-14 w-14 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-[#15241C] border border-[#2C4A39]">
                   <Zap className="h-7 w-7 text-accent-sage" />
                 </div>
                 <p className="text-sm text-text-secondary">
@@ -903,7 +903,7 @@ export default function ChatPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {QUICK.map((q) => (
                   <button key={q} disabled={loading} onClick={() => sendQuick(q)}
-                    className="text-left p-3 rounded-xl text-xs border transition-all disabled:opacity-40 bg-bg-base border-bg-border text-text-secondary hover:bg-[#EBF3EE] hover:border-[#B8D8C4] hover:text-text-primary">
+                    className="text-left p-3 rounded-xl text-xs border transition-all disabled:opacity-40 bg-bg-base border-bg-border text-text-secondary hover:bg-[#15241C] hover:border-[#2C4A39] hover:text-text-primary">
                     {q.length > 68 ? q.slice(0, 66) + "…" : q}
                   </button>
                 ))}
@@ -926,7 +926,7 @@ export default function ChatPage() {
               )}
               <div className={`rounded-2xl px-4 py-3 max-w-xl break-words ${
                 m.role === "user"
-                  ? "bg-[#EBF3EE] border border-[#B8D8C4] text-text-primary"
+                  ? "bg-[#15241C] border border-[#2C4A39] text-text-primary"
                   : "bg-bg-card border border-bg-border text-text-secondary"
               }`}
               >
@@ -949,7 +949,7 @@ export default function ChatPage() {
                 </div>
               </div>
               {m.role === "user" && (
-                <div className="shrink-0 h-8 px-2.5 rounded-xl flex items-center bg-[#EBF3EE] border border-[#B8D8C4]">
+                <div className="shrink-0 h-8 px-2.5 rounded-xl flex items-center bg-[#15241C] border border-[#2C4A39]">
                   <span className="text-xs font-bold font-mono-cyber text-accent-sage">moi</span>
                 </div>
               )}
@@ -976,10 +976,10 @@ export default function ChatPage() {
 
           {error && (
             <div className="fixed right-4 bottom-20 z-50">
-              <div className="text-sm px-4 py-3 rounded-xl flex items-center gap-3 bg-[#FDF0E8] border border-[#F0C4A8] text-accent-terra">
+              <div className="text-sm px-4 py-3 rounded-xl flex items-center gap-3 bg-[#2A1A12] border border-[#4D3122] text-accent-terra">
                 {error}
                 <button onClick={() => setError(null)}
-                  className="text-xs px-2 py-0.5 rounded-lg border border-[#F0C4A8]">
+                  className="text-xs px-2 py-0.5 rounded-lg border border-[#4D3122]">
                   ✕
                 </button>
               </div>
@@ -994,7 +994,7 @@ export default function ChatPage() {
           className="shrink-0 p-4 flex items-center gap-2 max-w-2xl mx-auto w-full border-t border-bg-border"
         >
           <input
-            className="flex-1 rounded-2xl px-4 py-2.5 text-sm font-mono-cyber bg-bg-card border border-bg-border text-text-primary focus:outline-none focus:border-[#B8D8C4] focus:ring-1 focus:ring-[#B8D8C4]/30 transition-all disabled:opacity-50"
+            className="flex-1 rounded-2xl px-4 py-2.5 text-sm font-mono-cyber bg-bg-card border border-bg-border text-text-primary focus:outline-none focus:border-[#2C4A39] focus:ring-1 focus:ring-[#2C4A39]/30 transition-all disabled:opacity-50"
             placeholder={activeId == null ? "Créez d'abord une session…" : "Message au SOC IA…"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -1008,7 +1008,7 @@ export default function ChatPage() {
             title="Mode vocal — parler au SOC IA"
             className={`inline-flex items-center justify-center h-10 w-10 rounded-2xl border transition-all disabled:opacity-40 shrink-0 ${
               isListening
-                ? "bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra"
+                ? "bg-[#2A1A12] border-[#4D3122] text-accent-terra"
                 : "bg-bg-base border-bg-border text-text-secondary"
             }`}
           >
@@ -1019,7 +1019,7 @@ export default function ChatPage() {
             <button
               type="button"
               onClick={stopStream}
-              className="inline-flex items-center gap-1.5 rounded-2xl text-sm px-4 py-2.5 font-semibold border transition-all bg-[#FDF0E8] border-[#F0C4A8] text-accent-terra"
+              className="inline-flex items-center gap-1.5 rounded-2xl text-sm px-4 py-2.5 font-semibold border transition-all bg-[#2A1A12] border-[#4D3122] text-accent-terra"
             >
               <Square className="h-4 w-4" /> Stop
             </button>
@@ -1027,7 +1027,7 @@ export default function ChatPage() {
             <button
               type="submit"
               disabled={!input.trim() || activeId == null}
-              className="inline-flex items-center gap-1.5 rounded-2xl text-sm px-4 py-2.5 font-semibold transition-all disabled:opacity-40 bg-accent-sage text-white hover:bg-[#4A7A5E] active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-2xl text-sm px-4 py-2.5 font-semibold transition-all disabled:opacity-40 bg-accent-sage text-white hover:bg-[#5CA37F] active:scale-[0.98]"
             >
               <Send className="h-4 w-4" /> Envoyer
             </button>
@@ -1088,7 +1088,7 @@ export default function ChatPage() {
           {/* ── Full-screen overlay ── */}
           <div
             className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none overflow-hidden"
-            style={{ background: "linear-gradient(160deg, #010c1a 0%, #020912 50%, #010c1a 100%)" }}
+            style={{ background: "linear-gradient(160deg, #0D1117 0%, #0D1117 50%, #0D1117 100%)" }}
           >
             {/* Hex grid */}
             <div style={{
@@ -1115,7 +1115,7 @@ export default function ChatPage() {
             {/* Vignette */}
             <div style={{
               position: "absolute", inset: 0, pointerEvents: "none",
-              background: "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 35%, #010c1a 100%)",
+              background: "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 35%, #0D1117 100%)",
             }} />
 
             {/* Scan line — speaking only */}
@@ -1132,14 +1132,14 @@ export default function ChatPage() {
               <div className="flex items-center gap-2.5">
                 <div style={{
                   width: 7, height: 7, borderRadius: "50%",
-                  background: voiceStatus === "idle" ? "#1e293b"
-                    : voiceStatus === "listening"  ? "#ef4444"
-                    : voiceStatus === "speaking"   ? "#22d3ee"
-                    : "#f59e0b",
-                  boxShadow: voiceStatus !== "idle" ? `0 0 10px ${voiceStatus === "listening" ? "#ef4444" : voiceStatus === "speaking" ? "#22d3ee" : "#f59e0b"}` : "none",
+                  background: voiceStatus === "idle" ? "#1C222B"
+                    : voiceStatus === "listening"  ? "#D98862"
+                    : voiceStatus === "speaking"   ? "#6BA3C9"
+                    : "#E8C547",
+                  boxShadow: voiceStatus !== "idle" ? `0 0 10px ${voiceStatus === "listening" ? "#D98862" : voiceStatus === "speaking" ? "#6BA3C9" : "#E8C547"}` : "none",
                   animation: voiceStatus !== "idle" ? "voiceGlow 1.4s ease-in-out infinite" : "none",
                 }} />
-                <span style={{ color: "#1e3a4a", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", textTransform: "uppercase" }}>
+                <span style={{ color: "#1A2C3A", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", textTransform: "uppercase" }}>
                   CyberSentinel &nbsp;·&nbsp; Mode Vocal
                 </span>
               </div>
@@ -1169,19 +1169,19 @@ export default function ChatPage() {
               }}>
                 <div style={{
                   width: 5, height: 5, borderRadius: "50%",
-                  background: voiceStatus === "idle" ? "#1e293b"
-                    : voiceStatus === "listening"  ? "#ef4444"
-                    : voiceStatus === "speaking"   ? "#22d3ee"
-                    : "#f59e0b",
+                  background: voiceStatus === "idle" ? "#1C222B"
+                    : voiceStatus === "listening"  ? "#D98862"
+                    : voiceStatus === "speaking"   ? "#6BA3C9"
+                    : "#E8C547",
                   animation: voiceStatus !== "idle" ? "voiceGlow 1s ease-in-out infinite" : "none",
                 }} />
                 <span style={{
                   fontSize: 10, fontFamily: "monospace", letterSpacing: "0.3em",
                   textTransform: "uppercase", fontWeight: 700,
-                  color: voiceStatus === "idle" ? "#1e3a4a"
-                    : voiceStatus === "listening"  ? "#ef4444"
-                    : voiceStatus === "speaking"   ? "#22d3ee"
-                    : "#f59e0b",
+                  color: voiceStatus === "idle" ? "#1A2C3A"
+                    : voiceStatus === "listening"  ? "#D98862"
+                    : voiceStatus === "speaking"   ? "#6BA3C9"
+                    : "#E8C547",
                 }}>
                   {voiceStatus === "listening"  ? "En écoute"
                    : voiceStatus === "processing" ? "Traitement…"
@@ -1214,7 +1214,7 @@ export default function ChatPage() {
                 <div style={{
                   position: "absolute", inset: -12, borderRadius: "50%",
                   border: "2px solid transparent",
-                  borderTopColor: "#f59e0b", borderRightColor: "rgba(245,158,11,0.2)",
+                  borderTopColor: "#E8C547", borderRightColor: "rgba(245,158,11,0.2)",
                   animation: "voiceSpinCW 1s linear infinite",
                 }} />
                 <div style={{
@@ -1311,13 +1311,13 @@ export default function ChatPage() {
                 }} />
                 {/* Icon */}
                 {voiceStatus === "listening" ? (
-                  <Mic style={{ width: 72, height: 72, color: "#ef4444", filter: "drop-shadow(0 0 20px rgba(239,68,68,0.65))" }} />
+                  <Mic style={{ width: 72, height: 72, color: "#D98862", filter: "drop-shadow(0 0 20px rgba(239,68,68,0.65))" }} />
                 ) : voiceStatus === "speaking" ? (
-                  <Volume2 style={{ width: 72, height: 72, color: "#22d3ee", filter: "drop-shadow(0 0 20px rgba(34,211,238,0.65))" }} />
+                  <Volume2 style={{ width: 72, height: 72, color: "#6BA3C9", filter: "drop-shadow(0 0 20px rgba(34,211,238,0.65))" }} />
                 ) : voiceStatus === "processing" ? (
-                  <Bot style={{ width: 72, height: 72, color: "#f59e0b", filter: "drop-shadow(0 0 16px rgba(245,158,11,0.55))" }} />
+                  <Bot style={{ width: 72, height: 72, color: "#E8C547", filter: "drop-shadow(0 0 16px rgba(245,158,11,0.55))" }} />
                 ) : (
-                  <Mic style={{ width: 72, height: 72, color: "#1e3a4a" }} />
+                  <Mic style={{ width: 72, height: 72, color: "#1A2C3A" }} />
                 )}
               </div>
             </div>
@@ -1356,7 +1356,7 @@ export default function ChatPage() {
             {/* ── Transcript ── */}
             <div style={{ marginTop: 24, maxWidth: 400, width: "100%", padding: "0 28px", textAlign: "center", minHeight: 56 }}>
               {voiceTranscript ? (
-                <div className="rounded-[14px] px-[18px] py-[10px] bg-black/80 border border-accent-violet/12 backdrop-blur-xl"
+                <div className="rounded-[14px] px-[18px] py-[10px] bg-black/80 border border-accent-sage/15 backdrop-blur-xl"
                   style={{ animation: "voiceTextIn 0.3s ease-out" }}>
                   <p className="text-text-secondary text-[13px] font-mono italic leading-relaxed">
                     « {voiceTranscript} »
