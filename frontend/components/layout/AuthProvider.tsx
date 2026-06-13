@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { TOTP, Secret } from 'otpauth';
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import ChatbotDock from "./ChatbotDock";
@@ -21,6 +22,8 @@ export type StoredUser = {
   phone?: string;
   role?: string;
   createdAt?: string;
+  mfaSecret?: string;
+  mfaEnabled?: boolean;
 };
 
 function getUsers(): StoredUser[] {
@@ -50,14 +53,58 @@ export function getUserProfile(): StoredUser | null {
   return users.find((u) => u.username.toLowerCase() === username.toLowerCase()) ?? null;
 }
 
-export function login(username: string, password: string): boolean {
+export function checkPassword(username: string, password: string): StoredUser | null {
   const users = getUsers();
-  const found = users.find(
+  return users.find(
     (u) => u.username.toLowerCase() === username.toLowerCase() && u.password === password
-  );
+  ) ?? null;
+}
+
+export function createSession(username: string): void {
+  localStorage.setItem(AUTH_KEY, "cs_session_" + Date.now());
+  localStorage.setItem(USER_KEY, username);
+}
+
+export function login(username: string, password: string): boolean {
+  const found = checkPassword(username, password);
   if (!found) return false;
-  localStorage.setItem(AUTH_KEY,  "cs_session_" + Date.now());
-  localStorage.setItem(USER_KEY,  found.username);
+  createSession(found.username);
+  return true;
+}
+
+export function generateMfaSecret(): string {
+  return new Secret().base32;
+}
+
+export function getMfaQrUri(username: string, secret: string): string {
+  return new TOTP({ issuer: 'CyberSentinel-LLM', label: username,
+    algorithm: 'SHA1', digits: 6, period: 30, secret: Secret.fromBase32(secret) }).toString();
+}
+
+export function verifyMfaToken(secret: string, token: string): boolean {
+  try {
+    const totp = new TOTP({ algorithm: 'SHA1', digits: 6, period: 30, secret: Secret.fromBase32(secret) });
+    return totp.validate({ token: token.replace(/\s/g, ''), window: 1 }) !== null;
+  } catch { return false; }
+}
+
+export function enableMfa(username: string, secret: string): boolean {
+  if (typeof window === 'undefined') return false;
+  const users = getUsers();
+  const idx = users.findIndex((u) => u.username.toLowerCase() === username.toLowerCase());
+  if (idx === -1) return false;
+  users[idx] = { ...users[idx], mfaSecret: secret, mfaEnabled: true };
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  return true;
+}
+
+export function disableMfa(username: string): boolean {
+  if (typeof window === 'undefined') return false;
+  const users = getUsers();
+  const idx = users.findIndex((u) => u.username.toLowerCase() === username.toLowerCase());
+  if (idx === -1) return false;
+  users[idx] = { ...users[idx], mfaSecret: undefined, mfaEnabled: false };
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
   return true;
 }
 
@@ -85,6 +132,31 @@ export function register(
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
   localStorage.setItem(AUTH_KEY,  "cs_session_" + Date.now());
   localStorage.setItem(USER_KEY,  username.trim());
+  return { ok: true };
+}
+
+export function addUser(
+  username: string,
+  password: string,
+  opts?: { email?: string; phone?: string; role?: string },
+): { ok: boolean; error?: string } {
+  if (!username.trim() || username.length < 3)
+    return { ok: false, error: "L'identifiant doit faire au moins 3 caractères." };
+  if (password.length < 6)
+    return { ok: false, error: "Le mot de passe doit faire au moins 6 caractères." };
+  const users = getUsers();
+  if (users.find((u) => u.username.toLowerCase() === username.toLowerCase()))
+    return { ok: false, error: "Cet identifiant est déjà utilisé." };
+  const newUser: StoredUser = {
+    username: username.trim(),
+    password,
+    email: opts?.email?.trim() || undefined,
+    phone: opts?.phone?.trim() || undefined,
+    role: opts?.role || "Analyste SOC",
+    createdAt: new Date().toISOString(),
+  };
+  users.push(newUser);
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
   return { ok: true };
 }
 

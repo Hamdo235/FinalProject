@@ -172,6 +172,19 @@ export async function revokeDefenseAction(actionId: number): Promise<{ ok: boole
   return apiFetch(`/defense/actions/${actionId}/revoke`, { method: 'POST' });
 }
 
+export async function autoDecideAction(actionId: number): Promise<{
+  ok: boolean;
+  decision: 'block' | 'allow';
+  actor: string;
+  reasoning: string;
+  confidence: number;
+  action: DefenseAction;
+  iptables_command?: string;
+  already_decided?: boolean;
+}> {
+  return apiFetch(`/defense/actions/${actionId}/auto-decide`, { method: 'POST', timeoutMs: 25_000 });
+}
+
 export async function fetchBlockedIps(): Promise<BlockedIp[]> {
   return apiFetch<BlockedIp[]>('/defense/blocked');
 }

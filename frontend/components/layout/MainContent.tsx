@@ -27,7 +27,7 @@ export default function MainContent({ children }: { children: React.ReactNode })
                 CyberSentinel LLM
               </div>
               <div className="text-2xl font-bold gradient-text-teal">
-                Centre de commandement
+                Centre de contrôle
               </div>
             </div>
             <div

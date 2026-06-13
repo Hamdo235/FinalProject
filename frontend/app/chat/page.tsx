@@ -1,72 +1,19 @@
 "use client";
 import React from "react";
 import {
-  Send, ArrowLeft, Plus, Bot, Pencil, Trash2, Copy, Square, Eye, Zap,
-  Volume2, VolumeX, Mic, X,
+  Send, ArrowLeft, Bot, Copy, Square, Eye, Zap,
+  Volume2, VolumeX, Mic,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { fetchAlerts } from "@/lib/api";
-import type { Alert } from "@/types/api";
-import { formatDateTimeLocal, parseApiDate, formatRelativeLocal } from "@/lib/time";
+import { parseApiDate, formatRelativeLocal } from "@/lib/time";
+import ConversationSidebar from "@/components/chat/ConversationSidebar";
+import { MessageContent } from "@/components/chat/MessageRenderer";
+import VoiceModeOverlay from "@/components/chat/VoiceModeOverlay";
+import { OVERVIEW_MARKER } from "@/components/chat/types";
+import type { Conversation, ChatMsg } from "@/components/chat/types";
 
-// Marker injecté dans le contenu pour détecter les cartes Vue d'ensemble
-const OVERVIEW_MARKER = "__CS_OVERVIEW__";
-
-// ── Composant de rendu des cartes alertes ──────────────────────────────────────
-function OverviewCards({ raw }: { raw: string }) {
-  let alerts: Alert[] = [];
-  try { alerts = JSON.parse(raw); } catch { return <p className="text-accent-red">Données invalides.</p>; }
-
-  const SEV_OV: Record<string, { card: string; badge: string; label: string }> = {
-    high:   { card: "bg-[#2A1A12] border-[#4D3122]",  badge: "bg-[#2A1A12] border-[#4D3122] text-accent-terra", label: "CRITIQUE" },
-    medium: { card: "bg-[#262017] border-[#4A3F1C]",  badge: "bg-[#262017] border-[#4A3F1C] text-[#E0B83A]",   label: "MOYENNE"  },
-    low:    { card: "bg-[#15241C] border-[#2C4A39]",  badge: "bg-[#1C3025] border-[#2C4A39] text-accent-sage", label: "FAIBLE"   },
-  };
-  const ov = (s: string) => SEV_OV[s] ?? SEV_OV.low;
-  const scoreColor = (v: number) => v > 0.8 ? "text-accent-terra" : v > 0.5 ? "text-[#E0B83A]" : "text-accent-sage";
-
-  if (alerts.length === 0)
-    return <p className="text-text-secondary">Aucune attaque détectée pour l&apos;instant.</p>;
-
-  return (
-    <div className="space-y-2 w-full">
-      <div className="text-[11px] uppercase tracking-wider font-semibold mb-3 font-mono-cyber text-accent-terra">
-        {alerts.length} attaque{alerts.length > 1 ? "s" : ""} detectee{alerts.length > 1 ? "s" : ""} - donnees ML temps reel
-      </div>
-      {alerts.map((a, i) => (
-        <div key={a.id} className={`rounded-xl p-3 border ${ov(a.severity).card}`}>
-          <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold font-mono-cyber w-5 text-center text-text-muted">#{i + 1}</span>
-              <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold font-mono-cyber uppercase border ${ov(a.severity).badge}`}>
-                {ov(a.severity).label}
-              </span>
-              <span className="text-xs font-mono-cyber text-text-mono">{a.ip || "IP inconnue"}</span>
-            </div>
-            <span className="text-[10px] font-mono-cyber text-text-muted">
-              Score ML: <span className={scoreColor(a.score)}>{a.score.toFixed(3)}</span>
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] pl-7 text-text-secondary">
-            <span>Règle: <span className="text-text-primary">{a.rule || a.source || "N/A"}</span></span>
-            <span>Statut: <span className="text-text-primary">{a.status}</span></span>
-            <span>Détectée: <span className="text-text-primary">{formatDateTimeLocal(a.ts)}</span></span>
-          </div>
-        </div>
-      ))}
-      <p className="text-[10px] mt-2 text-text-muted">
-        Source: API /alerts · Modèle IsolationForest/LOF — aucune action automatique
-      </p>
-    </div>
-  );
-}
-
-type Conversation = { id: number; title: string; created_at: string };
-type ChatMessage  = {
-  id: number; conversation_id: number;
-  role: "user" | "assistant"; content: string; created_at: string;
-};
 
 export default function ChatPage() {
   const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
@@ -75,7 +22,7 @@ export default function ChatPage() {
   const [error, setError]       = React.useState<string | null>(null);
   const [convs, setConvs]       = React.useState<Conversation[]>([]);
   const [activeId, setActiveId] = React.useState<number | null>(null);
-  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
+  const [messages, setMessages] = React.useState<ChatMsg[]>([]);
   const esRef       = React.useRef<EventSource | null>(null);
   const bottomRef   = React.useRef<HTMLDivElement | null>(null);
   const recognitionRef           = React.useRef<any>(null);
@@ -223,85 +170,7 @@ export default function ChatPage() {
 
   React.useEffect(() => () => { stopSpeaking(); }, [stopSpeaking]);
 
-  const formatRelative = (iso: string) => {
-    return formatRelativeLocal(iso);
-  };
-
-  const urlRegex = /(https?:\/\/[^\s)]+)|(www\.[^\s)]+)/gi;
-
-  const Linkified: React.FC<{ text: string }> = ({ text }) => {
-    const parts: (string | JSX.Element)[] = [];
-    let last = 0;
-    text.replace(urlRegex, (m, _g1, _g2, offset) => {
-      if (offset > last) parts.push(text.slice(last, offset));
-      const url = m.startsWith("http") ? m : `https://${m}`;
-      parts.push(
-        <a key={`${url}-${offset}`} href={url} target="_blank" rel="noreferrer"
-          className="underline text-accent-sage hover:text-[#5CA37F]">{m}</a>
-      );
-      last = offset + m.length; return m;
-    });
-    if (last < text.length) parts.push(text.slice(last));
-    return <>{parts}</>;
-  };
-
-  const InlineCode: React.FC<{ text: string }> = ({ text }) => {
-    const tokens: (string | JSX.Element)[] = [];
-    text.split(/`/).forEach((p, i) => {
-      if (i % 2 === 1)
-        tokens.push(
-          <code key={i} className="px-1.5 py-0.5 rounded text-[0.85em] font-mono-cyber bg-[#13202C] text-accent-slate border border-[#2A4357]">
-            {p}
-          </code>
-        );
-      else if (p) tokens.push(<Linkified key={i} text={p} />);
-    });
-    return <>{tokens}</>;
-  };
-
-  const CodeBlock: React.FC<{ code: string }> = ({ code }) => (
-    <div className="relative my-2 group">
-      <button
-        onClick={async () => { try { await navigator.clipboard.writeText(code); } catch {} }}
-        className="absolute top-2 right-2 text-xs px-2 py-1 rounded-lg font-mono-cyber opacity-0 group-hover:opacity-100 transition-opacity bg-[#13202C] text-accent-slate border border-[#2A4357]"
-      >
-        Copier
-      </button>
-      <pre className="overflow-auto rounded-xl p-4 text-xs font-mono-cyber bg-[#1C222B] text-accent-slate border border-[#262D38]">
-        <code>{code}</code>
-      </pre>
-    </div>
-  );
-
-  const renderMsg = (content: string) => {
-    // Vue d'ensemble: rendu carte dédié
-    if (content.startsWith(OVERVIEW_MARKER)) {
-      return <OverviewCards raw={content.slice(OVERVIEW_MARKER.length)} />;
-    }
-    const segs = content.split(/```[a-zA-Z0-9]*\n|```/);
-    if (segs.length > 1) return (
-      <div className="space-y-3">
-        {segs.map((s, i) =>
-          i % 2 === 1
-            ? <CodeBlock key={i} code={s.replace(/\n$/, "")} />
-            : (
-              <div key={i} className="space-y-2">
-                {s.split(/\n{2,}/).filter(Boolean).map((p, j) => (
-                  <p key={j} className="leading-relaxed"><InlineCode text={p} /></p>
-                ))}
-              </div>
-            )
-        )}
-      </div>
-    );
-    return (
-      <div className="space-y-2">
-        {content.split(/\n{2,}/).filter(Boolean).map((p, i) => (
-          <p key={i} className="leading-relaxed"><InlineCode text={p} /></p>
-        ))}
-      </div>
-    );
-  };
+  const formatRelative = formatRelativeLocal;
 
   const loadConvs = React.useCallback(async () => {
     const r = await fetch(`${API}/llm/conversations`);
@@ -395,7 +264,7 @@ export default function ChatPage() {
       body: JSON.stringify({ role: "assistant", content: d.response, reply_with_llm: false }),
     });
     if (!rr.ok) throw new Error();
-    const persistedAssistant: ChatMessage[] = await rr.json();
+    const persistedAssistant: ChatMsg[] = await rr.json();
     setMessages((m) => [...m, ...persistedAssistant]);
   };
 
@@ -422,7 +291,7 @@ export default function ChatPage() {
       setMessages((m) => {
         const c = [...m];
         const i = c.findIndex((x) => x.id === -1 && x.role === "assistant");
-        if (i !== -1) c[i] = { ...c[i], content: buf } as ChatMessage;
+        if (i !== -1) c[i] = { ...c[i], content: buf } as ChatMsg;
         return c;
       });
       // ── Streaming TTS: fire TTS per sentence while LLM is generating ──
@@ -477,7 +346,7 @@ export default function ChatPage() {
       body: JSON.stringify({ role: "user", content: q, reply_with_llm: false }),
     });
     if (!r.ok) throw new Error("Erreur d'envoi");
-    const persisted: ChatMessage[] = await r.json();
+    const persisted: ChatMsg[] = await r.json();
     setMessages((m) => [...m, ...persisted]);
     if (isOverview(q)) { await callAssistant(q, id); setLoading(false); }
     else streamReply(id);
@@ -757,7 +626,7 @@ export default function ChatPage() {
         body: JSON.stringify({ role: "assistant", content: overviewContent, reply_with_llm: false }),
       });
       if (r.ok) {
-        const saved: ChatMessage[] = await r.json();
+        const saved: ChatMsg[] = await r.json();
         setMessages((m) => [...m, ...saved]);
       } else {
         // Afficher localement si la persistance échoue
@@ -803,45 +672,14 @@ export default function ChatPage() {
     <div className="h-full flex overflow-hidden bg-bg-base text-text-primary">
 
       {/* ── Conversations sidebar ── */}
-      <aside className="hidden md:flex md:w-60 flex-col shrink-0 bg-bg-card border-r border-bg-border">
-        {/* Header */}
-        <div className="p-3 flex items-center justify-between shrink-0 border-b border-bg-border">
-          <span className="text-[10px] uppercase tracking-widest font-bold text-text-muted">Sessions</span>
-          <button onClick={() => createConv().catch((e) => setError(e.message))}
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold border transition-all border-[#2C4A39] text-accent-sage bg-[#15241C] hover:bg-[#1C3025]">
-            <Plus className="h-3 w-3" /> Nouvelle
-          </button>
-        </div>
-
-        {/* List */}
-        <div className="flex-1 overflow-auto">
-          {convs.length === 0 && (
-            <div className="p-4 text-xs text-center text-text-muted">Aucune session.</div>
-          )}
-          <ul>
-            {convs.map((c) => {
-              const isActive = activeId === c.id;
-              return (
-                <li key={c.id} className="border-b border-bg-border">
-                  <div className={`flex items-center gap-1.5 px-2 py-2 ${isActive ? "bg-[#15241C]" : ""}`}>
-                    {isActive && <span className="h-1.5 w-1.5 rounded-full shrink-0 bg-accent-sage" />}
-                    <button className={`flex-1 text-left text-xs truncate transition-all ${isActive ? "text-accent-sage font-semibold" : "text-text-secondary"}`}
-                      onClick={() => setActiveId(c.id)}>
-                      {c.title}
-                    </button>
-                    <button className="p-1 rounded-md hover:bg-[#15241C] transition-all shrink-0" onClick={() => renameConv(c.id)}>
-                      <Pencil className="h-3 w-3 text-text-muted" />
-                    </button>
-                    <button className="p-1 rounded-md hover:bg-[#2A1A12] transition-all shrink-0" onClick={() => deleteConv(c.id)}>
-                      <Trash2 className="h-3 w-3 text-text-muted" />
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </aside>
+      <ConversationSidebar
+        convs={convs}
+        activeId={activeId}
+        onSetActive={setActiveId}
+        onCreateConv={() => createConv().catch((e) => setError(e.message))}
+        onRenameConv={renameConv}
+        onDeleteConv={deleteConv}
+      />
 
       {/* ── Main chat area ── */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -930,23 +768,17 @@ export default function ChatPage() {
                   : "bg-bg-card border border-bg-border text-text-secondary"
               }`}
               >
-                {renderMsg(m.content)}
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <div className="text-[10px] font-mono-cyber opacity-30">
-                    {formatRelative(m.created_at)}
-                  </div>
-                  {m.role === "assistant" && !m.content.startsWith(OVERVIEW_MARKER) && (
-                    <button onClick={() => speak(m.content, m.id)}
-                      title={speakingId === m.id ? "Arrêter" : "Écouter"}
-                      className={`flex items-center justify-center h-5 w-5 rounded-lg transition-all opacity-40 hover:opacity-100 ${
-                        speakingId === m.id ? "text-accent-sage" : "text-text-secondary"
-                      }`}>
-                      {speakingId === m.id
-                        ? <VolumeX className="h-3 w-3" />
-                        : <Volume2 className="h-3 w-3" />}
-                    </button>
-                  )}
-                </div>
+                {m.role === "assistant"
+                  ? <MessageContent
+                      content={m.content}
+                      createdAt={m.created_at}
+                      speakingId={speakingId}
+                      msgId={m.id}
+                      formatRelative={formatRelative}
+                      onSpeak={speak}
+                    />
+                  : <>{m.content}<div className="mt-2 text-[10px] font-mono-cyber opacity-30">{formatRelative(m.created_at)}</div></>
+                }
               </div>
               {m.role === "user" && (
                 <div className="shrink-0 h-8 px-2.5 rounded-xl flex items-center bg-[#15241C] border border-[#2C4A39]">
@@ -1037,358 +869,16 @@ export default function ChatPage() {
 
       {/* ── Voice Mode Overlay ── */}
       {isVoiceMode && (
-        <>
-          <style>{`
-            @keyframes voiceOrbBreath {
-              0%, 100% { transform: scale(1); }
-              50%       { transform: scale(1.04); }
-            }
-            @keyframes voiceRing1 {
-              0%   { transform: scale(0.95); opacity: 0.7; }
-              100% { transform: scale(2.0);  opacity: 0; }
-            }
-            @keyframes voiceRing2 {
-              0%   { transform: scale(0.95); opacity: 0.45; }
-              100% { transform: scale(2.8);  opacity: 0; }
-            }
-            @keyframes voiceRing3 {
-              0%   { transform: scale(0.95); opacity: 0.25; }
-              100% { transform: scale(3.6);  opacity: 0; }
-            }
-            @keyframes voiceSpinCW  { to { transform: rotate(360deg);  } }
-            @keyframes voiceSpinCCW { to { transform: rotate(-360deg); } }
-            @keyframes voiceWave {
-              0%, 100% { transform: scaleY(0.15); }
-              50%       { transform: scaleY(1); }
-            }
-            @keyframes voiceIdleFloat {
-              0%, 100% { transform: translateY(0px); }
-              50%       { transform: translateY(-5px); }
-            }
-            @keyframes voiceGlow {
-              0%, 100% { opacity: 0.7; }
-              50%       { opacity: 1; }
-            }
-            @keyframes voiceTextIn {
-              from { opacity: 0; transform: translateY(8px); }
-              to   { opacity: 1; transform: translateY(0); }
-            }
-            @keyframes voiceCardIn {
-              from { opacity: 0; transform: translateY(16px); }
-              to   { opacity: 1; transform: translateY(0); }
-            }
-            @keyframes voiceScan {
-              0%   { transform: translateY(-100%); opacity: 0; }
-              10%  { opacity: 0.4; }
-              90%  { opacity: 0.4; }
-              100% { transform: translateY(100vh); opacity: 0; }
-            }
-          `}</style>
-
-          {/* ── Full-screen overlay ── */}
-          <div
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none overflow-hidden"
-            style={{ background: "linear-gradient(160deg, #0D1117 0%, #0D1117 50%, #0D1117 100%)" }}
-          >
-            {/* Hex grid */}
-            <div style={{
-              position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.055,
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='56' height='48' viewBox='0 0 56 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M28 0 L56 16 L56 32 L28 48 L0 32 L0 16Z' fill='none' stroke='%2322d3ee' stroke-width='0.6'/%3E%3C/svg%3E")`,
-              backgroundSize: "56px 48px",
-            }} />
-
-            {/* Ambient glow behind orb */}
-            <div style={{
-              position: "absolute", inset: 0, pointerEvents: "none",
-              background:
-                voiceStatus === "listening"
-                  ? "radial-gradient(ellipse 36% 32% at 50% 46%, rgba(239,68,68,0.14) 0%, transparent 70%)"
-                  : voiceStatus === "speaking"
-                  ? "radial-gradient(ellipse 36% 32% at 50% 46%, rgba(34,211,238,0.11) 0%, transparent 70%)"
-                  : voiceStatus === "processing"
-                  ? "radial-gradient(ellipse 36% 32% at 50% 46%, rgba(245,158,11,0.1) 0%, transparent 70%)"
-                  : "none",
-              transition: "background 0.9s ease",
-              animation: "voiceGlow 3.5s ease-in-out infinite",
-            }} />
-
-            {/* Vignette */}
-            <div style={{
-              position: "absolute", inset: 0, pointerEvents: "none",
-              background: "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 35%, #0D1117 100%)",
-            }} />
-
-            {/* Scan line — speaking only */}
-            {voiceStatus === "speaking" && (
-              <div style={{
-                position: "absolute", left: 0, right: 0, height: 2, pointerEvents: "none",
-                background: "linear-gradient(90deg, transparent, rgba(34,211,238,0.35), transparent)",
-                animation: "voiceScan 4s linear infinite",
-              }} />
-            )}
-
-            {/* ── Top bar ── */}
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 py-4">
-              <div className="flex items-center gap-2.5">
-                <div style={{
-                  width: 7, height: 7, borderRadius: "50%",
-                  background: voiceStatus === "idle" ? "#1C222B"
-                    : voiceStatus === "listening"  ? "#D98862"
-                    : voiceStatus === "speaking"   ? "#6BA3C9"
-                    : "#E8C547",
-                  boxShadow: voiceStatus !== "idle" ? `0 0 10px ${voiceStatus === "listening" ? "#D98862" : voiceStatus === "speaking" ? "#6BA3C9" : "#E8C547"}` : "none",
-                  animation: voiceStatus !== "idle" ? "voiceGlow 1.4s ease-in-out infinite" : "none",
-                }} />
-                <span style={{ color: "#1A2C3A", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", textTransform: "uppercase" }}>
-                  CyberSentinel &nbsp;·&nbsp; Mode Vocal
-                </span>
-              </div>
-              <button onClick={exitVoiceMode}
-                className="flex items-center justify-center w-9 h-9 rounded-xl border border-white/[0.08] text-text-muted bg-black/50 backdrop-blur-md hover:border-white/25 hover:text-text-secondary transition-all cursor-pointer">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            {/* ── Status chip ── */}
-            <div style={{ marginBottom: 36, animation: "voiceTextIn 0.3s ease-out" }}>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                padding: "6px 18px", borderRadius: 999,
-                background: voiceStatus === "idle" ? "rgba(15,23,42,0.5)"
-                  : voiceStatus === "listening"  ? "rgba(239,68,68,0.08)"
-                  : voiceStatus === "speaking"   ? "rgba(34,211,238,0.07)"
-                  : "rgba(245,158,11,0.07)",
-                border: `1px solid ${
-                  voiceStatus === "idle"       ? "rgba(30,58,74,0.3)"
-                  : voiceStatus === "listening"  ? "rgba(239,68,68,0.25)"
-                  : voiceStatus === "speaking"   ? "rgba(34,211,238,0.22)"
-                  : "rgba(245,158,11,0.22)"
-                }`,
-                backdropFilter: "blur(8px)",
-                transition: "all 0.5s ease",
-              }}>
-                <div style={{
-                  width: 5, height: 5, borderRadius: "50%",
-                  background: voiceStatus === "idle" ? "#1C222B"
-                    : voiceStatus === "listening"  ? "#D98862"
-                    : voiceStatus === "speaking"   ? "#6BA3C9"
-                    : "#E8C547",
-                  animation: voiceStatus !== "idle" ? "voiceGlow 1s ease-in-out infinite" : "none",
-                }} />
-                <span style={{
-                  fontSize: 10, fontFamily: "monospace", letterSpacing: "0.3em",
-                  textTransform: "uppercase", fontWeight: 700,
-                  color: voiceStatus === "idle" ? "#1A2C3A"
-                    : voiceStatus === "listening"  ? "#D98862"
-                    : voiceStatus === "speaking"   ? "#6BA3C9"
-                    : "#E8C547",
-                }}>
-                  {voiceStatus === "listening"  ? "En écoute"
-                   : voiceStatus === "processing" ? "Traitement…"
-                   : voiceStatus === "speaking"   ? "Assistant parle"
-                   : "Prêt"}
-                </span>
-              </div>
-            </div>
-
-            {/* ── Orb container ── */}
-            <div style={{ position: "relative", width: 230, height: 230, display: "flex", alignItems: "center", justifyContent: "center" }}>
-
-              {/* Ripple rings */}
-              {(voiceStatus === "listening" || voiceStatus === "speaking") && (<>
-                {[0, 0.75, 1.5].map((delay, i) => (
-                  <div key={i} style={{
-                    position: "absolute", inset: 0, borderRadius: "50%",
-                    border: `${i === 0 ? 1.5 : 1}px solid ${
-                      voiceStatus === "listening"
-                        ? `rgba(239,68,68,${[0.55,0.35,0.2][i]})`
-                        : `rgba(34,211,238,${[0.5,0.3,0.18][i]})`
-                    }`,
-                    animation: `voiceRing${i+1} 2.4s ease-out ${delay}s infinite`,
-                  }} />
-                ))}
-              </>)}
-
-              {/* Processing arcs */}
-              {voiceStatus === "processing" && (<>
-                <div style={{
-                  position: "absolute", inset: -12, borderRadius: "50%",
-                  border: "2px solid transparent",
-                  borderTopColor: "#E8C547", borderRightColor: "rgba(245,158,11,0.2)",
-                  animation: "voiceSpinCW 1s linear infinite",
-                }} />
-                <div style={{
-                  position: "absolute", inset: -24, borderRadius: "50%",
-                  border: "1px solid transparent",
-                  borderBottomColor: "rgba(245,158,11,0.35)", borderLeftColor: "rgba(245,158,11,0.12)",
-                  animation: "voiceSpinCCW 1.7s linear infinite",
-                }} />
-                <div style={{
-                  position: "absolute", inset: -38, borderRadius: "50%",
-                  border: "1px solid transparent",
-                  borderTopColor: "rgba(245,158,11,0.15)",
-                  animation: "voiceSpinCW 2.8s linear infinite",
-                }} />
-              </>)}
-
-              {/* Outer static ring */}
-              <div style={{
-                position: "absolute", inset: -8, borderRadius: "50%",
-                border: `1px solid ${
-                  voiceStatus === "idle"       ? "rgba(30,58,74,0.25)"
-                  : voiceStatus === "listening"  ? "rgba(239,68,68,0.15)"
-                  : voiceStatus === "speaking"   ? "rgba(34,211,238,0.14)"
-                  : "rgba(245,158,11,0.14)"
-                }`,
-                transition: "border-color 0.6s ease",
-              }} />
-
-              {/* ── Main sphere ── */}
-              <div
-                onClick={() => {
-                  if (voiceStatus === "listening") {
-                    forceProcessRef.current = true;
-                    (recognitionRef.current as MediaRecorder)?.stop();
-                  }
-                }}
-                style={{
-                  width: 210, height: 210, borderRadius: "50%",
-                  position: "relative",
-                  cursor: voiceStatus === "listening" ? "pointer" : "default",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  background:
-                    voiceStatus === "listening"
-                      ? "radial-gradient(circle at 32% 28%, rgba(239,68,68,0.38) 0%, rgba(239,68,68,0.12) 40%, rgba(1,12,26,0.97) 100%)"
-                      : voiceStatus === "speaking"
-                      ? "radial-gradient(circle at 32% 28%, rgba(34,211,238,0.3) 0%, rgba(34,211,238,0.09) 40%, rgba(1,12,26,0.97) 100%)"
-                      : voiceStatus === "processing"
-                      ? "radial-gradient(circle at 32% 28%, rgba(245,158,11,0.25) 0%, rgba(245,158,11,0.07) 40%, rgba(1,12,26,0.97) 100%)"
-                      : "radial-gradient(circle at 32% 28%, rgba(20,40,60,0.6) 0%, rgba(10,20,36,0.4) 45%, rgba(1,12,26,0.98) 100%)",
-                  border: `1.5px solid ${
-                    voiceStatus === "listening"  ? "rgba(239,68,68,0.45)"
-                    : voiceStatus === "speaking" ? "rgba(34,211,238,0.4)"
-                    : voiceStatus === "processing" ? "rgba(245,158,11,0.38)"
-                    : "rgba(20,40,60,0.4)"
-                  }`,
-                  boxShadow:
-                    voiceStatus === "listening"
-                      ? "0 0 60px rgba(239,68,68,0.2), 0 0 120px rgba(239,68,68,0.07), inset 0 1px 0 rgba(239,68,68,0.2), inset 0 0 40px rgba(239,68,68,0.05)"
-                      : voiceStatus === "speaking"
-                      ? "0 0 60px rgba(34,211,238,0.18), 0 0 120px rgba(34,211,238,0.06), inset 0 1px 0 rgba(34,211,238,0.18), inset 0 0 40px rgba(34,211,238,0.04)"
-                      : voiceStatus === "processing"
-                      ? "0 0 50px rgba(245,158,11,0.14), inset 0 1px 0 rgba(245,158,11,0.15)"
-                      : "0 0 40px rgba(0,0,0,0.8), inset 0 1px 0 rgba(20,40,60,0.2)",
-                  animation:
-                    voiceStatus === "listening" || voiceStatus === "speaking"
-                      ? "voiceOrbBreath 2.8s ease-in-out infinite"
-                      : voiceStatus === "idle"
-                      ? "voiceIdleFloat 5s ease-in-out infinite"
-                      : "none",
-                  transition: "background 0.7s ease, border-color 0.7s ease, box-shadow 0.7s ease",
-                }}
-              >
-                {/* Glass highlight top-left */}
-                <div style={{
-                  position: "absolute", top: "10%", left: "14%",
-                  width: "38%", height: "26%", borderRadius: "50%",
-                  background:
-                    voiceStatus === "listening"  ? "radial-gradient(ellipse, rgba(255,160,160,0.14) 0%, transparent 100%)"
-                    : voiceStatus === "speaking" ? "radial-gradient(ellipse, rgba(180,240,255,0.12) 0%, transparent 100%)"
-                    : voiceStatus === "processing" ? "radial-gradient(ellipse, rgba(255,220,100,0.1) 0%, transparent 100%)"
-                    : "radial-gradient(ellipse, rgba(255,255,255,0.03) 0%, transparent 100%)",
-                  pointerEvents: "none",
-                  transition: "background 0.7s ease",
-                }} />
-                {/* Bottom rim reflection */}
-                <div style={{
-                  position: "absolute", bottom: "12%", right: "14%",
-                  width: "28%", height: "12%", borderRadius: "50%",
-                  background: voiceStatus === "idle" ? "none"
-                    : voiceStatus === "listening"  ? "radial-gradient(ellipse, rgba(239,68,68,0.1) 0%, transparent 100%)"
-                    : voiceStatus === "speaking"   ? "radial-gradient(ellipse, rgba(34,211,238,0.08) 0%, transparent 100%)"
-                    : "radial-gradient(ellipse, rgba(245,158,11,0.07) 0%, transparent 100%)",
-                  pointerEvents: "none",
-                }} />
-                {/* Icon */}
-                {voiceStatus === "listening" ? (
-                  <Mic style={{ width: 72, height: 72, color: "#D98862", filter: "drop-shadow(0 0 20px rgba(239,68,68,0.65))" }} />
-                ) : voiceStatus === "speaking" ? (
-                  <Volume2 style={{ width: 72, height: 72, color: "#6BA3C9", filter: "drop-shadow(0 0 20px rgba(34,211,238,0.65))" }} />
-                ) : voiceStatus === "processing" ? (
-                  <Bot style={{ width: 72, height: 72, color: "#E8C547", filter: "drop-shadow(0 0 16px rgba(245,158,11,0.55))" }} />
-                ) : (
-                  <Mic style={{ width: 72, height: 72, color: "#1A2C3A" }} />
-                )}
-              </div>
-            </div>
-
-            {/* ── Equalizer / idle dots ── */}
-            <div style={{ height: 60, marginTop: 28, display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 3, paddingBottom: 4 }}>
-              {voiceStatus === "speaking"
-                ? [14,22,38,30,52,44,56,48,60,52,44,36,54,46,58,40,52,44,36,28,42,34,48,30,22,38,26,18].map((maxH, i) => (
-                    <div key={i} style={{
-                      width: 3, borderRadius: 2,
-                      height: `${maxH}px`,
-                      background: `linear-gradient(to top, rgba(34,211,238,${0.7 + (maxH / 60) * 0.3}), rgba(34,211,238,0.25))`,
-                      transformOrigin: "center bottom",
-                      animation: `voiceWave ${0.5 + (i % 7) * 0.08}s ease-in-out ${i * 0.04}s infinite`,
-                      boxShadow: maxH > 45 ? "0 0 5px rgba(34,211,238,0.5)" : "none",
-                    }} />
-                  ))
-                : voiceStatus === "listening"
-                ? [8,14,10,18,12,16,10,14,8,18,12,10,16,8,12,14,10,18,8,14,12,16,10,14,8,12,10,14].map((h, i) => (
-                    <div key={i} style={{
-                      width: 3, borderRadius: 2, height: `${h}px`,
-                      background: "rgba(239,68,68,0.25)",
-                      animation: `voiceWave ${0.8 + (i % 4) * 0.15}s ease-in-out ${i * 0.06}s infinite`,
-                      transformOrigin: "center bottom",
-                    }} />
-                  ))
-                : Array.from({ length: 28 }).map((_, i) => (
-                    <div key={i} style={{
-                      width: 3, height: 3, borderRadius: "50%",
-                      background: "rgba(20,40,60,0.8)",
-                    }} />
-                  ))
-              }
-            </div>
-
-            {/* ── Transcript ── */}
-            <div style={{ marginTop: 24, maxWidth: 400, width: "100%", padding: "0 28px", textAlign: "center", minHeight: 56 }}>
-              {voiceTranscript ? (
-                <div className="rounded-[14px] px-[18px] py-[10px] bg-black/80 border border-accent-sage/15 backdrop-blur-xl"
-                  style={{ animation: "voiceTextIn 0.3s ease-out" }}>
-                  <p className="text-text-secondary text-[13px] font-mono italic leading-relaxed">
-                    « {voiceTranscript} »
-                  </p>
-                </div>
-              ) : (
-                <p className="text-[11px] font-mono tracking-[0.05em] text-text-muted">
-                  {voiceStatus === "listening"   ? "Parlez — cliquez sur l'orbe pour envoyer"
-                   : voiceStatus === "processing" ? "Envoi au LLM local…"
-                   : voiceStatus === "speaking"   ? "L'assistant répond — patientez"
-                   : "Cliquez sur le micro pour commencer"}
-                </p>
-              )}
-            </div>
-
-            {/* ── Last assistant message preview ── */}
-            {lastAssistantMsg && (
-              <div style={{
-                position: "absolute", bottom: 36, left: 0, right: 0,
-                display: "flex", justifyContent: "center",
-                padding: "0 32px",
-                animation: "voiceCardIn 0.5s ease-out",
-              }}>
-                <div className="max-w-[460px] w-full rounded-[14px] px-4 py-[10px] bg-bg-base/75 border border-white/[0.06] backdrop-blur-xl">
-                  <p className="text-[9px] font-mono tracking-[0.2em] uppercase text-text-muted mb-1">Dernière réponse</p>
-                  <p className="text-[12px] leading-relaxed italic text-text-muted">{lastAssistantMsg}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </>
+        <VoiceModeOverlay
+          voiceStatus={voiceStatus}
+          voiceTranscript={voiceTranscript}
+          lastAssistantMsg={lastAssistantMsg}
+          recognitionRef={recognitionRef}
+          forceProcessRef={forceProcessRef}
+          onExit={exitVoiceMode}
+        />
       )}
+
     </div>
   );
 }

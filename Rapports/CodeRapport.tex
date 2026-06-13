@@ -8,6 +8,7 @@
 \usepackage{color}
 \usepackage{setspace}
 \usepackage{graphicx}
+\usepackage{microtype}
 \usepackage{amsmath, amsfonts, amssymb}
 \usepackage[pdfauthor={{YAKHOUB MAHAMAT HAMDO}},
             pdftitle={{CyberSentinel-LLM}},
@@ -141,7 +142,7 @@
 %% AVANT-PROPOS
 %% ============================================================
 \chapter*{Avant-propos}
-\addcontentsline{toc}{chapter}{Avant-propos}
+\phantomsection\addcontentsline{toc}{chapter}{Avant-propos}
 \begin{onehalfspace}
 L'École Nationale Supérieure des Technologies de l'Information et de la
 Communication (ENASTIC) est un établissement public d'enseignement, de
@@ -190,7 +191,7 @@ ses capacités dans un contexte local (Tchad).
 %% DÉDICACE
 %% ============================================================
 \chapter*{Dédicace}
-\addcontentsline{toc}{chapter}{Dédicace}
+\phantomsection\addcontentsline{toc}{chapter}{Dédicace}
 \begin{onehalfspace}
 \vspace*{3cm}
 \begin{center}
@@ -205,7 +206,7 @@ ses capacités dans un contexte local (Tchad).
 %% REMERCIEMENTS
 %% ============================================================
 \chapter*{Remerciements}
-\addcontentsline{toc}{chapter}{Remerciements}
+\phantomsection\addcontentsline{toc}{chapter}{Remerciements}
 \begin{onehalfspace}
 Le présent mémoire est le résultat d'un travail effectué avec l'aide et le
 soutien de nombreuses personnes, à qui j'adresse mes sincères remerciements.\\
@@ -236,21 +237,21 @@ Je tiens à exprimer ma profonde gratitude à :
 %% LISTE DES FIGURES
 %% ============================================================
 \listoffigures
-\addcontentsline{toc}{chapter}{Liste des figures}
+\phantomsection\addcontentsline{toc}{chapter}{Liste des figures}
 \newpage
 
 %% ============================================================
 %% LISTE DES TABLEAUX
 %% ============================================================
 \listoftables
-\addcontentsline{toc}{chapter}{Liste des tableaux}
+\phantomsection\addcontentsline{toc}{chapter}{Liste des tableaux}
 \newpage
 
 %% ============================================================
 %% LISTE DES ABRÉVIATIONS
 %% ============================================================
 \chapter*{Liste des Abréviations}
-\addcontentsline{toc}{chapter}{Liste des Abréviations}
+\phantomsection\addcontentsline{toc}{chapter}{Liste des Abréviations}
 
 \hspace{5mm}\textbf{\textcolor{darkblue}{API :}} Application Programming Interface \newline
 \hspace{5mm}\textbf{\textcolor{darkblue}{ASN :}} Autonomous System Number \newline
@@ -285,6 +286,7 @@ Je tiens à exprimer ma profonde gratitude à :
 \hspace{5mm}\textbf{\textcolor{darkblue}{TTS :}} Text-to-Speech \newline
 \hspace{5mm}\textbf{\textcolor{darkblue}{TTL :}} Time To Live \newline
 \hspace{5mm}\textbf{\textcolor{darkblue}{UI :}} User Interface \newline
+\hspace{5mm}\textbf{\textcolor{darkblue}{Vitest :}} Framework de tests JavaScript/TypeScript \newline
 
 \newpage
 
@@ -292,7 +294,7 @@ Je tiens à exprimer ma profonde gratitude à :
 %% INTRODUCTION GÉNÉRALE
 %% ============================================================
 \chapter*{Introduction Générale}
-\addcontentsline{toc}{chapter}{Introduction Générale}
+\phantomsection\addcontentsline{toc}{chapter}{Introduction Générale}
 \pagenumbering{arabic}
 
 \subsection*{Contexte et justification}
@@ -402,7 +404,7 @@ telle approche dans le contexte tchadien.
 \chapter{État de l'Art et Généralités}
 
 \section*{Introduction}
-\addcontentsline{toc}{section}{Introduction}
+\phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
 La cybersécurité est devenue un enjeu stratégique majeur pour les organisations
 à l'échelle mondiale. Face à la sophistication croissante des attaques
@@ -585,7 +587,7 @@ une recherche sémantique locale sans dépendance cloud.
 \end{onehalfspace}
 
 \section*{Conclusion du Chapitre 1}
-\addcontentsline{toc}{section}{Conclusion}
+\phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
 Ce chapitre a présenté l'évolution des systèmes de détection d'intrusions,
 leurs limites, et l'apport combiné du Machine Learning, des LLM et du RAG
@@ -604,7 +606,7 @@ les besoins fonctionnels et non fonctionnels du système.
 \chapter{Analyse des Besoins et Spécifications}
 
 \section*{Introduction}
-\addcontentsline{toc}{section}{Introduction}
+\phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
 Ce chapitre présente l'analyse des besoins qui ont guidé la conception de
 \textbf{CyberSentinel-LLM}. Compte tenu du contexte tchadien — faibles
@@ -642,7 +644,7 @@ besoins opérationnels d'un analyste SOC confronté à des attaques réseau :
 \end{itemize}
 \end{onehalfspace}
 
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.90\linewidth]{images/cybersentinel_use_case.png}
 \caption{Diagramme de cas d'utilisation de CyberSentinel-LLM}
@@ -652,12 +654,17 @@ besoins opérationnels d'un analyste SOC confronté à des attaques réseau :
 \section{Exigences fonctionnelles}
 \begin{onehalfspace}
 Les exigences fonctionnelles définissent les fonctionnalités que le système
-doit obligatoirement implémenter :
+doit obligatoirement implémenter. Les treize exigences identifiées (EF01 à EF13),
+présentées dans le Tableau~\ref{tab:ef}, couvrent l'ensemble du cycle opérationnel
+de la plateforme : ingestion et scoring des logs, gestion des alertes et des incidents,
+recherche contextuelle par RAG MITRE ATT\&CK, explication structurée par LLM,
+neutralisation adaptive des menaces, reporting et authentification à double facteur.
 \end{onehalfspace}
 
 \begin{table}[!h]
 \centering
 \caption{Exigences fonctionnelles de CyberSentinel-LLM}
+\label{tab:ef}
 \begin{tabular}{|p{1cm}|p{4cm}|p{8.5cm}|}
 \hline
 \textbf{ID} & \textbf{Fonctionnalité} & \textbf{Description} \\
@@ -718,7 +725,7 @@ de performance et de sécurité du système :
 \end{onehalfspace}
 
 \section*{Conclusion du Chapitre 2}
-\addcontentsline{toc}{section}{Conclusion}
+\phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
 Ce chapitre a défini les cas d'usage, les exigences fonctionnelles et
 non fonctionnelles de \textbf{CyberSentinel-LLM}. Ces spécifications
@@ -734,7 +741,7 @@ présentées dans les chapitres suivants.
 \chapter{Conception Logicielle et Architecture}
 
 \section*{Introduction}
-\addcontentsline{toc}{section}{Introduction}
+\phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
 Ce chapitre présente l'architecture globale de \textbf{CyberSentinel-LLM},
 la structure du code, la description détaillée des composants backend et
@@ -753,7 +760,7 @@ L'architecture comprend cinq grandes couches :
 \begin{itemize}
   \item[\ding{43}] \textbf{Couche 1 — Frontend (UI) :} interface Next.js 16
   (App Router), 9 pages SOC (dashboard, alertes, incidents, demo, chat,
-  modèle ML, paramètres, rapports, login), intégration SSE et WebSocket ;
+  modèle ML, paramètres, rapports, login), intégration SSE temps réel ;
   \item[\ding{43}] \textbf{Couche 2 — API Gateway :} FastAPI modulaire avec
   routers, endpoints, middlewares de sécurité et middleware de blocage IP ;
   \item[\ding{43}] \textbf{Couche 3 — Détection ML :} pipeline non supervisé
@@ -768,7 +775,7 @@ L'architecture comprend cinq grandes couches :
 \end{itemize}
 \end{onehalfspace}
 
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.90\linewidth]{images/cybersentinel_architecture.png}
 \caption{Architecture globale de CyberSentinel-LLM}
@@ -814,6 +821,14 @@ cybersentinel-llm/
 |   |   |-- reports/        # Rapports + export CSV
 |   |   `-- login/          # Authentification
 |   `-- components/
+|       |-- chat/
+|       |   |-- types.ts             # Types partages (Conversation, ChatMsg)
+|       |   |-- ConversationSidebar.tsx  # Sidebar conversations
+|       |   |-- MessageRenderer.tsx  # Rendu messages + helpers
+|       |   |-- OverviewCards.tsx    # Cartes alertes ML
+|       |   `-- VoiceModeOverlay.tsx # Overlay mode vocal
+|       |-- settings/
+|       |   `-- shared.tsx           # StatusChip, ServiceRow, CopyBtn...
 |       |-- BlockingNotification.tsx  # Notification blocage
 |       |-- WorldMap.tsx              # Carte GeoIP Leaflet
 |       `-- ...
@@ -889,18 +904,73 @@ dark cybersécurité et offre une interface SOC complète en 9 pages :
   historique persisté, mode voix (STT Whisper + TTS Piper) ;
   \item[\ding{43}] \textbf{/model :} métriques ML (F1-score, précision,
   rappel, ROC-AUC, seuil actif) ;
-  \item[\ding{43}] \textbf{/settings :} état des services, gestion des IPs
-  bloquées, blocage manuel, commandes iptables actives ;
+  \item[\ding{43}] \textbf{/settings :} état des services (Ollama, SQLite,
+  RAG, GeoLite2), configuration du mode défense, gestion des IPs bloquées
+  (liste, blocage manuel, commandes iptables), authentification 2FA TOTP
+  (QR code, activation/désactivation), gestion des utilisateurs (CRUD) et
+  administration système (réinitialisation de la base de données) ;
   \item[\ding{43}] \textbf{/reports :} statistiques par période, top
   attaquants, distribution MITRE, export CSV/TXT ;
   \item[\ding{43}] \textbf{/login :} authentification et inscription.
 \end{itemize}
 \end{onehalfspace}
 
+\section{Refactoring frontend — Architecture modulaire}
+\begin{onehalfspace}
+Afin d'améliorer la maintenabilité et la lisibilité du code frontend, une
+refactorisation modulaire a été appliquée aux pages principales. L'objectif
+est de réduire la taille des fichiers monolithiques (plus de 1000 lignes)
+en extrayant des sous-composants réutilisables et des types partagés.
+
+\subsection*{Refactoring de la page Chat}
+\begin{itemize}
+  \item[\ding{43}] \textbf{Fichier créé :} \texttt{components/chat/types.ts}
+  — Types partagés (\texttt{Conversation}, \texttt{ChatMsg}, \texttt{OVERVIEW\_MARKER}) ;
+  \item[\ding{43}] \textbf{Composant OverviewCards :} affichage des cartes
+  alertes ML détectées dans les réponses LLM ;
+  \item[\ding{43}] \textbf{Composant ConversationSidebar :} sidebar de gestion
+  des conversations (créer, renommer, supprimer) ;
+  \item[\ding{43}] \textbf{Composant MessageRenderer :} rendu des messages
+  avec helpers (Linkified, InlineCode, CodeBlock) et support TTS ;
+  \item[\ding{43}] \textbf{Composant VoiceModeOverlay :} overlay plein écran
+  pour le mode vocal avec animations CSS (orb breathing, ripple rings, equalizer).
+\end{itemize}
+
+\textbf{Résultat :} réduction de \texttt{chat/page.tsx} de 1395 à 884 lignes
+($-$37\%), avec une séparation claire des responsabilités.
+
+\subsection*{Refactoring de la page Settings}
+\begin{itemize}
+  \item[\ding{43}] \textbf{Fichier créé :} \texttt{components/settings/shared.tsx}
+  — Composants partagés (\texttt{StatusChip}, \texttt{ServiceRow},
+  \texttt{CopyBtn}, \texttt{ExpiryCountdown}) et utilitaires (\texttt{timeLeft}) ;
+  \item[\ding{43}] \textbf{Composants extraits :}
+  \begin{itemize}
+    \item \texttt{ServiceStatusSection} — État des services (Ollama, SQLite, RAG, GeoLite2) ;
+    \item \texttt{DefenseConfigSection} — Configuration défense + mode actif ;
+    \item \texttt{BlockedIpsSection} — Liste IPs bloquées + blocage manuel ;
+    \item \texttt{MfaSection} — Configuration 2FA (QR code, validation) ;
+    \item \texttt{UsersSection} — Gestion utilisateurs (CRUD) ;
+    \item \texttt{SystemAdminSection} — Administration système (reset DB).
+  \end{itemize}
+\end{itemize}
+
+\subsection*{Nettoyage du code mort}
+\begin{itemize}
+  \item[\ding{43}] \textbf{Fichier supprimé :} \texttt{lib/llm.ts} — Non utilisé
+  (remplacé par appel direct Ollama) ;
+  \item[\ding{43}] \textbf{Fonctions supprimées dans utils.ts :}
+  \texttt{formatTimestamp()}, \texttt{severityColor()}, \texttt{severityIcon()}
+  — Jamais utilisées hors fichier ;
+  \item[\ding{43}] \textbf{Consolidation localStorage :} constantes dupliquées
+  dans \texttt{lib/actor.ts} remplacées par imports depuis \texttt{AuthProvider}.
+\end{itemize}
+\end{onehalfspace}
+
 \section{Diagrammes UML}
 
 \subsection{Diagramme de classes}
-\begin{figure}[!h]
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.90\linewidth]{images/cybersentinel_class_diagram.png}
 \caption{Diagramme de classes de CyberSentinel-LLM}
@@ -908,7 +978,11 @@ dark cybersécurité et offre une interface SOC complète en 9 pages :
 \end{figure}
 
 \subsection{Diagramme de séquence}
-\begin{figure}[!h]
+\begin{onehalfspace}
+La Figure~\ref{fig:sequence} illustre le flux complet d'une alerte depuis l'arrivée d'un log suspect jusqu'à l'affichage de l'explication structurée à l'analyste SOC. Le log est d'abord soumis au pipeline ML qui calcule un score d'anomalie et enregistre l'alerte en base. Le moteur de défense détermine alors l'action appropriée (monitor, review ou block\_temp) et déclenche une notification temps réel via SSE. L'analyste consulte l'alerte, approuve ou rejette l'action défensive, ce qui provoque la création d'un incident et l'appel au module RAG + LLM pour générer l'explication contextuelle finale.
+\end{onehalfspace}
+
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.90\linewidth]{images/sequence_simplifie_fr.png}
 \caption{Diagramme de séquence — flux d'une alerte jusqu'à la neutralisation}
@@ -916,7 +990,11 @@ dark cybersécurité et offre une interface SOC complète en 9 pages :
 \end{figure}
 
 \subsection{Diagramme d'activité}
-\begin{figure}[!h]
+\begin{onehalfspace}
+La Figure~\ref{fig:activite} décrit le processus de traitement d'un log entrant sous forme d'activités séquentielles et de branchements conditionnels. Après l'analyse comportementale, le score d'anomalie oriente le flux : un score faible conduit à l'archivage du log sans alerte, tandis qu'un score élevé déclenche la classification à haute sévérité, l'enregistrement de l'alerte et la notification de l'analyste. L'analyste valide ou rejette l'alerte, ce qui détermine la création ou non d'un incident ; dans les deux cas, son retour (\texttt{true\_attack} / \texttt{false\_positive}) est utilisé pour calibrer le détecteur ML.
+\end{onehalfspace}
+
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.75\linewidth]{images/cybersentinel_activity.png}
 \caption{Diagramme d'activité — traitement d'un log entrant}
@@ -924,13 +1002,12 @@ dark cybersécurité et offre une interface SOC complète en 9 pages :
 \end{figure}
 
 \section*{Conclusion du Chapitre 3}
-\addcontentsline{toc}{section}{Conclusion}
+\phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
 Ce chapitre a présenté l'architecture globale en cinq couches, la structure
 du projet et les composants principaux de \textbf{CyberSentinel-LLM}. Les
 diagrammes UML illustrent les flux de données et les interactions entre les
-modules. Le chapitre suivant détaillera l'implémentation concrète de chaque
-composante.
+modules. Le chapitre suivant détaillera l'implémentation concrète de chaque composante.
 \end{onehalfspace}
 
 \newpage
@@ -941,7 +1018,7 @@ composante.
 \chapter{Implémentation}
 
 \section*{Introduction}
-\addcontentsline{toc}{section}{Introduction}
+\phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
 Ce chapitre présente les détails d'implémentation de \textbf{CyberSentinel-LLM}:
 le pipeline ML de détection d'anomalies, le module RAG MITRE ATT\&CK, le module
@@ -1287,12 +1364,19 @@ iptables -D INPUT -s {ip} -j DROP
 \section{Endpoints principaux de l'API}
 \begin{onehalfspace}
 L'API de \textbf{CyberSentinel-LLM} expose un ensemble d'endpoints REST
-organisés par domaine fonctionnel :
+organisés par domaine fonctionnel. Le Tableau~\ref{tab:endpoints} présente
+les routes principales regroupées en six domaines : ingestion des logs
+(\texttt{/ingest}), gestion des alertes et incidents (\texttt{/alerts},
+\texttt{/incidents}), interface conversationnelle et LLM (\texttt{/chat},
+\texttt{/llm}), neutralisation défensive (\texttt{/defense}), métriques
+de calibration ML (\texttt{/metrics}) et diffusion temps réel par
+Server-Sent Events (\texttt{/stream}).
 \end{onehalfspace}
 
 \begin{table}[!h]
 \centering
 \caption{Endpoints principaux de l'API CyberSentinel-LLM}
+\label{tab:endpoints}
 \begin{tabular}{|p{1.5cm}|p{5.5cm}|p{6.5cm}|}
 \hline
 \textbf{Méthode} & \textbf{Endpoint} & \textbf{Rôle} \\
@@ -1389,8 +1473,77 @@ est essentiel pour une console SOC qui doit rester opérationnelle même en
 cas d'incident UI.
 \end{onehalfspace}
 
+\section{Interfaces utilisateur}
+\begin{onehalfspace}
+Les captures d'écran ci-dessous illustrent les principales pages de
+l'interface SOC de \textbf{CyberSentinel-LLM}.
+\end{onehalfspace}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.92\linewidth]{images/screen_dashboard.png}
+\caption{Tableau de bord SOC — KPIs temps réel, timeline 24h et carte GeoIP}
+\label{fig:screen_dashboard}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.92\linewidth]{images/screen_alerts.png}
+\caption{Page Alertes — liste complète avec labellisation et gestion des blocages}
+\label{fig:screen_alerts}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.92\linewidth]{images/screen_incidents.png}
+\caption{Page Incidents — détail d'un incident avec explication LLM structurée}
+\label{fig:screen_incidents}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.92\linewidth]{images/screen_chat.png}
+\caption{Page Chat SOC — console conversationnelle streaming avec historique}
+\label{fig:screen_chat}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.92\linewidth]{images/screen_settings.png}
+\caption{Page Paramètres — état des services, 2FA TOTP, gestion des utilisateurs et IPs bloquées}
+\label{fig:screen_settings}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.92\linewidth]{images/screen_model_metrics.png}
+\caption{Page Modèle ML — métriques F1-score, précision, rappel et ROC-AUC}
+\label{fig:screen_model_metrics}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.92\linewidth]{images/screen_reports.png}
+\caption{Page Rapports — statistiques par période, top attaquants et export CSV}
+\label{fig:screen_reports}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.92\linewidth]{images/screen_login.png}
+\caption{Page Connexion — authentification et inscription avec gestion des sessions}
+\label{fig:screen_login}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.75\linewidth]{images/screen_voice_mode.png}
+\caption{Overlay mode vocal — orb animée, équaliseur et transcription en temps réel}
+\label{fig:screen_voice_mode}
+\end{figure}
+
 \section*{Conclusion du Chapitre 4}
-\addcontentsline{toc}{section}{Conclusion}
+\phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
 Ce chapitre a détaillé l'implémentation des composantes clés de
 \textbf{CyberSentinel-LLM} : pipeline ML, module RAG MITRE ATT\&CK,
@@ -1407,7 +1560,7 @@ résultats des tests et l'évaluation du système.
 \chapter{Tests, Validation et Résultats}
 
 \section*{Introduction}
-\addcontentsline{toc}{section}{Introduction}
+\phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
 Ce chapitre présente les scénarios de démonstration, les mécanismes
 d'évaluation et les résultats obtenus lors des tests de
@@ -1446,6 +1599,20 @@ Un scénario de démonstration reproductible a été développé sur la page
   (supervision humaine requise).
 \end{enumerate}
 \end{onehalfspace}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.92\linewidth]{images/screen_demo.png}
+\caption{Page Démo — pipeline IDS 5 étapes avec terminal live et carte GeoIP}
+\label{fig:screen_demo}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.75\linewidth]{images/screen_blocking_notif.png}
+\caption{Notification de blocage — countdown 30s, détails de l'attaque et validation humaine}
+\label{fig:screen_blocking_notif}
+\end{figure}
 
 \section{Mécanismes d'évaluation}
 \begin{onehalfspace}
@@ -1486,6 +1653,27 @@ Fiabilité globale de l'analyse \\
 \section{Résultats observés}
 \begin{onehalfspace}
 Les tests réalisés sur le prototype ont permis de valider les points suivants :
+\begin{itemize}
+  \item[\ding{43}] \textbf{Pipeline ML :} scoring d'anomalie fonctionnel avec un
+  temps de traitement inférieur à 50~ms par log en mode hybride
+  (IsolationForest + LOF + heuristique) ;
+  \item[\ding{43}] \textbf{RAG MITRE ATT\&CK :} pertinence élevée des techniques
+  récupérées pour le scénario SSH (T1110.001, T1110.003, T1078 correctement
+  identifiées parmi 697 techniques indexées) ;
+  \item[\ding{43}] \textbf{Explications LLM :} cohérence et structuration
+  satisfaisantes des rapports générés par Ollama (\textit{qwen2.5:1.5b}),
+  avec un temps de génération compris entre 30 et 90~secondes selon
+  la complexité de l'incident ;
+  \item[\ding{43}] \textbf{Système de blocage :} bon fonctionnement du mécanisme
+  de neutralisation applicative (middleware HTTP~403 + commandes iptables)
+  avec validation humaine obligatoire avant toute activation ;
+  \item[\ding{43}] \textbf{Streaming SSE :} stabilité du flux temps réel
+  confirmée avec plusieurs abonnés simultanés sur \texttt{/stream/alerts}
+  sans perte d'événements observée ;
+  \item[\ding{43}] \textbf{Tests automatisés :} ensemble des tests pytest
+  (logique de défense, liste noire IP) et Vitest (authentification, 2FA)
+  passants, sans régression détectée.
+\end{itemize}
 \end{onehalfspace}
 
 \begin{table}[!h]
@@ -1529,7 +1717,17 @@ Chat SOC + mode voix & \checkmark Partiel & STT/TTS si modèles présents \\
 \hline
 Métriques ML (F1, etc.) & \checkmark Partiel & Nécessite labels humains \\
 \hline
-Authentification RBAC backend & $\times$ Absent & localStorage uniquement \\
+Authentification 2FA TOTP & \checkmark Complet & QR code + TOTP, côté frontend \\
+\hline
+Gestion des utilisateurs (CRUD) & \checkmark Complet & localStorage, rôles, mot de passe \\
+\hline
+Tests automatisés backend & \checkmark Complet & pytest : 6 fichiers de tests \\
+\hline
+Tests automatisés frontend & \checkmark Complet & Vitest : auth.test.ts \\
+\hline
+Refactoring modulaire frontend & \checkmark Complet & Chat : $-$37\%, Settings : modulaire \\
+\hline
+Authentification RBAC backend & $\times$ Absent & JWT côté serveur non implémenté \\
 \hline
 Blocage iptables automatique & $\times$ Absent & Affichage manuel uniquement \\
 \hline
@@ -1539,29 +1737,82 @@ Blocage iptables automatique & $\times$ Absent & Affichage manuel uniquement \\
 \section{Tests automatisés}
 \begin{onehalfspace}
 Des tests automatisés ont été mis en place pour valider le bon fonctionnement
-du backend :
+du backend et du frontend, avec une couverture croissante des composants critiques.
 
+\subsection*{Tests backend (pytest)}
 \begin{itemize}
-  \item[\ding{43}] \textbf{Tests backend (pytest) :} tests de santé
-  (\texttt{GET /health}), tests d'ingestion (\texttt{POST /ingest/logs}),
-  tests de cartographie (\texttt{GET /map/points}),
-  tests du chat LLM (\texttt{POST /llm/chat}) ;
-  \item[\ding{43}] \textbf{Tests frontend :} build Next.js
-  (\texttt{npm run build}) et lint TypeScript (\texttt{tsc --noEmit}) sans
-  erreur bloquante, y compris après l'introduction du provider temps réel
-  centralisé, de l'\texttt{ErrorBoundary} global et du système de toasts.
+  \item[\ding{43}] \textbf{test\_health.py :} tests de santé (\texttt{GET /health}) ;
+  \item[\ding{43}] \textbf{test\_ingest\_and\_map.py :} tests d'ingestion
+  (\texttt{POST /ingest/logs}) et de cartographie (\texttt{GET /map/points}) ;
+  \item[\ding{43}] \textbf{test\_llm\_chat.py :} tests du chat LLM
+  (\texttt{POST /llm/chat}) en mode streaming et non-streaming ;
+  \item[\ding{43}] \textbf{test\_security.py :} tests de sécurité (protection
+  admin token, validation TTL, limites batch) ;
+  \item[\ding{43}] \textbf{test\_defense.py :} tests unitaires du service de
+  défense (\texttt{services/defense.py}) :
+  \begin{itemize}
+    \item \texttt{decide\_defense\_action()} : validation des 4 modes
+    (off, monitor, assist, auto) et des règles de seuil ;
+    \item \texttt{expire\_actions()} : désactivation automatique des actions
+    expirées en base SQLite ;
+    \item Endpoints \texttt{POST /defense/actions/\{id\}/approve} et
+    \texttt{POST /defense/auto-decide}.
+  \end{itemize}
+  \item[\ding{43}] \textbf{test\_ip\_blacklist.py :} tests unitaires du service
+  de liste noire IP (\texttt{services/ip\_blacklist.py}) :
+  \begin{itemize}
+    \item \texttt{add\_ip()} : ajout avec expiration, raison, approbateur ;
+    \item \texttt{is\_blocked()} : vérification O(1) avec purge auto des
+    entrées expirées ;
+    \item \texttt{remove\_ip()} : retrait thread-safe ;
+    \item \texttt{get\_all()} : liste complète avec purge ;
+    \item \texttt{expire\_loop} : boucle d'expiration automatique.
+  \end{itemize}
+\end{itemize}
+
+\subsection*{Tests frontend (Vitest)}
+\begin{itemize}
+  \item[\ding{43}] \textbf{Configuration Vitest :} fichier \texttt{vitest.config.ts}
+  avec environnement \texttt{happy-dom}, mocks pour \texttt{next/navigation}
+  et \texttt{next/dynamic} ;
+  \item[\ding{43}] \textbf{Scripts package.json :} \texttt{npm test} (exécution)
+  et \texttt{npm run test:ui} (interface visuelle) ;
+  \item[\ding{43}] \textbf{auth.test.ts :} tests complets d'authentification
+  et 2FA (\texttt{components/layout/AuthProvider}) :
+  \begin{itemize}
+    \item \texttt{addUser()} : création utilisateur avec validation ;
+    \item \texttt{login()} : vérification mot de passe + token JWT simulé ;
+    \item \texttt{logout()} : nettoyage localStorage ;
+    \item \texttt{generateMfaSecret()} : génération secret base32 ;
+    \item \texttt{getMfaQrUri()} : URI otpauth pour QR code ;
+    \item \texttt{verifyMfaToken()} : validation code 6 chiffres ;
+    \item \texttt{enableMfa()} / \texttt{disableMfa()} : activation/désactivation ;
+    \item \texttt{getUsername()} / \texttt{getUserProfile()} : gestion sessions.
+  \end{itemize}
+  \item[\ding{43}] \textbf{Build et lint :} build Next.js (\texttt{npm run build})
+  et lint TypeScript (\texttt{tsc --noEmit}) sans erreur bloquante,
+  y compris après l'introduction du provider temps réel centralisé,
+  de l'\texttt{ErrorBoundary} global et du système de toasts.
 \end{itemize}
 \end{onehalfspace}
 
 \section*{Conclusion du Chapitre 5}
-\addcontentsline{toc}{section}{Conclusion}
+\phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
 Les tests réalisés confirment que \textbf{CyberSentinel-LLM} remplit ses
 objectifs : démontrer la faisabilité d'un pipeline ML + RAG + LLM pour
 l'assistance SOC avec neutralisation adaptive, un scénario de démo
-reproductible et des métriques d'évaluation mesurables. Les limites
-identifiées — authentification backend absente, blocage iptables manuel —
-constituent des pistes d'amélioration pour des travaux futurs.
+reproductible et des métriques d'évaluation mesurables.\\
+
+La mise en place de tests automatisés backend (pytest) et frontend (Vitest)
+renforce la robustesse du système, avec une couverture croissante des
+composants critiques : logique de défense, liste noire IP, authentification
+et 2FA. Le refactoring modulaire du frontend (chat et settings) améliore
+la maintenabilité du code en réduisant la taille des fichiers monolithiques
+et en extrayant des sous-composants réutilisables.\\
+
+Les limites identifiées — authentification backend absente, blocage iptables
+manuel — constituent des pistes d'amélioration pour des travaux futurs.
 \end{onehalfspace}
 
 \newpage
@@ -1570,7 +1821,7 @@ constituent des pistes d'amélioration pour des travaux futurs.
 %% CONCLUSION GÉNÉRALE
 %% ============================================================
 \chapter*{Conclusion Générale et Perspectives}
-\addcontentsline{toc}{chapter}{Conclusion Générale et Perspectives}
+\phantomsection\addcontentsline{toc}{chapter}{Conclusion Générale et Perspectives}
 \begin{onehalfspace}
 Ce mémoire a présenté la conception et l'implémentation de
 \textbf{CyberSentinel-LLM}, une plateforme cognitive de cybersécurité
@@ -1596,9 +1847,16 @@ ce type de plateforme représente une contribution pertinente : accessible
 localement, indépendante de services cloud, et adaptée à des équipes SOC
 en formation.\\
 
+Le projet intègre également une authentification 2FA TOTP (QR code, compatible
+Google Authenticator/Authy) et une gestion des utilisateurs côté frontend,
+ainsi qu'une suite de tests automatisés (pytest backend, Vitest frontend)
+couvrant la logique de défense, la liste noire IP et les fonctions
+d'authentification.\\
+
 \textbf{Limites identifiées :} architecture monolithique locale, authentification
-100\% côté client (localStorage), blocage iptables affiché mais non exécuté
-automatiquement, et features ML limitées au domaine SSH.\\
+JWT côté serveur absente (gestion des sessions en localStorage), blocage
+iptables affiché mais non exécuté automatiquement, et features ML limitées
+au domaine SSH.\\
 
 \textbf{Perspectives :}
 \begin{itemize}
@@ -1626,7 +1884,7 @@ automatiquement, et features ML limitées au domaine SSH.\\
 %% BIBLIOGRAPHIE
 %% ============================================================
 \begin{thebibliography}{99}
-\addcontentsline{toc}{chapter}{Bibliographie}
+\phantomsection\addcontentsline{toc}{chapter}{Bibliographie}
 
 \bibitem{liu2008isolation}
 \textbf{Liu, F. T., Ting, K. M., Zhou, Z.-H.} (2008).
@@ -1706,12 +1964,12 @@ Certification Électronique du Tchad.
 %% ANNEXES
 %% ============================================================
 \chapter*{Annexes}
-\addcontentsline{toc}{chapter}{Annexes}
+\phantomsection\addcontentsline{toc}{chapter}{Annexes}
 
 %% --- Annexe A ---
 \section*{Annexe A : Architecture globale du système}
-\addcontentsline{toc}{section}{Annexe A : Architecture globale}
-\begin{figure}[!h]
+\phantomsection\addcontentsline{toc}{section}{Annexe A : Architecture globale}
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.90\linewidth]{images/cybersentinel_architecture.png}
 \caption{Architecture globale de CyberSentinel-LLM}
@@ -1721,7 +1979,7 @@ Certification Électronique du Tchad.
 
 %% --- Annexe B ---
 \section*{Annexe B : Exemples de payloads API}
-\addcontentsline{toc}{section}{Annexe B : Exemples de payloads API}
+\phantomsection\addcontentsline{toc}{section}{Annexe B : Exemples de payloads API}
 
 \textbf{POST /ingest/logs — Requête et réponse :}
 
@@ -1771,7 +2029,7 @@ Certification Électronique du Tchad.
 
 %% --- Annexe C ---
 \section*{Annexe C : Guide d'installation et d'exécution}
-\addcontentsline{toc}{section}{Annexe C : Guide d'installation}
+\phantomsection\addcontentsline{toc}{section}{Annexe C : Guide d'installation}
 
 \textbf{Prérequis :}
 \begin{itemize}

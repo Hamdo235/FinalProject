@@ -1,18 +1,50 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   fetchAlerts, labelAlert, createIncidentFromAlerts,
   approveDefenseAction, revokeDefenseAction,
 } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { Alert } from "@/types/api";
-import { CheckSquare, MapPin, MessageCircle, AlertTriangle } from "lucide-react";
+import { CheckSquare, MapPin, MessageCircle, AlertTriangle, Tag } from "lucide-react";
 import Link from "next/link";
 import { getActorLabel } from "@/lib/actor";
 import { formatDateTimeLocal, formatTimeLocal } from "@/lib/time";
 import { useRealtime } from "@/components/layout/RealtimeProvider";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
+
+// ── Catégorisation des alertes ──
+type AlertCategory = "Brute Force" | "DDoS / Flood" | "Scan / Recon" | "Malware / Exploit" | "Injection" | "Anomalie";
+
+const CAT_CLS: Record<AlertCategory, string> = {
+  "Brute Force":     "bg-[#2A1A12] text-accent-terra  border-[#4D3122]",
+  "DDoS / Flood":    "bg-[#262017] text-[#E0B83A]    border-[#4A3F1C]",
+  "Scan / Recon":    "bg-[#13202C] text-accent-slate  border-[#2A4357]",
+  "Malware / Exploit":"bg-[#2A1A12] text-[#E88862]   border-[#5C3322]",
+  "Injection":       "bg-[#1A1226] text-[#B89AE8]    border-[#3D2A5C]",
+  "Anomalie":        "bg-bg-base   text-text-secondary border-bg-border",
+};
+
+function getCategory(rule?: string, source?: string): AlertCategory {
+  const t = `${rule ?? ""} ${source ?? ""}`.toLowerCase();
+  if (/brute|force|ssh|rdp|ftp|fail|password|login|auth/.test(t)) return "Brute Force";
+  if (/ddos|flood|syn|udp|amplif|reflect|dos/.test(t))            return "DDoS / Flood";
+  if (/scan|recon|probe|nmap|port|sweep|enum/.test(t))            return "Scan / Recon";
+  if (/malware|exploit|payload|shell|ransomware|trojan|backdoor|rat|c2|c&c/.test(t)) return "Malware / Exploit";
+  if (/inject|sqli|xss|lfi|rfi|traversal|command/.test(t))       return "Injection";
+  return "Anomalie";
+}
+
+function CatBadge({ cat }: { cat: AlertCategory }) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.64rem] font-semibold border font-mono-cyber ${CAT_CLS[cat]}`}>
+      <Tag className="h-2.5 w-2.5" />{cat}
+    </span>
+  );
+}
+
+const ALL_CATS: AlertCategory[] = ["Brute Force", "DDoS / Flood", "Scan / Recon", "Malware / Exploit", "Injection", "Anomalie"];
 
 const SEV_CLS: Record<string, string> = {
   high:   "bg-[#2A1A12] text-accent-terra border-[#4D3122]",
@@ -162,6 +194,16 @@ export default function AlertsPage() {
     } finally { setBulkBusy(false); }
   };
 
+  const [catFilter, setCatFilter] = React.useState<AlertCategory | "Toutes">("Toutes");
+
+  const categorized = alerts.map((a) => ({ ...a, _cat: getCategory(a.rule, a.source) }));
+  const filtered = catFilter === "Toutes" ? categorized : categorized.filter((a) => a._cat === catFilter);
+  const catCounts = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    categorized.forEach((a) => { map[a._cat] = (map[a._cat] ?? 0) + 1; });
+    return map;
+  }, [categorized]);
+
   const criticalCount = alerts.filter((a) => a.severity === "high").length;
 
   return (
@@ -184,6 +226,36 @@ export default function AlertsPage() {
           <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-accent-sage animate-pulse" : "bg-text-muted"}`} />
           {live ? "LIVE" : "OFF"}
         </span>
+      </div>
+
+      {/* ── Filtres catégorie ── */}
+      <div className="flex flex-wrap gap-1.5">
+        <button
+          onClick={() => setCatFilter("Toutes")}
+          className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
+            catFilter === "Toutes"
+              ? "bg-[#15241C] border-[#2C4A39] text-accent-sage"
+              : "bg-bg-base border-bg-border text-text-muted hover:text-text-primary"
+          }`}
+        >
+          Toutes <span className="ml-1 font-mono-cyber opacity-70">{alerts.length}</span>
+        </button>
+        {ALL_CATS.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setCatFilter(cat)}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
+              catFilter === cat
+                ? CAT_CLS[cat]
+                : "bg-bg-base border-bg-border text-text-muted hover:text-text-primary"
+            }`}
+          >
+            {cat}
+            {catCounts[cat] ? (
+              <span className="ml-1 font-mono-cyber opacity-70">{catCounts[cat]}</span>
+            ) : null}
+          </button>
+        ))}
       </div>
 
       {/* ── Toolbar ── */}
@@ -218,14 +290,15 @@ export default function AlertsPage() {
               <th>
                 <input
                   type="checkbox"
-                  checked={alerts.length > 0 && selected.size === alerts.length}
-                  onChange={toggleAll}
+                  checked={filtered.length > 0 && selected.size === filtered.length}
+                  onChange={() => setSelected((p) => p.size === filtered.length ? new Set() : new Set(filtered.map((a) => a.id)))}
                   className="accent-accent-sage"
                 />
               </th>
               <th>Time</th>
               <th>Source</th>
               <th>IP</th>
+              <th>Catégorie</th>
               <th>Règle</th>
               <th>Sévérité</th>
               <th>Score</th>
@@ -234,7 +307,7 @@ export default function AlertsPage() {
             </tr>
           </thead>
           <tbody>
-            {alerts.map((a) => (
+            {filtered.map((a) => (
               <tr key={a.id}>
                 <td className="px-4 py-3">
                   <input
@@ -247,6 +320,7 @@ export default function AlertsPage() {
                 <td className="px-4 py-3 font-mono-cyber text-xs text-text-secondary">{formatDateTimeLocal(a.ts)}</td>
                 <td className="px-4 py-3 font-medium text-sm text-text-primary">{a.source}</td>
                 <td className="px-4 py-3 font-mono-cyber text-xs text-text-mono">{a.ip || "—"}</td>
+                <td className="px-4 py-3"><CatBadge cat={a._cat} /></td>
                 <td className="px-4 py-3 text-xs text-text-secondary">{a.rule || "—"}</td>
                 <td className="px-4 py-3">
                   <SevBadge s={a.severity} />

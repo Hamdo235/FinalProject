@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { AlertTriangle, ShieldOff, ShieldCheck, X, Terminal, Clock } from "lucide-react";
-import { approveDefenseAction, revokeDefenseAction } from "@/lib/api";
+import { approveDefenseAction, revokeDefenseAction, autoDecideAction } from "@/lib/api";
 import { getActorLabel } from "@/lib/actor";
 import { Alert, DefenseAction } from "@/types/api";
 import { useRealtime } from "@/components/layout/RealtimeProvider";
@@ -17,6 +17,9 @@ interface Notification {
   approved?: boolean;
   rejected?: boolean;
   busy?: boolean;
+  autoDeciding?: boolean;
+  llmReasoning?: string;
+  llmDecision?: 'block' | 'allow';
 }
 
 const COUNTDOWN_SECONDS = 30;
@@ -138,8 +141,8 @@ function NotifCard({
           </span>
         </div>
 
-        {/* Countdown */}
-        {!notif.approved && !notif.rejected && (
+        {/* Countdown / LLM reasoning */}
+        {!notif.approved && !notif.rejected && !notif.autoDeciding && (
           <div className="pt-1">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1">
@@ -165,8 +168,37 @@ function NotifCard({
               />
             </div>
             <p className="text-[9px] mt-1 font-mono-cyber text-text-muted">
-              Aucune action automatique — décision humaine requise
+              {notif.countdown > 0
+                ? "Aucune réponse → le LLM décidera automatiquement"
+                : "Transfert au LLM SOC IA…"}
             </p>
+          </div>
+        )}
+
+        {/* LLM en cours de décision */}
+        {notif.autoDeciding && (
+          <div className="pt-2 space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full border-2 border-[#6FB894] border-t-transparent animate-spin" />
+              <span className="text-[10px] font-mono-cyber text-[#6FB894]">LLM SOC IA en cours d'analyse…</span>
+            </div>
+            <p className="text-[9px] font-mono-cyber text-text-muted pl-5">
+              Consultation du modèle de langage…
+            </p>
+          </div>
+        )}
+
+        {/* Raisonnement LLM après décision */}
+        {(notif.approved || notif.rejected) && notif.llmReasoning && (
+          <div
+            className="rounded-lg px-3 py-2 text-[9px] font-mono-cyber mt-1"
+            style={{
+              background: notif.llmDecision === 'block' ? '#15241C' : '#1C222B',
+              border: `1px solid ${notif.llmDecision === 'block' ? '#2C4A39' : '#262D38'}`,
+              color: notif.llmDecision === 'block' ? '#7FB89A' : '#9BA3AF',
+            }}
+          >
+            🤖 <span className="font-bold">LLM SOC IA :</span> {notif.llmReasoning}
           </div>
         )}
 
@@ -218,6 +250,45 @@ export default function BlockingNotification() {
   notifsRef.current = notifications;
   const dismissTimersRef = React.useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
+  const handleAutoDecide = React.useCallback(async (id: string) => {
+    const notif = notifsRef.current.find((n) => n.id === id);
+    if (!notif || notif.approved || notif.rejected || notif.autoDeciding) return;
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, autoDeciding: true } : n))
+    );
+    try {
+      const res = await autoDecideAction(notif.defenseActionId);
+      if (res.decision === 'block') {
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === id
+              ? { ...n, autoDeciding: false, approved: true, llmDecision: 'block',
+                  llmReasoning: res.reasoning, iptables: res.iptables_command ?? undefined }
+              : n
+          )
+        );
+        pushToast(`🤖 LLM SOC : IP ${notif.alert.ip ?? '?'} bloquée automatiquement`, 'success');
+      } else {
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === id
+              ? { ...n, autoDeciding: false, rejected: true, llmDecision: 'allow',
+                  llmReasoning: res.reasoning }
+              : n
+          )
+        );
+        pushToast(`🤖 LLM SOC : IP ${notif.alert.ip ?? '?'} autorisée (faible risque)`, 'info');
+      }
+      refreshPending();
+      scheduleDismissRef.current(id, 10000);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Erreur';
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, autoDeciding: false, error: `LLM: ${msg}` } : n))
+      );
+    }
+  }, [pushToast, refreshPending]);
+
   const scheduleDismiss = React.useCallback((id: string, delay: number) => {
     const timer = setTimeout(() => {
       setNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -225,6 +296,9 @@ export default function BlockingNotification() {
     }, delay);
     dismissTimersRef.current.add(timer);
   }, []);
+
+  const scheduleDismissRef = React.useRef(scheduleDismiss);
+  scheduleDismissRef.current = scheduleDismiss;
 
   React.useEffect(() => {
     const timers = dismissTimersRef.current;
@@ -281,13 +355,19 @@ export default function BlockingNotification() {
     for (const action of pendingActions) pushFromAction(action);
   }, [pendingActions, pushFromAction]);
 
+  const handleAutoDecideRef = React.useRef(handleAutoDecide);
+  handleAutoDecideRef.current = handleAutoDecide;
+
   React.useEffect(() => {
     const timer = setInterval(() => {
       setNotifications((prev) =>
         prev.map((n) => {
-          if (n.approved || n.rejected) return n;
+          if (n.approved || n.rejected || n.autoDeciding) return n;
           const elapsed = Math.floor((Date.now() - n.startedAt) / 1000);
           const countdown = Math.max(0, COUNTDOWN_SECONDS - elapsed);
+          if (countdown === 0 && !n.autoDeciding) {
+            setTimeout(() => handleAutoDecideRef.current(n.id), 0);
+          }
           return { ...n, countdown };
         })
       );

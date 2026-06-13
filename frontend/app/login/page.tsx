@@ -2,7 +2,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Radar, Eye, EyeOff, AlertCircle, ArrowRight, Lock, User, UserPlus, Shield, Mail, Phone, Briefcase } from "lucide-react";
-import { login, register } from "@/components/layout/AuthProvider";
+import { checkPassword, createSession, register, verifyMfaToken } from "@/components/layout/AuthProvider";
 
 type Mode = "signin" | "signup";
 type FocusField = "user" | "pass" | "confirm" | "email" | "phone" | null;
@@ -21,6 +21,11 @@ export default function LoginPage() {
   const [error,    setError]      = React.useState("");
   const [loading,  setLoading]    = React.useState(false);
   const [welcome,  setWelcome]    = React.useState<string | null>(null);
+  const [hasUsers,  setHasUsers]   = React.useState(false);
+  const [mfaStep,   setMfaStep]    = React.useState(false);
+  const [mfaToken,  setMfaToken]   = React.useState("");
+  const [mfaSecret, setMfaSecret]  = React.useState("");
+  const [pendingUser, setPendingUser] = React.useState("");
 
   function switchMode(m: Mode) {
     setMode(m); setError("");
@@ -32,7 +37,12 @@ export default function LoginPage() {
     try {
       const raw = localStorage.getItem("cs_users");
       const users = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(users) || users.length === 0) setMode("signup");
+      if (!Array.isArray(users) || users.length === 0) {
+        setMode("signup");
+        setHasUsers(false);
+      } else {
+        setHasUsers(true);
+      }
     } catch {}
   }, []);
 
@@ -55,14 +65,35 @@ export default function LoginPage() {
     // Sign in
     setLoading(true);
     await new Promise((r) => setTimeout(r, 700));
-    const ok = login(username.trim(), password);
-    if (!ok) {
+    const found = checkPassword(username.trim(), password);
+    if (!found) {
       setError("Identifiants incorrects. Vérifiez votre accès SOC.");
       setLoading(false);
       return;
     }
     setLoading(false);
-    setWelcome(username.trim());
+
+    if (found.mfaEnabled && found.mfaSecret) {
+      setMfaSecret(found.mfaSecret);
+      setPendingUser(found.username);
+      setMfaStep(true);
+      return;
+    }
+
+    createSession(found.username);
+    setWelcome(found.username);
+    setTimeout(() => router.replace("/"), 2400);
+  }
+
+  async function handleMfaSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!verifyMfaToken(mfaSecret, mfaToken)) {
+      setError("Code invalide. Vérifiez votre application d'authentification.");
+      return;
+    }
+    createSession(pendingUser);
+    setWelcome(pendingUser);
     setTimeout(() => router.replace("/"), 2400);
   }
 
@@ -84,6 +115,84 @@ export default function LoginPage() {
             <div className="login-welcome-bar">
               <div className="login-welcome-bar-fill" />
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── 2FA OTP step ── */
+  if (mfaStep) {
+    return (
+      <div className="login-root">
+        <div className="login-bg-grid" />
+        <div className="login-bg-glow-tl" />
+        <div className="login-bg-glow-br" />
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <div className="login-card w-full max-w-sm">
+            <div className="login-card-header">
+              <div className="login-logo-wrap">
+                <div className="login-logo">
+                  <Shield className="h-[22px] w-[22px] text-white" />
+                </div>
+                <div className="login-logo-pulse" />
+              </div>
+              <h1 className="login-title">
+                CyberSentinel<span className="login-title-dim">‑LLM</span>
+              </h1>
+              <p className="login-subtitle">Vérification en deux étapes</p>
+            </div>
+
+            <div className="px-6 pb-2">
+              <div className="rounded-xl p-3 mb-4 text-[11px] font-mono-cyber text-center"
+                style={{ background: '#15241C', border: '1px solid #2C4A39', color: '#7FB89A' }}>
+                🔐 Entrez le code à 6 chiffres affiché dans votre application d&apos;authentification
+              </div>
+            </div>
+
+            <form onSubmit={handleMfaSubmit} className="login-form">
+              <div className={`login-field ${focused === "user" ? "focused" : ""}`}>
+                <label className="login-label">Code de vérification</label>
+                <div className="login-input-wrap">
+                  <Lock className="login-input-icon h-[15px] w-[15px]" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="000 000"
+                    value={mfaToken}
+                    onChange={(e) => setMfaToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    onFocus={() => setFocused("user")}
+                    onBlur={() => setFocused(null)}
+                    className="login-input text-center tracking-[0.4em] text-lg font-bold font-mono-cyber"
+                    autoFocus
+                    required
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="login-error">
+                  <AlertCircle className="h-[14px] w-[14px] shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <button type="submit" disabled={mfaToken.length < 6} className="login-btn">
+                <span className="login-btn-label">
+                  Vérifier le code
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              </button>
+            </form>
+
+            <p className="login-toggle-link">
+              <button type="button" onClick={() => { setMfaStep(false); setMfaToken(""); setError(""); }}
+                className="login-link-btn">
+                ← Retour à la connexion
+              </button>
+            </p>
+            <div className="login-scanline" />
           </div>
         </div>
       </div>
@@ -192,7 +301,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Mode tabs */}
+            {/* Mode tabs — inscription masquée si des comptes existent */}
             <div className="login-tabs">
               <button
                 type="button"
@@ -202,14 +311,16 @@ export default function LoginPage() {
                 <Lock className="h-[13px] w-[13px]" />
                 Connexion
               </button>
-              <button
-                type="button"
-                className={`login-tab ${isSignup ? "active" : ""}`}
-                onClick={() => switchMode("signup")}
-              >
-                <UserPlus className="h-[13px] w-[13px]" />
-                Inscription
-              </button>
+              {!hasUsers && (
+                <button
+                  type="button"
+                  className={`login-tab ${isSignup ? "active" : ""}`}
+                  onClick={() => switchMode("signup")}
+                >
+                  <UserPlus className="h-[13px] w-[13px]" />
+                  Inscription
+                </button>
+              )}
             </div>
 
             {/* Form */}
@@ -367,24 +478,26 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* Toggle link */}
-            <p className="login-toggle-link">
-              {isSignup ? (
-                <>
-                  Vous avez déjà un compte ?{" "}
-                  <button type="button" onClick={() => switchMode("signin")} className="login-link-btn">
-                    Se connecter
-                  </button>
-                </>
-              ) : (
-                <>
-                  Vous êtes nouveau ?{" "}
-                  <button type="button" onClick={() => switchMode("signup")} className="login-link-btn">
-                    S&apos;enregistrer
-                  </button>
-                </>
-              )}
-            </p>
+            {/* Toggle link — uniquement si pas encore de comptes */}
+            {!hasUsers && (
+              <p className="login-toggle-link">
+                {isSignup ? (
+                  <>
+                    Vous avez déjà un compte ?{" "}
+                    <button type="button" onClick={() => switchMode("signin")} className="login-link-btn">
+                      Se connecter
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Première utilisation ?{" "}
+                    <button type="button" onClick={() => switchMode("signup")} className="login-link-btn">
+                      Créer le compte admin
+                    </button>
+                  </>
+                )}
+              </p>
+            )}
 
 
             <div className="login-scanline" />

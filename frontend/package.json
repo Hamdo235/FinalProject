@@ -5,7 +5,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
@@ -14,6 +16,8 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.462.0",
     "next": "^16.2.2",
+    "otpauth": "^9.5.1",
+    "qrcode.react": "^4.2.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "recharts": "^2.15.4",
@@ -28,11 +32,14 @@
     "@types/node": "20.17.12",
     "@types/react": "18.2.74",
     "@types/react-dom": "18.2.25",
+    "@vitest/ui": "^4.1.8",
     "autoprefixer": "10.4.20",
     "eslint": "^10.2.0",
     "eslint-config-next": "^16.2.2",
+    "happy-dom": "^20.10.2",
     "postcss": "8.4.49",
     "tailwindcss": "3.4.14",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "^4.1.8"
   }
 }
