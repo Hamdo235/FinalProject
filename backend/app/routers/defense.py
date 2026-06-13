@@ -286,6 +286,127 @@ def unblock_ip_direct(ip: str, db: Session = Depends(get_session), request: Requ
     return {"ok": True, "message": f"IP {ip} débloquée.", "ip": ip}
 
 
+@router.post("/actions/{action_id}/auto-decide")
+async def auto_decide(
+    action_id: int,
+    db: Session = Depends(get_session),
+    request: Request = None,
+):
+    """
+    Appelé par le frontend quand le délai analyste expire sans réponse humaine.
+    Le LLM analyse le contexte de l'alerte et prend une décision autonome :
+    block → approuve l'action, allow → révoque l'action.
+    """
+    item = db.get(DefenseAction, action_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Defense action not found")
+    if item.approved_by or item.approved_at or item.revoked_at:
+        return {"ok": True, "already_decided": True, "action": action_to_dict(item)}
+
+    # ── Construire le prompt LLM ──
+    score_10 = round(float(item.confidence or 0) * 10, 1)
+    prompt = f"""Tu es un analyste SOC autonome. Un incident a dépassé le délai de supervision humaine.
+Tu dois décider immédiatement : BLOQUER ou AUTORISER l'IP source.
+
+Données de l'alerte :
+- IP source     : {item.ip or "inconnue"}
+- Règle détectée: {item.reason or "inconnue"}
+- Score ML      : {score_10}/10
+- Action initiale suggérée : {item.action}
+
+Réponds UNIQUEMENT avec un objet JSON valide sans texte avant ni après :
+{{
+  "decision": "block" ou "allow",
+  "confidence": <float entre 0.0 et 1.0>,
+  "reasoning": "<explication courte en français, 1-2 phrases>"
+}}"""
+
+    llm_decision = "block"
+    llm_confidence = float(item.confidence or 0.5)
+    llm_reasoning = "Décision automatique par défaut (LLM indisponible)."
+
+    try:
+        import httpx, json as _json
+        from ..core.settings import settings as _s
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            resp = await client.post(
+                f"{_s.ollama_base_url}/api/generate",
+                json={"model": "qwen2.5:1.5b", "prompt": prompt, "stream": False},
+            )
+            if resp.status_code == 200:
+                raw = resp.json().get("response", "")
+                start = raw.find("{")
+                end   = raw.rfind("}") + 1
+                if start != -1 and end > start:
+                    parsed = _json.loads(raw[start:end])
+                    llm_decision   = str(parsed.get("decision", "block")).lower().strip()
+                    llm_confidence = float(parsed.get("confidence", llm_confidence))
+                    llm_reasoning  = str(parsed.get("reasoning", llm_reasoning))
+    except Exception as exc:
+        logger.warning("[AutoDecide] LLM call failed for action %s: %s", action_id, exc)
+        # Fallback heuristic: score >= 0.7 → block
+        llm_decision = "block" if float(item.confidence or 0) >= 0.7 else "allow"
+
+    actor = f"LLM SOC IA (auto — {llm_decision.upper()})"
+    now = _utcnow_naive()
+
+    if llm_decision == "block":
+        item.action     = "block_temp"
+        item.active     = True
+        item.created_by = "system"
+        item.approved_by = actor
+        item.approved_at = now
+        if item.expires_at is None:
+            item.expires_at = now + timedelta(minutes=30)
+        db.add(item)
+        db.commit()
+        db.refresh(item)
+        if item.ip:
+            ip_blacklist.add_ip(
+                ip=item.ip,
+                expires_at=item.expires_at,
+                reason=item.reason or f"Auto-bloqué par LLM : {llm_reasoning}",
+                approved_by=actor,
+                action_id=item.id,
+            )
+        result = action_to_dict(item)
+        try:
+            asyncio.create_task(publish_defense_changed("auto_block", result))
+        except RuntimeError:
+            pass
+        return {
+            "ok": True,
+            "decision": "block",
+            "actor": actor,
+            "reasoning": llm_reasoning,
+            "confidence": llm_confidence,
+            "action": result,
+            "iptables_command": result.get("iptables_command"),
+        }
+    else:
+        item.active     = False
+        item.revoked_at = now
+        item.approved_by = actor
+        db.add(item)
+        db.commit()
+        db.refresh(item)
+        if item.ip:
+            ip_blacklist.remove_ip(item.ip)
+        result = action_to_dict(item)
+        try:
+            asyncio.create_task(publish_defense_changed("auto_allow", result))
+        except RuntimeError:
+            pass
+        return {
+            "ok": True,
+            "decision": "allow",
+            "actor": actor,
+            "reasoning": llm_reasoning,
+            "confidence": llm_confidence,
+            "action": result,
+        }
+
+
 @router.post("/expire")
 def run_expire(db: Session = Depends(get_session), request: Request = None):
     _require_admin_token(request)
