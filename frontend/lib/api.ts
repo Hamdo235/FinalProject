@@ -1,7 +1,6 @@
 import {
   Alert,
   Incident,
-  AlertLabel,
   ModelMetrics,
   MapPoint,
   IncidentExplanation,
@@ -260,10 +259,3 @@ export function createEventStream(handlers: SSEHandlers): EventSource {
   return es;
 }
 
-/**
- * @deprecated use createEventStream({ onAlert }) instead.
- * Maintenu pour compat de code existant.
- */
-export function createAlertsSSE(onAlert: (alert: Alert) => void): EventSource {
-  return createEventStream({ onAlert });
-}

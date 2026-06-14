@@ -52,7 +52,23 @@ def _attack_explanation(a: Alert) -> str:
 
 
 def _latest_attacks(db: Session, limit: int = 5) -> List[Dict[str, str]]:
-    stmt = select(Alert).order_by(Alert.ts.desc()).limit(200)
+    from sqlalchemy import or_
+    cap = max(1, min(limit, 5))
+    stmt = (
+        select(Alert)
+        .where(
+            or_(
+                Alert.severity == "high",
+                Alert.rule.like("ml_%"),
+                Alert.rule.like("%anomaly%"),
+                Alert.rule.like("%failed%"),
+                Alert.rule.like("%bruteforce%"),
+                Alert.rule.like("%attack%"),
+            )
+        )
+        .order_by(Alert.ts.desc())
+        .limit(cap * 4)
+    )
     rows = db.exec(stmt).all()
     picked: List[Dict[str, str]] = []
     for a in rows:
@@ -65,7 +81,7 @@ def _latest_attacks(db: Session, limit: int = 5) -> List[Dict[str, str]]:
             "severity": a.severity or "unknown",
             "explanation": _attack_explanation(a),
         })
-        if len(picked) >= max(1, min(limit, 5)):
+        if len(picked) >= cap:
             break
     return picked
 

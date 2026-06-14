@@ -35,7 +35,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel, Session as SQLModelSession
-# runtime metrics removed for simplicity
+from sqlalchemy import text as _sa_text
 
 logger = logging.getLogger(__name__)
 _rag_executor: ThreadPoolExecutor | None = None
@@ -84,7 +84,7 @@ async def lifespan(app: FastAPI):
             for col, typ in _new_cols:
                 try:
                     conn.execute(
-                        __import__("sqlalchemy").text(
+                        _sa_text(
                             f"ALTER TABLE defenseaction ADD COLUMN {col} {typ}"
                         )
                     )
@@ -106,7 +106,7 @@ async def lifespan(app: FastAPI):
             for col, typ in _llm_cols:
                 try:
                     conn.execute(
-                        __import__("sqlalchemy").text(
+                        _sa_text(
                             f"ALTER TABLE llmtrace ADD COLUMN {col} {typ}"
                         )
                     )

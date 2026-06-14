@@ -253,40 +253,48 @@ Je tiens à exprimer ma profonde gratitude à :
 \chapter*{Liste des Abréviations}
 \phantomsection\addcontentsline{toc}{chapter}{Liste des Abréviations}
 
-\hspace{5mm}\textbf{\textcolor{darkblue}{API :}} Application Programming Interface \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{ASN :}} Autonomous System Number \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{C2 :}} Command and Control \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{ChromaDB :}} Base de données vectorielle locale \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{DB :}} Database (Base de Données) \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{GeoIP :}} Geographic Internet Protocol \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{HTTP :}} HyperText Transfer Protocol \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{IA :}} Intelligence Artificielle \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{IDS :}} Intrusion Detection System \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{IF :}} Isolation Forest \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{IPS :}} Intrusion Prevention System \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{JSON :}} JavaScript Object Notation \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{JWT :}} JSON Web Token \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{LLM :}} Large Language Model \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{LOF :}} Local Outlier Factor \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{MITRE ATT\&CK :}} Adversarial Tactics, Techniques and Common Knowledge \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{ML :}} Machine Learning \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{MVP :}} Minimum Viable Product \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{NER :}} Named Entity Recognition \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{ORM :}} Object Relational Mapping \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{PFE :}} Projet de Fin d'Études \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{RAG :}} Retrieval-Augmented Generation \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{RBAC :}} Role-Based Access Control \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{REST :}} Representational State Transfer \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{SIEM :}} Security Information and Event Management \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{SOC :}} Security Operations Center \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{SSH :}} Secure Shell \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{SSE :}} Server-Sent Events \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{STT :}} Speech-to-Text \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{TIC :}} Technologies de l'Information et de la Communication \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{TTS :}} Text-to-Speech \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{TTL :}} Time To Live \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{UI :}} User Interface \newline
-\hspace{5mm}\textbf{\textcolor{darkblue}{Vitest :}} Framework de tests JavaScript/TypeScript \newline
+\begin{description}[
+  leftmargin=3.5cm,
+  labelwidth=3cm,
+  labelsep=0.5cm,
+  itemsep=4pt,
+  font=\bfseries\color{darkblue}
+]
+\item[API :] Application Programming Interface
+\item[ASN :] Autonomous System Number
+\item[C2 :] Command and Control
+\item[ChromaDB :] Base de données vectorielle locale
+\item[DB :] Database (Base de Données)
+\item[GeoIP :] Geographic Internet Protocol
+\item[HTTP :] HyperText Transfer Protocol
+\item[IA :] Intelligence Artificielle
+\item[IDS :] Intrusion Detection System
+\item[IF :] Isolation Forest
+\item[IPS :] Intrusion Prevention System
+\item[JSON :] JavaScript Object Notation
+\item[JWT :] JSON Web Token
+\item[LLM :] Large Language Model
+\item[LOF :] Local Outlier Factor
+\item[MITRE ATT\&CK :] Adversarial Tactics, Techniques and Common Knowledge
+\item[ML :] Machine Learning
+\item[MVP :] Minimum Viable Product
+\item[NER :] Named Entity Recognition
+\item[ORM :] Object Relational Mapping
+\item[PFE :] Projet de Fin d'Études
+\item[RAG :] Retrieval-Augmented Generation
+\item[RBAC :] Role-Based Access Control
+\item[REST :] Representational State Transfer
+\item[SIEM :] Security Information and Event Management
+\item[SOC :] Security Operations Center
+\item[SSH :] Secure Shell
+\item[SSE :] Server-Sent Events
+\item[STT :] Speech-to-Text
+\item[TIC :] Technologies de l'Information et de la Communication
+\item[TTS :] Text-to-Speech
+\item[TTL :] Time To Live
+\item[UI :] User Interface
+\item[Vitest :] Framework de tests JavaScript/TypeScript
+\end{description}
 
 \newpage
 
@@ -436,9 +444,10 @@ détectées. On distingue deux grandes approches :
 \end{itemize}
 \end{onehalfspace}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Comparaison IDS par signatures vs IDS comportemental}
+\label{tab:ids_comparaison}
 \begin{tabular}{|p{4cm}|p{5cm}|p{5cm}|}
 \hline
 \textbf{Critère} & \textbf{Par signatures} & \textbf{Comportemental} \\
@@ -502,9 +511,10 @@ features, fragilité face aux changements de domaine (\textit{domain-shift}),
 et nécessité d'un volume minimal de données d'entraînement.
 \end{onehalfspace}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Comparaison Isolation Forest vs Local Outlier Factor}
+\label{tab:if_lof_comparaison}
 \begin{tabular}{|p{4cm}|p{5cm}|p{5cm}|}
 \hline
 \textbf{Critère} & \textbf{Isolation Forest} & \textbf{Local Outlier Factor} \\
@@ -644,7 +654,7 @@ besoins opérationnels d'un analyste SOC confronté à des attaques réseau :
 \end{itemize}
 \end{onehalfspace}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.90\linewidth]{images/cybersentinel_use_case.png}
 \caption{Diagramme de cas d'utilisation de CyberSentinel-LLM}
@@ -661,7 +671,7 @@ recherche contextuelle par RAG MITRE ATT\&CK, explication structurée par LLM,
 neutralisation adaptive des menaces, reporting et authentification à double facteur.
 \end{onehalfspace}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Exigences fonctionnelles de CyberSentinel-LLM}
 \label{tab:ef}
@@ -775,7 +785,7 @@ L'architecture comprend cinq grandes couches :
 \end{itemize}
 \end{onehalfspace}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.90\linewidth]{images/cybersentinel_architecture.png}
 \caption{Architecture globale de CyberSentinel-LLM}
@@ -843,9 +853,10 @@ Le backend est organisé en modules distincts, chacun ayant une responsabilité
 clairement définie :
 \end{onehalfspace}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Description des composants backend}
+\label{tab:backend_composants}
 \begin{tabular}{|p{5cm}|p{8.5cm}|}
 \hline
 \textbf{Composant} & \textbf{Rôle} \\
@@ -968,9 +979,28 @@ en extrayant des sous-composants réutilisables et des types partagés.
 \end{onehalfspace}
 
 \section{Diagrammes UML}
+\begin{onehalfspace}
+Cette section présente les principaux diagrammes UML modélisant la
+structure statique et les flux dynamiques de \textbf{CyberSentinel-LLM} :
+le diagramme de classes décrivant le schéma de données, le diagramme de
+séquence illustrant le traitement d'une alerte de bout en bout, et le
+diagramme d'activité représentant la logique de décision du pipeline
+de détection.
+\end{onehalfspace}
 
 \subsection{Diagramme de classes}
-\begin{figure}[!ht]
+\begin{onehalfspace}
+La Figure~\ref{fig:classes} présente les entités persistées en base de
+données et leurs relations. L'entité \texttt{Alert} centralise les
+événements détectés et peut être regroupée en \texttt{Incident}, chacun
+disposant d'une trace d'explication LLM (\texttt{LLMTrace}). Les actions
+défensives (\texttt{DefenseAction}) et les labels de validation humaine
+(\texttt{AlertLabel}) sont rattachés aux alertes, tandis que les
+conversations du chat SOC (\texttt{Conversation}, \texttt{ChatMessage})
+forment un sous-graphe indépendant.
+\end{onehalfspace}
+
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.90\linewidth]{images/cybersentinel_class_diagram.png}
 \caption{Diagramme de classes de CyberSentinel-LLM}
@@ -982,7 +1012,7 @@ en extrayant des sous-composants réutilisables et des types partagés.
 La Figure~\ref{fig:sequence} illustre le flux complet d'une alerte depuis l'arrivée d'un log suspect jusqu'à l'affichage de l'explication structurée à l'analyste SOC. Le log est d'abord soumis au pipeline ML qui calcule un score d'anomalie et enregistre l'alerte en base. Le moteur de défense détermine alors l'action appropriée (monitor, review ou block\_temp) et déclenche une notification temps réel via SSE. L'analyste consulte l'alerte, approuve ou rejette l'action défensive, ce qui provoque la création d'un incident et l'appel au module RAG + LLM pour générer l'explication contextuelle finale.
 \end{onehalfspace}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.90\linewidth]{images/sequence_simplifie_fr.png}
 \caption{Diagramme de séquence — flux d'une alerte jusqu'à la neutralisation}
@@ -994,7 +1024,7 @@ La Figure~\ref{fig:sequence} illustre le flux complet d'une alerte depuis l'arri
 La Figure~\ref{fig:activite} décrit le processus de traitement d'un log entrant sous forme d'activités séquentielles et de branchements conditionnels. Après l'analyse comportementale, le score d'anomalie oriente le flux : un score faible conduit à l'archivage du log sans alerte, tandis qu'un score élevé déclenche la classification à haute sévérité, l'enregistrement de l'alerte et la notification de l'analyste. L'analyste valide ou rejette l'alerte, ce qui détermine la création ou non d'un incident ; dans les deux cas, son retour (\texttt{true\_attack} / \texttt{false\_positive}) est utilisé pour calibrer le détecteur ML.
 \end{onehalfspace}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{images/cybersentinel_activity.png}
 \caption{Diagramme d'activité — traitement d'un log entrant}
@@ -1043,9 +1073,10 @@ Le pipeline ML de \textbf{CyberSentinel-LLM} suit les étapes suivantes :
 \end{enumerate}
 \end{onehalfspace}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Features utilisées dans le pipeline ML}
+\label{tab:ml_features}
 \begin{tabular}{|p{4.5cm}|p{9cm}|}
 \hline
 \textbf{Feature} & \textbf{Description / Formule} \\
@@ -1131,9 +1162,10 @@ STIX officiel MITRE ATT\&CK Enterprise. Le tableau ci-dessous présente un
 échantillon représentatif des techniques les plus pertinentes pour
 le scénario SSH de démonstration :
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Échantillon de techniques MITRE ATT\&CK indexées (697 au total dans ChromaDB)}
+\label{tab:mitre_sample}
 \begin{tabular}{|p{2.5cm}|p{5cm}|p{1.5cm}|}
 \hline
 \textbf{ID} & \textbf{Nom} & \textbf{Sévérité} \\
@@ -1276,9 +1308,10 @@ implémente un IDS/IPS hybride à validation humaine.
 \subsection*{Les quatre modes de défense}
 \end{onehalfspace}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Modes de défense du module de neutralisation}
+\label{tab:defense_modes}
 \begin{tabular}{|p{2.5cm}|p{4cm}|p{7cm}|}
 \hline
 \textbf{Mode} & \textbf{Comportement} & \textbf{Action produite} \\
@@ -1373,7 +1406,7 @@ de calibration ML (\texttt{/metrics}) et diffusion temps réel par
 Server-Sent Events (\texttt{/stream}).
 \end{onehalfspace}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Endpoints principaux de l'API CyberSentinel-LLM}
 \label{tab:endpoints}
@@ -1479,63 +1512,63 @@ Les captures d'écran ci-dessous illustrent les principales pages de
 l'interface SOC de \textbf{CyberSentinel-LLM}.
 \end{onehalfspace}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{images/screen_dashboard.png}
 \caption{Tableau de bord SOC — KPIs temps réel, timeline 24h et carte GeoIP}
 \label{fig:screen_dashboard}
 \end{figure}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{images/screen_alerts.png}
 \caption{Page Alertes — liste complète avec labellisation et gestion des blocages}
 \label{fig:screen_alerts}
 \end{figure}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{images/screen_incidents.png}
 \caption{Page Incidents — détail d'un incident avec explication LLM structurée}
 \label{fig:screen_incidents}
 \end{figure}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{images/screen_chat.png}
 \caption{Page Chat SOC — console conversationnelle streaming avec historique}
 \label{fig:screen_chat}
 \end{figure}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{images/screen_settings.png}
 \caption{Page Paramètres — état des services, 2FA TOTP, gestion des utilisateurs et IPs bloquées}
 \label{fig:screen_settings}
 \end{figure}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{images/screen_model_metrics.png}
 \caption{Page Modèle ML — métriques F1-score, précision, rappel et ROC-AUC}
 \label{fig:screen_model_metrics}
 \end{figure}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{images/screen_reports.png}
 \caption{Page Rapports — statistiques par période, top attaquants et export CSV}
 \label{fig:screen_reports}
 \end{figure}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{images/screen_login.png}
 \caption{Page Connexion — authentification et inscription avec gestion des sessions}
 \label{fig:screen_login}
 \end{figure}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{images/screen_voice_mode.png}
 \caption{Overlay mode vocal — orb animée, équaliseur et transcription en temps réel}
@@ -1600,14 +1633,14 @@ Un scénario de démonstration reproductible a été développé sur la page
 \end{enumerate}
 \end{onehalfspace}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{images/screen_demo.png}
 \caption{Page Démo — pipeline IDS 5 étapes avec terminal live et carte GeoIP}
 \label{fig:screen_demo}
 \end{figure}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{images/screen_blocking_notif.png}
 \caption{Notification de blocage — countdown 30s, détails de l'attaque et validation humaine}
@@ -1620,9 +1653,10 @@ L'évaluation du module ML repose sur les labels humains collectés via
 le mécanisme de validation (\texttt{true\_attack} / \texttt{false\_positive}).
 \end{onehalfspace}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Métriques d'évaluation du module de détection}
+\label{tab:metrics}
 \begin{tabular}{|p{3.5cm}|p{5cm}|p{5cm}|}
 \hline
 \textbf{Métrique} & \textbf{Formule} & \textbf{Interprétation} \\
@@ -1676,9 +1710,10 @@ Les tests réalisés sur le prototype ont permis de valider les points suivants 
 \end{itemize}
 \end{onehalfspace}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Synthèse des fonctionnalités — état final}
+\label{tab:synthese}
 \begin{tabular}{|p{6cm}|p{2.5cm}|p{5cm}|}
 \hline
 \textbf{Fonctionnalité} & \textbf{Statut} & \textbf{Remarque} \\
@@ -1969,7 +2004,12 @@ Certification Électronique du Tchad.
 %% --- Annexe A ---
 \section*{Annexe A : Architecture globale du système}
 \phantomsection\addcontentsline{toc}{section}{Annexe A : Architecture globale}
-\begin{figure}[!ht]
+\begin{onehalfspace}
+Cette annexe reprend, à des fins de référence rapide, le schéma
+d'architecture globale détaillé à la section~3.1.
+\end{onehalfspace}
+
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.90\linewidth]{images/cybersentinel_architecture.png}
 \caption{Architecture globale de CyberSentinel-LLM}
@@ -2066,9 +2106,10 @@ npm run dev
 \end{small}
 \end{tcolorbox}
 
-\begin{table}[!h]
+\begin{table}[H]
 \centering
 \caption{Variables d'environnement principales}
+\label{tab:env_vars}
 \begin{tabular}{|p{5.5cm}|p{3cm}|p{5cm}|}
 \hline
 \textbf{Variable} & \textbf{Défaut} & \textbf{Description} \\

@@ -15,6 +15,19 @@ const AUTH_KEY  = "cs_auth";
 const USER_KEY  = "cs_username";
 const USERS_KEY = "cs_users";
 
+async function _sha256(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function _sha256Sync(text: string): string {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+  }
+  return 'h' + Math.abs(hash).toString(16).padStart(8, '0');
+}
+
 export type StoredUser = {
   username: string;
   password: string;
@@ -53,10 +66,16 @@ export function getUserProfile(): StoredUser | null {
   return users.find((u) => u.username.toLowerCase() === username.toLowerCase()) ?? null;
 }
 
+export function hashPassword(password: string): string {
+  return _sha256Sync(password);
+}
+
 export function checkPassword(username: string, password: string): StoredUser | null {
   const users = getUsers();
+  const hashed = hashPassword(password);
   return users.find(
-    (u) => u.username.toLowerCase() === username.toLowerCase() && u.password === password
+    (u) => u.username.toLowerCase() === username.toLowerCase() &&
+           (u.password === hashed || u.password === password)
   ) ?? null;
 }
 
@@ -122,7 +141,7 @@ export function register(
     return { ok: false, error: "Cet identifiant est déjà utilisé." };
   const newUser: StoredUser = {
     username: username.trim(),
-    password,
+    password: hashPassword(password),
     email: opts?.email?.trim() || undefined,
     phone: opts?.phone?.trim() || undefined,
     role: opts?.role || "Analyste SOC",
@@ -149,7 +168,7 @@ export function addUser(
     return { ok: false, error: "Cet identifiant est déjà utilisé." };
   const newUser: StoredUser = {
     username: username.trim(),
-    password,
+    password: hashPassword(password),
     email: opts?.email?.trim() || undefined,
     phone: opts?.phone?.trim() || undefined,
     role: opts?.role || "Analyste SOC",
