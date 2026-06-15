@@ -276,7 +276,7 @@ export default function LoginPage() {
             </div>
             <div className="login-brand-badge">
               <span className="dot-live" />
-              Projet de Fin d&apos;Études — Master Informatique
+              Projet de Fin d&apos;Études — Licence Informatique
             </div>
           </div>
         </div>

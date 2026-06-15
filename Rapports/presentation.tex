@@ -1,0 +1,532 @@
+\documentclass[11pt,aspectratio=169]{beamer}
+
+% ===================== THEME & POLICES =====================
+\usetheme{Boadilla}
+\usefonttheme{professionalfonts}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\usepackage[french]{babel}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, shadows}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+
+% ===================== COULEURS (palette claire, inspirée de la plateforme) =====================
+\definecolor{csblue}{RGB}{30,64,140}      % bleu profond (titres)
+\definecolor{csteal}{RGB}{13,148,136}     % teal (accent principal)
+\definecolor{csviolet}{RGB}{109,90,205}   % violet (accent secondaire)
+\definecolor{csbg}{RGB}{248,250,252}      % fond très clair
+\definecolor{cstext}{RGB}{30,41,59}       % texte gris-bleu foncé
+\definecolor{csgray}{RGB}{100,116,139}    % texte secondaire
+% Couleurs identiques à la page de garde du rapport
+\definecolor{darkblue}{RGB}{4,89,187}
+\definecolor{lightblue}{RGB}{220,235,255}
+\definecolor{gold}{RGB}{212,175,55}
+
+\setbeamercolor{background canvas}{bg=csbg}
+\setbeamercolor{frametitle}{bg=csblue, fg=white}
+\setbeamercolor{title}{fg=white, bg=csblue}
+\setbeamercolor{subtitle}{fg=csteal!80!white}
+\setbeamercolor{author in head/foot}{bg=csblue!80, fg=white}
+\setbeamercolor{title in head/foot}{bg=csblue!60, fg=white}
+\setbeamercolor{date in head/foot}{bg=csblue!40, fg=white}
+\setbeamercolor{page number in head/foot}{bg=csblue!40, fg=white}
+\setbeamercolor{normal text}{fg=cstext}
+\setbeamercolor{alerted text}{fg=csviolet}
+\setbeamercolor{example text}{fg=csteal}
+\setbeamercolor{block title}{bg=csteal!15, fg=csblue}
+\setbeamercolor{block body}{bg=csteal!5, fg=cstext}
+\setbeamercolor{structure}{fg=csblue}
+\setbeamercolor{section in toc}{fg=csblue}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[page number]
+\setbeamertemplate{section in toc}[sections numbered]
+
+% Désactive les diapositives de section automatiques de Metropolis
+\AtBeginSection{}
+
+% ===================== INFOS DOCUMENT =====================
+\title{CyberSentinel-LLM}
+\subtitle{Détection d'anomalies réseau par ML, RAG et LLM local}
+\author{M. Yakhoub Mahamat Hamdo}
+\institute{ENASTIC --- Licence Informatique \\ Directeur de mémoire : Dr. Mouaz Mickail}
+\date{Année universitaire 2025--2026}
+
+\begin{document}
+
+% ============================================================
+\begin{frame}[plain]
+
+  % --- Marge haute pour dégager la bordure ---
+  \vspace{0.55cm}
+
+  % --- Logo ENASTIC (hauteur contrainte + centré) ---
+  \begin{center}
+    \includegraphics[height=1.4cm, keepaspectratio]{images/enastic_logo2.png}
+  \end{center}
+
+  \vspace{0.08em}
+
+  % --- Boîte PFE (fond bleu clair) ---
+  \begin{center}
+    \begin{tcolorbox}[
+      enhanced, colback=lightblue, colframe=darkblue,
+      arc=5pt, boxrule=1.2pt, width=0.82\textwidth, halign=center,
+      top=2pt, bottom=2pt, left=4pt, right=4pt
+    ]
+      {\small\textbf{Projet de Fin d'Études}}\\[2pt]
+      {\footnotesize En vue de l'obtention du \textbf{Diplôme de Licence en Informatique}}
+    \end{tcolorbox}
+  \end{center}
+
+  \vspace{0.08em}
+
+  % --- Boîte titre (fond bleu foncé, bordure or) ---
+  \begin{center}
+    \begin{tcolorbox}[
+      enhanced, colback=darkblue, colframe=gold,
+      arc=6pt, boxrule=1.5pt, width=0.92\textwidth, halign=center,
+      top=3pt, bottom=3pt, left=4pt, right=4pt
+    ]
+      {\color{white}\small\textbf{\underline{THÈME}}}\\[3pt]
+      {\color{white}\normalsize\textbf{CyberSentinel-LLM}}\\[2pt]
+      {\color{white}\footnotesize Plateforme Cognitive de Cybersécurité Conversationnelle}\\[1pt]
+      {\color{white}\footnotesize pour la Détection Contextuelle et la Neutralisation Adaptive des Menaces Réseau}
+    \end{tcolorbox}
+  \end{center}
+
+  \vspace{0.2em}
+
+  % --- Auteur / Directeur (minipages avec hfill = gauche | droite) ---
+  \noindent\hspace{0.04\textwidth}%
+  \begin{minipage}[t]{0.42\textwidth}
+    \small\textbf{\underline{Présenté par} :}\\[3pt]
+    \small M. YAKHOUB MAHAMAT HAMDO
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[t]{0.42\textwidth}
+    \small\textbf{\underline{Directeur de mémoire} :}\\[3pt]
+    \small Dr. MOUAZ MICKAIL\\[1pt]
+    {\footnotesize\itshape Enseignant chercheur en IA}
+  \end{minipage}\hspace{0.04\textwidth}
+
+  \vspace{0.2em}
+
+  % --- Année universitaire ---
+  \begin{center}
+    \begin{tcolorbox}[
+      enhanced, colback=darkblue, colframe=gold,
+      arc=15pt, boxrule=1.2pt, width=0.48\textwidth, halign=center,
+      top=2pt, bottom=2pt
+    ]
+      {\color{white}\small\textbf{Année Universitaire : 2025--2026}}
+    \end{tcolorbox}
+  \end{center}
+
+  % --- Double bordure dessinée EN DERNIER (passe au-dessus de tout) ---
+  \begin{tikzpicture}[overlay, remember picture]
+    \draw[darkblue, line width=3pt]
+      ([xshift=0.3cm, yshift=-0.3cm]current page.north west)
+      rectangle
+      ([xshift=-0.3cm, yshift=0.3cm]current page.south east);
+    \draw[gold, line width=1pt]
+      ([xshift=0.52cm, yshift=-0.52cm]current page.north west)
+      rectangle
+      ([xshift=-0.52cm, yshift=0.52cm]current page.south east);
+  \end{tikzpicture}
+
+\end{frame}
+
+% ============================================================
+\begin{frame}{Sommaire}
+  \tableofcontents
+\end{frame}
+
+% ============================================================
+\section{Contexte et problématique}
+
+\begin{frame}{Contexte : la cybersécurité au Tchad}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{itemize}
+        \item En 2025, le Tchad compte \textbf{2,74 millions d'internautes} et
+              \textbf{14,5 millions de connexions mobiles}
+        \item La digitalisation avance vite, mais les outils de cybersécurité
+              restent \textbf{limités}
+        \item Peu de SOC nationaux, peu d'experts locaux, dépendance à l'étranger
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Un exemple concret}
+        Le \textbf{10 janvier 2024}, une attaque DDoS a coupé
+        \textbf{tout Internet} au Tchad pendant plusieurs heures.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{1em}
+  \centering
+  \alert{La cybersécurité n'est plus un luxe : c'est une nécessité.}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame}{Le problème}
+  Les outils classiques (Snort, Suricata...) fonctionnent avec des
+  \textbf{règles fixes} :
+
+  \vspace{0.5em}
+  \begin{center}
+  \begin{tikzpicture}
+    \node[draw=csblue, rounded corners, fill=csblue!8, minimum width=10cm, minimum height=1.1cm, align=center]
+      (regle) {``Si tu vois EXACTEMENT ce motif $\rightarrow$ alerte''};
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.8em}
+  \begin{itemize}
+    \item \textcolor{csviolet}{\textbf{Limite 1}} : une attaque \textbf{nouvelle}
+          (jamais vue) passe inaperçue
+    \item \textcolor{csviolet}{\textbf{Limite 2}} : les alertes sont
+          \textbf{trop techniques} pour un analyste débutant
+          \\ \small (ex : \texttt{score=0.87, rule=ml\_iforest\_anomaly} --- et maintenant ?)
+  \end{itemize}
+
+  \vspace{0.8em}
+  \begin{block}{Notre question centrale}
+    Comment détecter des attaques \textbf{même inconnues}, les
+    \textbf{expliquer en langage simple}, tout en gardant un
+    \textbf{humain} dans la décision finale --- sur une machine
+    \textbf{sans GPU} ?
+  \end{block}
+\end{frame}
+
+% ============================================================
+\section{Notre approche}
+
+\begin{frame}{L'idée : 3 cerveaux qui travaillent ensemble}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, minimum width=3.4cm, minimum height=2.1cm,
+                   align=center, drop shadow, font=\small},
+      arr/.style={-{Latex}, thick, csgray}
+    ]
+    \node[box, fill=csblue!12, draw=csblue] (ml) at (0,0)
+      {\textbf{Machine Learning}\\[2pt] IsolationForest + LOF\\[2pt]
+       \textit{repère ce qui est anormal}};
+
+    \node[box, fill=csteal!15, draw=csteal] (rag) at (4.6,0)
+      {\textbf{RAG + MITRE ATT\&CK}\\[2pt] 697 techniques connues\\[2pt]
+       \textit{retrouve la fiche technique}};
+
+    \node[box, fill=csviolet!12, draw=csviolet] (llm) at (9.2,0)
+      {\textbf{LLM local (Ollama)}\\[2pt] qwen2.5:1.5b\\[2pt]
+       \textit{explique en français}};
+
+    \draw[arr] (ml) -- (rag);
+    \draw[arr] (rag) -- (llm);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{1.2em}
+  \begin{exampleblock}{Principe central : Human-in-the-Loop}
+    L'IA \textbf{analyse, explique, recommande} --- mais c'est toujours
+    \textbf{l'analyste humain} qui décide de bloquer ou non.
+  \end{exampleblock}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame}{Objectif général}
+  \begin{block}{}
+    Concevoir et réaliser une plateforme qui combine \textbf{détection
+    d'anomalies} (Machine Learning), \textbf{explication contextuelle}
+    (RAG + MITRE ATT\&CK + LLM local), et \textbf{neutralisation adaptive}
+    des menaces validée par un humain --- pour aider un analyste SOC à
+    comprendre et réagir plus vite.
+  \end{block}
+
+  \vspace{1em}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Contraintes respectées :}
+      \begin{itemize}
+        \item Fonctionne \textbf{sans GPU} (CPU + 16 Go RAM)
+        \item \textbf{100\% local} --- aucune donnée envoyée au cloud
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Technologies clés :}
+      \begin{itemize}
+        \item Backend : Python / FastAPI
+        \item Frontend : Next.js / React
+        \item Base : SQLite + ChromaDB
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\section{Architecture et fonctionnement}
+
+\begin{frame}{Architecture globale --- 5 couches}
+  \begin{center}
+  \begin{tikzpicture}[
+      layer/.style={draw, rounded corners, minimum width=10.5cm, minimum height=0.85cm,
+                     align=center, font=\small, drop shadow},
+      lbl/.style={font=\scriptsize\color{csgray}, align=left}
+    ]
+    \node[layer, fill=csblue!15, draw=csblue] (l5) at (0,4)
+      {\textbf{Interface (Next.js)} --- Dashboard, Alertes, Chat, Démo...};
+    \node[layer, fill=csblue!10, draw=csblue] (l4) at (0,3)
+      {\textbf{API (FastAPI)} --- routes, sécurité, temps réel (SSE)};
+    \node[layer, fill=csteal!15, draw=csteal] (l3) at (0,2)
+      {\textbf{Détection ML} --- IsolationForest + LOF + heuristique};
+    \node[layer, fill=csteal!10, draw=csteal] (l2) at (0,1)
+      {\textbf{RAG + LLM} --- ChromaDB (MITRE ATT\&CK) + Ollama};
+    \node[layer, fill=csviolet!12, draw=csviolet] (l1) at (0,0)
+      {\textbf{Défense} --- liste noire, blocage, validation humaine};
+
+    \foreach \i/\j in {l5/l4, l4/l3, l3/l2, l2/l1} {
+      \draw[-{Latex}, csgray] (\i.south) -- (\j.north);
+    }
+  \end{tikzpicture}
+  \end{center}
+  \vspace{0.5em}
+  \centering \small
+  Architecture \textbf{monolithique modulaire} : simple à déployer
+  localement, sans serveur complexe.
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame}{Comment ça marche ? Exemple concret}
+  \small
+  \textit{Une connexion SSH échoue 3 fois en 1h, à 3h du matin, depuis une IP inconnue.}
+
+  \vspace{0.5em}
+  \begin{center}
+  \begin{tikzpicture}[
+      stepbox/.style={draw, rounded corners, minimum width=2.2cm, minimum height=1.5cm,
+                    align=center, font=\tiny, drop shadow},
+      arr/.style={-{Latex}, thick, csgray}
+    ]
+    \node[stepbox, fill=csblue!12, draw=csblue] (a) at (0,0) {Log reçu\\\texttt{/ingest/logs}};
+    \node[stepbox, fill=csteal!15, draw=csteal] (b) at (2.6,0) {Score ML\\$0,87$ (high)};
+    \node[stepbox, fill=csviolet!12, draw=csviolet] (c) at (5.2,0) {Défense propose\\``Bloquer ?''};
+    \node[stepbox, fill=csteal!15, draw=csteal] (d) at (7.8,0) {RAG trouve\\T1110.001};
+    \node[stepbox, fill=csblue!12, draw=csblue] (e) at (10.4,0) {LLM explique\\en français};
+
+    \draw[arr] (a) -- (b);
+    \draw[arr] (b) -- (c);
+    \draw[arr] (c) -- (d);
+    \draw[arr] (d) -- (e);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{1em}
+  \begin{block}{Score de confiance final}
+    \centering
+    confiance $= 0{,}4 \times \text{score}_{ML} + 0{,}3 \times \text{score}_{RAG} + 0{,}3 \times \text{score}_{LLM}$
+
+    \small $0{,}4{\times}0{,}87 + 0{,}3{\times}0{,}82 + 0{,}3{\times}0{,}89 = \mathbf{0{,}861}$
+    $\rightarrow$ \textbf{86\% de confiance}
+  \end{block}
+
+  \vspace{0.5em}
+  \centering
+  L'analyste reçoit une notification, \textbf{décide}, et l'IP est bloquée
+  pendant 30 min seulement si \textbf{lui} l'approuve.
+\end{frame}
+
+% ============================================================
+\section{La plateforme en images}
+
+\begin{frame}{Tableau de bord SOC}
+  \centering
+  \includegraphics[width=0.72\textwidth]{images/screen_dashboard.png}
+  \\ \small \textcolor{csgray}{Vue temps réel : alertes, carte des attaques, indicateurs clés}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame}{Alertes et incidents}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{images/screen_alerts.png}\\
+      \small \textcolor{csgray}{Liste des alertes détectées}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{images/screen_incidents.png}\\
+      \small \textcolor{csgray}{Incidents groupés depuis les alertes}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame}{Assistant conversationnel (Chat SOC)}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{images/screen_chat.png}\\
+      \small \textcolor{csgray}{Discussion en langage naturel avec l'IA}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{images/screen_voice_mode.png}\\
+      \small \textcolor{csgray}{Mode vocal (voix $\rightarrow$ texte $\rightarrow$ voix)}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame}{Neutralisation et suivi}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{images/screen_blocking_notif.png}\\
+      \small \textcolor{csgray}{Notification de blocage : validation humaine requise}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{images/screen_model_metrics.png}\\
+      \small \textcolor{csgray}{Métriques du modèle ML}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\section{Tests et résultats}
+
+\begin{frame}{Tests automatisés}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Backend --- pytest}
+      \begin{itemize}
+        \item \texttt{test\_defense.py} --- décision, approbation, révocation
+        \item \texttt{test\_ip\_blacklist.py} --- ajout, blocage, expiration
+        \item \texttt{test\_detection.py} --- features ML, fallback heuristique
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Frontend --- Vitest}
+      \begin{itemize}
+        \item \texttt{auth.test.ts} --- login, register, 2FA TOTP
+        \item DOM simulé avec \texttt{happy-dom}
+      \end{itemize}
+      \vspace{0.8em}
+      \begin{block}{Résultat global}
+        \centering
+        Tous les tests passent \\[2pt]
+        \small \texttt{pytest} $+$ \texttt{vitest --run}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\section{Démonstration}
+
+{\setbeamercolor{background canvas}{bg=csblue}
+\setbeamercolor{normal text}{fg=white}
+\begin{frame}[plain]
+  \centering
+  \vspace{3em}
+  {\Large\bfseries\color{white} Démonstration en direct}\\[1em]
+  {\normalsize\color{white!80!csblue}
+   Génération d'une attaque $\rightarrow$ détection $\rightarrow$
+   explication $\rightarrow$ validation et blocage}
+\end{frame}
+}
+
+% ============================================================
+\section{Bilan et perspectives}
+
+\begin{frame}{Ce qui fonctionne}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{itemize}
+        \item Détection ML en \textbf{moins de 50 ms}
+        \item RAG sur \textbf{697 techniques} MITRE ATT\&CK
+        \item Explication LLM en \textbf{30 à 90 secondes}
+        \item Blocage avec \textbf{validation humaine} obligatoire
+        \item Interface temps réel (sans rechargement de page)
+        \item \textbf{Tests automatisés} (backend + frontend)
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{images/screen_demo.png}\\
+      \small \textcolor{csgray}{Scénario de démonstration reproductible}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame}{Limites et perspectives}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Limites actuelles}
+      \begin{itemize}
+        \item Authentification simplifiée (côté frontend)
+        \item Blocage iptables \textbf{affiché}, pas exécuté
+              automatiquement
+        \item Détection centrée sur le \textbf{SSH}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Perspectives}
+      \begin{itemize}
+        \item Couvrir plus de types d'attaques (DDoS, injection...)
+        \item Exécution automatique sécurisée des blocages
+        \item Authentification renforcée (JWT, rôles)
+        \item Adaptation au contexte tchadien (ANSICE)
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Conclusion}
+  \begin{block}{En résumé}
+    CyberSentinel-LLM montre qu'il est possible de construire, avec des
+    outils \textbf{gratuits et locaux}, une plateforme qui
+    \textbf{détecte}, \textbf{explique} et \textbf{aide à décider} ---
+    en gardant toujours \textbf{l'humain au centre}.
+  \end{block}
+
+  \vspace{1em}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \textbf{Contributions}
+      \begin{itemize}
+        \small
+        \item Moteur ML non supervisé (IF + LOF)
+        \item RAG sur 697 techniques MITRE
+        \item LLM local, 100\% hors ligne
+        \item Human-in-the-Loop intégré
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \large Une première brique vers des outils
+      de cybersécurité \textbf{accessibles}
+      au contexte tchadien.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ============================================================
+{\setbeamercolor{background canvas}{bg=csblue}
+\begin{frame}[plain]
+  \centering
+  \vspace{3.5em}
+  {\Large\bfseries\color{white} Merci pour votre attention}\\[1.2em]
+  {\LARGE\color{csteal} Questions ?}
+\end{frame}
+}
+
+\end{document}
