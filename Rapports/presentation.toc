@@ -1,0 +1,7 @@
+\babel@toc {french}{}\relax 
+\beamer@sectionintoc {1}{Contexte et problématique}{3}{0}{1}
+\beamer@sectionintoc {2}{Notre approche}{10}{0}{2}
+\beamer@sectionintoc {3}{Architecture et fonctionnement}{14}{0}{3}
+\beamer@sectionintoc {4}{Tests et résultats}{25}{0}{4}
+\beamer@sectionintoc {5}{Démonstration}{28}{0}{5}
+\beamer@sectionintoc {6}{Bilan et perspectives}{29}{0}{6}
