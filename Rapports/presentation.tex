@@ -11,6 +11,7 @@
 \usetikzlibrary{positioning, arrows.meta, shadows}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{tabularx}
 \usepackage{microtype}
 \usepackage{tcolorbox}
 \tcbuselibrary{skins}
@@ -44,11 +45,23 @@
 \setbeamercolor{section in toc}{fg=csblue}
 
 \setbeamertemplate{navigation symbols}{}
-\setbeamertemplate{footline}[page number]
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.35\paperwidth,ht=2.5ex,dp=1.5ex,leftskip=.3cm]{author in head/foot}%
+      \usebeamerfont{author in head/foot}M. Yakhoub Mahamat Hamdo
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.35\paperwidth,ht=2.5ex,dp=1.5ex,center]{title in head/foot}%
+      \usebeamerfont{title in head/foot}CyberSentinel-LLM
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.30\paperwidth,ht=2.5ex,dp=1.5ex,rightskip=.3cm,right]{date in head/foot}%
+      \usebeamerfont{date in head/foot}\insertframenumber{}/\inserttotalframenumber
+    \end{beamercolorbox}%
+  }%
+  \vskip0pt%
+}
 \setbeamertemplate{section in toc}[sections numbered]
 
-% Désactive les diapositives de section automatiques de Metropolis
-\AtBeginSection{}
 
 % ===================== INFOS DOCUMENT =====================
 \title{CyberSentinel-LLM}
@@ -60,86 +73,54 @@
 \begin{document}
 
 % ============================================================
+% PAGE DE GARDE
+% ============================================================
 \begin{frame}[plain]
+  \vspace{0.3cm}
 
-  % --- Marge haute pour dégager la bordure ---
-  \vspace{0.55cm}
-
-  % --- Logo ENASTIC (hauteur contrainte + centré) ---
   \begin{center}
     \includegraphics[height=1.4cm, keepaspectratio]{images/enastic_logo2.png}
   \end{center}
+  \vspace{0.0em}
 
-  \vspace{0.08em}
-
-  % --- Boîte PFE (fond bleu clair) ---
   \begin{center}
-    \begin{tcolorbox}[
-      enhanced, colback=lightblue, colframe=darkblue,
-      arc=5pt, boxrule=1.2pt, width=0.82\textwidth, halign=center,
-      top=2pt, bottom=2pt, left=4pt, right=4pt
-    ]
-      {\small\textbf{Projet de Fin d'Études}}\\[2pt]
-      {\footnotesize En vue de l'obtention du \textbf{Diplôme de Licence en Informatique}}
-    \end{tcolorbox}
+    {\large\textbf{PROJET DE FIN D'ÉTUDES}}\\[4pt]
+    {\small En vue de l'obtention du \textbf{Diplôme de Licence en Informatique}}
   \end{center}
+  \vspace{0.1em}
 
-  \vspace{0.08em}
-
-  % --- Boîte titre (fond bleu foncé, bordure or) ---
   \begin{center}
     \begin{tcolorbox}[
       enhanced, colback=darkblue, colframe=gold,
       arc=6pt, boxrule=1.5pt, width=0.92\textwidth, halign=center,
-      top=3pt, bottom=3pt, left=4pt, right=4pt
+      top=5pt, bottom=5pt, left=6pt, right=6pt
     ]
-      {\color{white}\small\textbf{\underline{THÈME}}}\\[3pt]
+      {\color{white}\small\textbf{\underline{THÈME}}}\\[4pt]
       {\color{white}\normalsize\textbf{CyberSentinel-LLM}}\\[2pt]
       {\color{white}\footnotesize Plateforme Cognitive de Cybersécurité Conversationnelle}\\[1pt]
       {\color{white}\footnotesize pour la Détection Contextuelle et la Neutralisation Adaptive des Menaces Réseau}
     \end{tcolorbox}
   \end{center}
+  \vspace{0.4em}
 
-  \vspace{0.2em}
-
-  % --- Auteur / Directeur (minipages avec hfill = gauche | droite) ---
-  \noindent\hspace{0.04\textwidth}%
-  \begin{minipage}[t]{0.42\textwidth}
-    \small\textbf{\underline{Présenté par} :}\\[3pt]
-    \small M. YAKHOUB MAHAMAT HAMDO
-  \end{minipage}%
-  \hfill
-  \begin{minipage}[t]{0.42\textwidth}
-    \small\textbf{\underline{Directeur de mémoire} :}\\[3pt]
-    \small Dr. MOUAZ MICKAIL\\[1pt]
-    {\footnotesize\itshape Enseignant chercheur en IA}
-  \end{minipage}\hspace{0.04\textwidth}
-
-  \vspace{0.2em}
-
-  % --- Année universitaire ---
   \begin{center}
-    \begin{tcolorbox}[
-      enhanced, colback=darkblue, colframe=gold,
-      arc=15pt, boxrule=1.2pt, width=0.48\textwidth, halign=center,
-      top=2pt, bottom=2pt
-    ]
-      {\color{white}\small\textbf{Année Universitaire : 2025--2026}}
-    \end{tcolorbox}
+  \begin{tabularx}{0.90\textwidth}{>{\centering\arraybackslash}X >{\centering\arraybackslash}X}
+    \small\textbf{\underline{Présenté par} :} & \small\textbf{\underline{Directeur de mémoire} :} \\[5pt]
+    \small M. YAKHOUB MAHAMAT HAMDO & \small Dr. MOUAZ MICKAIL
+  \end{tabularx}
   \end{center}
 
-  % --- Double bordure dessinée EN DERNIER (passe au-dessus de tout) ---
+  % Bordure EN DERNIER
   \begin{tikzpicture}[overlay, remember picture]
-    \draw[darkblue, line width=3pt]
-      ([xshift=0.3cm, yshift=-0.3cm]current page.north west)
+    \draw[darkblue, line width=2pt]
+      ([xshift=0.22cm, yshift=-0.22cm]current page.north west)
       rectangle
-      ([xshift=-0.3cm, yshift=0.3cm]current page.south east);
-    \draw[gold, line width=1pt]
-      ([xshift=0.52cm, yshift=-0.52cm]current page.north west)
+      ([xshift=-0.22cm, yshift=0.22cm]current page.south east);
+    \draw[gold, line width=0.8pt]
+      ([xshift=0.40cm, yshift=-0.40cm]current page.north west)
       rectangle
-      ([xshift=-0.52cm, yshift=0.52cm]current page.south east);
+      ([xshift=-0.40cm, yshift=0.40cm]current page.south east);
   \end{tikzpicture}
-
 \end{frame}
 
 % ============================================================
@@ -152,249 +133,152 @@
 
 \begin{frame}{Contexte : la cybersécurité au Tchad}
   \begin{columns}[T]
-    \begin{column}{0.55\textwidth}
+    \begin{column}{0.58\textwidth}
       \begin{itemize}
-        \item En 2025, le Tchad compte \textbf{2,74 millions d'internautes} et
-              \textbf{14,5 millions de connexions mobiles}
-        \item La digitalisation avance vite, mais les outils de cybersécurité
-              restent \textbf{limités}
-        \item Peu de SOC nationaux, peu d'experts locaux, dépendance à l'étranger
+        \item<1-> \textbf{2,74 M d'internautes} et 14,5 M de connexions
+              mobiles au Tchad en 2025
+        \item<2-> La digitalisation avance vite, mais les outils de
+              cybersécurité restent \textbf{quasi inexistants}
+        \item<3-> Peu de SOC nationaux, peu d'experts locaux
       \end{itemize}
     \end{column}
-    \begin{column}{0.45\textwidth}
-      \begin{block}{Un exemple concret}
-        Le \textbf{10 janvier 2024}, une attaque DDoS a coupé
+    \begin{column}{0.42\textwidth}
+      \onslide<2->{
+      \begin{block}{Exemple réel}
+        \textbf{10 jan. 2024} : attaque DDoS coupe
         \textbf{tout Internet} au Tchad pendant plusieurs heures.
       \end{block}
+      }
     \end{column}
   \end{columns}
-  \vspace{1em}
-  \centering
-  \alert{La cybersécurité n'est plus un luxe : c'est une nécessité.}
+  \vspace{0.8em}
+  \onslide<3->{\centering\alert{La cybersécurité n'est plus un luxe : c'est une nécessité.}}
 \end{frame}
 
 % ------------------------------------------------------------
 \begin{frame}{Le problème}
-  Les outils classiques (Snort, Suricata...) fonctionnent avec des
-  \textbf{règles fixes} :
-
-  \vspace{0.5em}
+  \onslide<1->{
+  Les outils classiques (Snort, Suricata\ldots) fonctionnent sur des \textbf{règles fixes} :
   \begin{center}
   \begin{tikzpicture}
-    \node[draw=csblue, rounded corners, fill=csblue!8, minimum width=10cm, minimum height=1.1cm, align=center]
-      (regle) {``Si tu vois EXACTEMENT ce motif $\rightarrow$ alerte''};
+    \node[draw=csblue, rounded corners, fill=csblue!8,
+          minimum width=9cm, minimum height=0.9cm, align=center, font=\small]
+      {``Si tu vois EXACTEMENT ce motif $\rightarrow$ alerte''};
   \end{tikzpicture}
   \end{center}
+  }
 
-  \vspace{0.8em}
+  \vspace{0.5em}
   \begin{itemize}
-    \item \textcolor{csviolet}{\textbf{Limite 1}} : une attaque \textbf{nouvelle}
-          (jamais vue) passe inaperçue
-    \item \textcolor{csviolet}{\textbf{Limite 2}} : les alertes sont
-          \textbf{trop techniques} pour un analyste débutant
-          \\ \small (ex : \texttt{score=0.87, rule=ml\_iforest\_anomaly} --- et maintenant ?)
+    \item<2-> \textcolor{csviolet}{\textbf{Limite 1}} : une attaque \textbf{nouvelle} passe inaperçue
+    \item<3-> \textcolor{csviolet}{\textbf{Limite 2}} : les alertes sont \textbf{incompréhensibles}
+              pour un analyste débutant
   \end{itemize}
 
-  \vspace{0.8em}
+  \vspace{0.6em}
+  \onslide<4->{
   \begin{block}{Notre question centrale}
-    Comment détecter des attaques \textbf{même inconnues}, les
-    \textbf{expliquer en langage simple}, tout en gardant un
-    \textbf{humain} dans la décision finale --- sur une machine
-    \textbf{sans GPU} ?
+    Comment détecter des attaques \textbf{même inconnues} et les
+    \textbf{expliquer en langage simple}, en gardant l'\textbf{humain} dans la boucle ?
   \end{block}
+  }
 \end{frame}
 
 % ============================================================
 \section{Notre approche}
 
-\begin{frame}{L'idée : 3 cerveaux qui travaillent ensemble}
+\begin{frame}{L'idée : 3 cerveaux qui coopèrent}
   \begin{center}
   \begin{tikzpicture}[
-      box/.style={draw, rounded corners, minimum width=3.4cm, minimum height=2.1cm,
+      box/.style={draw, rounded corners, minimum width=3.2cm, minimum height=2cm,
                    align=center, drop shadow, font=\small},
       arr/.style={-{Latex}, thick, csgray}
     ]
-    \node[box, fill=csblue!12, draw=csblue] (ml) at (0,0)
+    \node<1->[box, fill=csblue!12, draw=csblue] (ml) at (0,0)
       {\textbf{Machine Learning}\\[2pt] IsolationForest + LOF\\[2pt]
-       \textit{repère ce qui est anormal}};
+       \textit{\scriptsize repère ce qui est anormal}};
 
-    \node[box, fill=csteal!15, draw=csteal] (rag) at (4.6,0)
-      {\textbf{RAG + MITRE ATT\&CK}\\[2pt] 697 techniques connues\\[2pt]
-       \textit{retrouve la fiche technique}};
+    \node<2->[box, fill=csteal!15, draw=csteal] (rag) at (4.4,0)
+      {\textbf{RAG + MITRE}\\[2pt] 697 techniques\\[2pt]
+       \textit{\scriptsize retrouve la fiche}};
 
-    \node[box, fill=csviolet!12, draw=csviolet] (llm) at (9.2,0)
-      {\textbf{LLM local (Ollama)}\\[2pt] qwen2.5:1.5b\\[2pt]
-       \textit{explique en français}};
+    \node<3->[box, fill=csviolet!12, draw=csviolet] (llm) at (8.8,0)
+      {\textbf{LLM local}\\[2pt] Ollama (qwen2.5)\\[2pt]
+       \textit{\scriptsize explique en français}};
 
-    \draw[arr] (ml) -- (rag);
-    \draw[arr] (rag) -- (llm);
+    \draw<2->[arr] (ml) -- (rag);
+    \draw<3->[arr] (rag) -- (llm);
   \end{tikzpicture}
   \end{center}
 
-  \vspace{1.2em}
-  \begin{exampleblock}{Principe central : Human-in-the-Loop}
-    L'IA \textbf{analyse, explique, recommande} --- mais c'est toujours
-    \textbf{l'analyste humain} qui décide de bloquer ou non.
+  \vspace{0.8em}
+  \onslide<4->{
+  \begin{exampleblock}{Principe : Human-in-the-Loop}
+    L'IA \textbf{analyse, explique, recommande} ---
+    c'est l'\textbf{analyste humain} qui décide du blocage.
   \end{exampleblock}
-\end{frame}
-
-% ------------------------------------------------------------
-\begin{frame}{Objectif général}
-  \begin{block}{}
-    Concevoir et réaliser une plateforme qui combine \textbf{détection
-    d'anomalies} (Machine Learning), \textbf{explication contextuelle}
-    (RAG + MITRE ATT\&CK + LLM local), et \textbf{neutralisation adaptive}
-    des menaces validée par un humain --- pour aider un analyste SOC à
-    comprendre et réagir plus vite.
-  \end{block}
-
-  \vspace{1em}
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \textbf{Contraintes respectées :}
-      \begin{itemize}
-        \item Fonctionne \textbf{sans GPU} (CPU + 16 Go RAM)
-        \item \textbf{100\% local} --- aucune donnée envoyée au cloud
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \textbf{Technologies clés :}
-      \begin{itemize}
-        \item Backend : Python / FastAPI
-        \item Frontend : Next.js / React
-        \item Base : SQLite + ChromaDB
-      \end{itemize}
-    \end{column}
-  \end{columns}
+  }
 \end{frame}
 
 % ============================================================
 \section{Architecture et fonctionnement}
 
-\begin{frame}{Architecture globale --- 5 couches}
+\begin{frame}{Architecture --- 5 couches}
   \begin{center}
   \begin{tikzpicture}[
-      layer/.style={draw, rounded corners, minimum width=10.5cm, minimum height=0.85cm,
-                     align=center, font=\small, drop shadow},
-      lbl/.style={font=\scriptsize\color{csgray}, align=left}
+      layer/.style={draw, rounded corners, minimum width=10cm, minimum height=0.8cm,
+                     align=center, font=\small, drop shadow}
     ]
-    \node[layer, fill=csblue!15, draw=csblue] (l5) at (0,4)
-      {\textbf{Interface (Next.js)} --- Dashboard, Alertes, Chat, Démo...};
-    \node[layer, fill=csblue!10, draw=csblue] (l4) at (0,3)
+    \node<1->[layer, fill=csblue!15, draw=csblue] (l5) at (0,3.6)
+      {\textbf{Interface (Next.js)} --- Dashboard, Alertes, Chat, Démo};
+    \node<2->[layer, fill=csblue!10, draw=csblue] (l4) at (0,2.7)
       {\textbf{API (FastAPI)} --- routes, sécurité, temps réel (SSE)};
-    \node[layer, fill=csteal!15, draw=csteal] (l3) at (0,2)
-      {\textbf{Détection ML} --- IsolationForest + LOF + heuristique};
-    \node[layer, fill=csteal!10, draw=csteal] (l2) at (0,1)
-      {\textbf{RAG + LLM} --- ChromaDB (MITRE ATT\&CK) + Ollama};
-    \node[layer, fill=csviolet!12, draw=csviolet] (l1) at (0,0)
+    \node<3->[layer, fill=csteal!15, draw=csteal] (l3) at (0,1.8)
+      {\textbf{Détection ML} --- IsolationForest + LOF};
+    \node<4->[layer, fill=csteal!10, draw=csteal] (l2) at (0,0.9)
+      {\textbf{RAG + LLM} --- ChromaDB + Ollama};
+    \node<5->[layer, fill=csviolet!12, draw=csviolet] (l1) at (0,0)
       {\textbf{Défense} --- liste noire, blocage, validation humaine};
 
-    \foreach \i/\j in {l5/l4, l4/l3, l3/l2, l2/l1} {
-      \draw[-{Latex}, csgray] (\i.south) -- (\j.north);
-    }
+    \draw<2->[-{Latex}, csgray] (l5.south) -- (l4.north);
+    \draw<3->[-{Latex}, csgray] (l4.south) -- (l3.north);
+    \draw<4->[-{Latex}, csgray] (l3.south) -- (l2.north);
+    \draw<5->[-{Latex}, csgray] (l2.south) -- (l1.north);
   \end{tikzpicture}
   \end{center}
-  \vspace{0.5em}
-  \centering \small
-  Architecture \textbf{monolithique modulaire} : simple à déployer
-  localement, sans serveur complexe.
 \end{frame}
 
 % ------------------------------------------------------------
-\begin{frame}{Comment ça marche ? Exemple concret}
-  \small
-  \textit{Une connexion SSH échoue 3 fois en 1h, à 3h du matin, depuis une IP inconnue.}
-
+\begin{frame}{Scénario complet : attaque SSH}
+  \small\textit{3h du matin --- 3 tentatives SSH échouées depuis une IP inconnue}
   \vspace{0.5em}
   \begin{center}
   \begin{tikzpicture}[
-      stepbox/.style={draw, rounded corners, minimum width=2.2cm, minimum height=1.5cm,
+      stepbox/.style={draw, rounded corners, minimum width=2cm, minimum height=1.3cm,
                     align=center, font=\tiny, drop shadow},
       arr/.style={-{Latex}, thick, csgray}
     ]
-    \node[stepbox, fill=csblue!12, draw=csblue] (a) at (0,0) {Log reçu\\\texttt{/ingest/logs}};
-    \node[stepbox, fill=csteal!15, draw=csteal] (b) at (2.6,0) {Score ML\\$0,87$ (high)};
-    \node[stepbox, fill=csviolet!12, draw=csviolet] (c) at (5.2,0) {Défense propose\\``Bloquer ?''};
-    \node[stepbox, fill=csteal!15, draw=csteal] (d) at (7.8,0) {RAG trouve\\T1110.001};
-    \node[stepbox, fill=csblue!12, draw=csblue] (e) at (10.4,0) {LLM explique\\en français};
+    \node<1->[stepbox, fill=csblue!12, draw=csblue]   (a) at (0,0)   {Log reçu};
+    \node<2->[stepbox, fill=csteal!15, draw=csteal]   (b) at (2.5,0) {Score ML\\$0{,}87$};
+    \node<3->[stepbox, fill=csviolet!12, draw=csviolet](c) at (5,0)  {Défense\\``Bloquer ?''};
+    \node<4->[stepbox, fill=csteal!15, draw=csteal]   (d) at (7.5,0) {RAG\\T1110.001};
+    \node<5->[stepbox, fill=csblue!12, draw=csblue]   (e) at (10,0)  {LLM\\en français};
 
-    \draw[arr] (a) -- (b);
-    \draw[arr] (b) -- (c);
-    \draw[arr] (c) -- (d);
-    \draw[arr] (d) -- (e);
+    \draw<2->[arr] (a) -- (b);
+    \draw<3->[arr] (b) -- (c);
+    \draw<4->[arr] (c) -- (d);
+    \draw<5->[arr] (d) -- (e);
   \end{tikzpicture}
   \end{center}
 
-  \vspace{1em}
+  \vspace{0.6em}
+  \onslide<6->{
   \begin{block}{Score de confiance final}
     \centering
-    confiance $= 0{,}4 \times \text{score}_{ML} + 0{,}3 \times \text{score}_{RAG} + 0{,}3 \times \text{score}_{LLM}$
-
-    \small $0{,}4{\times}0{,}87 + 0{,}3{\times}0{,}82 + 0{,}3{\times}0{,}89 = \mathbf{0{,}861}$
-    $\rightarrow$ \textbf{86\% de confiance}
+    $0{,}4{\times}0{,}87 + 0{,}3{\times}0{,}82 + 0{,}3{\times}0{,}89 = \mathbf{0{,}861}$
+    \quad $\rightarrow$ \textbf{86\% --- blocage soumis à l'analyste}
   \end{block}
-
-  \vspace{0.5em}
-  \centering
-  L'analyste reçoit une notification, \textbf{décide}, et l'IP est bloquée
-  pendant 30 min seulement si \textbf{lui} l'approuve.
-\end{frame}
-
-% ============================================================
-\section{La plateforme en images}
-
-\begin{frame}{Tableau de bord SOC}
-  \centering
-  \includegraphics[width=0.72\textwidth]{images/screen_dashboard.png}
-  \\ \small \textcolor{csgray}{Vue temps réel : alertes, carte des attaques, indicateurs clés}
-\end{frame}
-
-% ------------------------------------------------------------
-\begin{frame}{Alertes et incidents}
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{images/screen_alerts.png}\\
-      \small \textcolor{csgray}{Liste des alertes détectées}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{images/screen_incidents.png}\\
-      \small \textcolor{csgray}{Incidents groupés depuis les alertes}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ------------------------------------------------------------
-\begin{frame}{Assistant conversationnel (Chat SOC)}
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{images/screen_chat.png}\\
-      \small \textcolor{csgray}{Discussion en langage naturel avec l'IA}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{images/screen_voice_mode.png}\\
-      \small \textcolor{csgray}{Mode vocal (voix $\rightarrow$ texte $\rightarrow$ voix)}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ------------------------------------------------------------
-\begin{frame}{Neutralisation et suivi}
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{images/screen_blocking_notif.png}\\
-      \small \textcolor{csgray}{Notification de blocage : validation humaine requise}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{images/screen_model_metrics.png}\\
-      \small \textcolor{csgray}{Métriques du modèle ML}
-    \end{column}
-  \end{columns}
+  }
 \end{frame}
 
 % ============================================================
@@ -402,42 +286,47 @@
 
 \begin{frame}{Tests automatisés}
   \begin{columns}[T]
-    \begin{column}{0.52\textwidth}
+    \begin{column}{0.5\textwidth}
+      \onslide<1->{
       \textbf{Backend --- pytest}
       \begin{itemize}
-        \item \texttt{test\_defense.py} --- décision, approbation, révocation
-        \item \texttt{test\_ip\_blacklist.py} --- ajout, blocage, expiration
-        \item \texttt{test\_detection.py} --- features ML, fallback heuristique
+        \item \texttt{test\_defense.py}
+        \item \texttt{test\_ip\_blacklist.py}
+        \item \texttt{test\_detection.py}
       \end{itemize}
+      }
     \end{column}
-    \begin{column}{0.48\textwidth}
+    \begin{column}{0.5\textwidth}
+      \onslide<2->{
       \textbf{Frontend --- Vitest}
       \begin{itemize}
-        \item \texttt{auth.test.ts} --- login, register, 2FA TOTP
+        \item \texttt{auth.test.ts} (login, 2FA TOTP)
         \item DOM simulé avec \texttt{happy-dom}
       \end{itemize}
-      \vspace{0.8em}
-      \begin{block}{Résultat global}
-        \centering
-        Tous les tests passent \\[2pt]
-        \small \texttt{pytest} $+$ \texttt{vitest --run}
-      \end{block}
+      }
     \end{column}
   \end{columns}
+
+  \vspace{1em}
+  \onslide<3->{
+  \begin{block}{\centering Résultat}
+    \centering
+    \textbf{Tous les tests passent} \quad \texttt{pytest} $+$ \texttt{vitest --run}
+  \end{block}
+  }
 \end{frame}
 
 % ============================================================
 \section{Démonstration}
 
 {\setbeamercolor{background canvas}{bg=csblue}
-\setbeamercolor{normal text}{fg=white}
 \begin{frame}[plain]
   \centering
-  \vspace{3em}
+  \vspace{3.5em}
   {\Large\bfseries\color{white} Démonstration en direct}\\[1em]
-  {\normalsize\color{white!80!csblue}
+  {\normalsize\color{white!70!csblue}
    Génération d'une attaque $\rightarrow$ détection $\rightarrow$
-   explication $\rightarrow$ validation et blocage}
+   explication $\rightarrow$ validation}
 \end{frame}
 }
 
@@ -445,78 +334,70 @@
 \section{Bilan et perspectives}
 
 \begin{frame}{Ce qui fonctionne}
-  \begin{columns}[T]
-    \begin{column}{0.55\textwidth}
-      \begin{itemize}
-        \item Détection ML en \textbf{moins de 50 ms}
-        \item RAG sur \textbf{697 techniques} MITRE ATT\&CK
-        \item Explication LLM en \textbf{30 à 90 secondes}
-        \item Blocage avec \textbf{validation humaine} obligatoire
-        \item Interface temps réel (sans rechargement de page)
-        \item \textbf{Tests automatisés} (backend + frontend)
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.45\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{images/screen_demo.png}\\
-      \small \textcolor{csgray}{Scénario de démonstration reproductible}
-    \end{column}
-  \end{columns}
+  \begin{itemize}
+    \item<1-> Détection ML en \textbf{moins de 50 ms}
+    \item<2-> RAG sur \textbf{697 techniques} MITRE ATT\&CK
+    \item<3-> Explication LLM en \textbf{30--90 secondes}
+    \item<4-> Blocage avec \textbf{validation humaine} obligatoire
+    \item<5-> Interface temps réel via SSE (sans rechargement)
+    \item<6-> Tests automatisés backend + frontend
+  \end{itemize}
 \end{frame}
 
 % ------------------------------------------------------------
-\begin{frame}{Limites et perspectives}
+\begin{frame}{Limites \& perspectives}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
-      \textbf{Limites actuelles}
+      \onslide<1->{
+      \textbf{Limites}
       \begin{itemize}
-        \item Authentification simplifiée (côté frontend)
-        \item Blocage iptables \textbf{affiché}, pas exécuté
-              automatiquement
-        \item Détection centrée sur le \textbf{SSH}
+        \item Authentification côté frontend
+        \item LLM local : réponses en 30--90 s selon le matériel
       \end{itemize}
+      }
     \end{column}
     \begin{column}{0.5\textwidth}
+      \onslide<2->{
       \textbf{Perspectives}
       \begin{itemize}
-        \item Couvrir plus de types d'attaques (DDoS, injection...)
-        \item Exécution automatique sécurisée des blocages
-        \item Authentification renforcée (JWT, rôles)
-        \item Adaptation au contexte tchadien (ANSICE)
+        \item Authentification JWT + rôles
+        \item LLM plus rapide (GPU ou modèle distillé)
+        \item Déploiement multi-sites (Tchad / ANSICE)
       \end{itemize}
+      }
     \end{column}
   \end{columns}
 \end{frame}
 
 % ============================================================
 \begin{frame}{Conclusion}
+  \onslide<1->{
   \begin{block}{En résumé}
-    CyberSentinel-LLM montre qu'il est possible de construire, avec des
-    outils \textbf{gratuits et locaux}, une plateforme qui
-    \textbf{détecte}, \textbf{explique} et \textbf{aide à décider} ---
+    CyberSentinel-LLM prouve qu'avec des outils \textbf{gratuits et locaux},
+    on peut \textbf{détecter, expliquer et aider à décider} ---
     en gardant toujours \textbf{l'humain au centre}.
   \end{block}
+  }
 
-  \vspace{1em}
+  \vspace{0.8em}
+  \onslide<2->{
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
-      \centering
-      \textbf{Contributions}
+      \textbf{Contributions clés}
       \begin{itemize}
-        \small
-        \item Moteur ML non supervisé (IF + LOF)
-        \item RAG sur 697 techniques MITRE
-        \item LLM local, 100\% hors ligne
-        \item Human-in-the-Loop intégré
+        \item ML non supervisé (IF + LOF)
+        \item RAG MITRE ATT\&CK local
+        \item LLM 100\% hors ligne
+        \item Human-in-the-Loop
       \end{itemize}
     \end{column}
     \begin{column}{0.5\textwidth}
-      \centering
-      \large Une première brique vers des outils
-      de cybersécurité \textbf{accessibles}
-      au contexte tchadien.
+      \centering\vspace{0.5em}
+      {\large Une première brique vers des outils de cybersécurité
+      \textbf{accessibles} au contexte tchadien.}
     \end{column}
   \end{columns}
+  }
 \end{frame}
 
 % ============================================================
