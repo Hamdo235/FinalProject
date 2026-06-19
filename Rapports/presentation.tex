@@ -130,32 +130,28 @@
 
 \begin{frame}{Contexte : la cybersécurité au Tchad}
   \begin{columns}[T]
-    \begin{column}{0.58\textwidth}
-      \begin{itemize}
-        \item<1-> \textbf{2,74 M d'internautes} et 14,5 M de connexions
-              mobiles au Tchad en 2025
-        \item<2-> La digitalisation avance vite, mais les outils de
-              cybersécurité restent \textbf{quasi inexistants}
-        \item<3-> Peu de SOC nationaux, peu d'experts locaux
+    \begin{column}{0.55\textwidth}
+      \begin{itemize}[<+->]
+        \item \textbf{2,74 M} d'internautes en 2025
+        \item Outils de cybersécurité \textbf{quasi inexistants}
+        \item Peu de SOC, peu d'experts locaux
       \end{itemize}
     \end{column}
-    \begin{column}{0.42\textwidth}
+    \begin{column}{0.45\textwidth}
       \onslide<2->{
-      \begin{block}{Exemple réel}
-        \textbf{10 jan. 2024} : attaque DDoS coupe
-        \textbf{tout Internet} au Tchad pendant plusieurs heures.
+      \begin{block}{10 jan. 2024}
+        Attaque DDoS : \textbf{tout Internet} coupé au Tchad.
       \end{block}
       }
     \end{column}
   \end{columns}
   \vspace{0.8em}
-  \onslide<3->{\centering\alert{La cybersécurité n'est plus un luxe : c'est une nécessité.}}
+  \onslide<4->{\centering\alert{La cybersécurité n'est plus un luxe.}}
 \end{frame}
 
 % ------------------------------------------------------------
 \begin{frame}{Le problème}
-  \onslide<1->{
-  Les outils classiques (Snort, Suricata\ldots) fonctionnent sur des \textbf{règles fixes} :
+  Les outils classiques (Snort, Suricata\ldots) : des \textbf{règles fixes}.
   \begin{center}
   \begin{tikzpicture}
     \node[draw=csblue, rounded corners, fill=csblue!8,
@@ -163,20 +159,15 @@
       {``Si tu vois EXACTEMENT ce motif $\rightarrow$ alerte''};
   \end{tikzpicture}
   \end{center}
-  }
 
-  \vspace{0.5em}
-  \begin{itemize}
-    \item<2-> \textcolor{csviolet}{\textbf{Limite 1}} : une attaque \textbf{nouvelle} passe inaperçue
-    \item<3-> \textcolor{csviolet}{\textbf{Limite 2}} : les alertes sont \textbf{incompréhensibles}
-              pour un analyste débutant
+  \begin{itemize}[<+->]
+    \item \textcolor{csviolet}{\textbf{Limite 1}} : attaque \textbf{nouvelle} = invisible
+    \item \textcolor{csviolet}{\textbf{Limite 2}} : alertes \textbf{illisibles} pour un débutant
   \end{itemize}
 
-  \vspace{0.6em}
-  \onslide<4->{
-  \begin{block}{Notre question centrale}
-    Comment détecter des attaques \textbf{même inconnues} et les
-    \textbf{expliquer en langage simple}, en gardant l'\textbf{humain} dans la boucle ?
+  \onslide<+->{
+  \begin{block}{Notre question}
+    Détecter l'\textbf{inconnu}, l'\textbf{expliquer simplement}, garder l'\textbf{humain} au centre ?
   \end{block}
   }
 \end{frame}
@@ -279,6 +270,32 @@
 \end{frame}
 
 % ============================================================
+\section{Outils et technologies}
+
+\begin{frame}{Outils et technologies utilisés}
+  \begin{center}
+  \begin{tikzpicture}[logo/.style={align=center, font=\tiny}]
+    % Rangée 1
+    \node<1->[logo] (l1) at (0,4)   {\includegraphics[width=1.5cm]{images/python.png}\\Python};
+    \node<2->[logo] (l2) at (3,4)   {\includegraphics[width=1.5cm]{images/fastapi.png}\\FastAPI};
+    \node<3->[logo] (l3) at (6,4)   {\includegraphics[width=1.5cm]{images/nextdotjs.png}\\Next.js};
+    \node<4->[logo] (l4) at (9,4)   {\includegraphics[width=1.5cm]{images/react.png}\\React};
+    % Rangée 2
+    \node<5->[logo] (l5) at (0,1.8) {\includegraphics[width=1.5cm]{images/sqlite.png}\\SQLite};
+    \node<6->[logo] (l6) at (3,1.8) {%
+      \begin{tikzpicture}\node[draw=csteal, rounded corners, fill=csteal!12,
+        minimum width=1.5cm, minimum height=1.5cm, font=\scriptsize, text=csblue]{ChromaDB};\end{tikzpicture}\\ChromaDB};
+    \node<7->[logo] (l7) at (6,1.8) {\includegraphics[width=1.5cm]{images/scikitlearn.png}\\scikit-learn};
+    \node<8->[logo] (l8) at (9,1.8) {\includegraphics[width=1.5cm]{images/ollama.png}\\Ollama};
+    % Rangée 3
+    \node<9->[logo] (l9) at (4.5,-0.4) {\includegraphics[width=1.5cm]{images/qwen.png}\\Qwen2.5};
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+
+
+% ============================================================
 \section{Tests et résultats}
 
 \begin{frame}{Tests automatisés}
@@ -287,9 +304,7 @@
       \onslide<1->{
       \textbf{Backend --- pytest}
       \begin{itemize}
-        \item \texttt{test\_defense.py}
-        \item \texttt{test\_ip\_blacklist.py}
-        \item \texttt{test\_detection.py}
+        \item défense, blacklist, détection
       \end{itemize}
       }
     \end{column}
@@ -297,8 +312,7 @@
       \onslide<2->{
       \textbf{Frontend --- Vitest}
       \begin{itemize}
-        \item \texttt{auth.test.ts} (login, 2FA TOTP)
-        \item DOM simulé avec \texttt{happy-dom}
+        \item auth (login, 2FA TOTP)
       \end{itemize}
       }
     \end{column}
@@ -307,8 +321,7 @@
   \vspace{1em}
   \onslide<3->{
   \begin{block}{\centering Résultat}
-    \centering
-    \textbf{Tous les tests passent} \quad \texttt{pytest} $+$ \texttt{vitest --run}
+    \centering \textbf{Tous les tests passent}
   \end{block}
   }
 \end{frame}
@@ -331,13 +344,13 @@
 \section{Bilan et perspectives}
 
 \begin{frame}{Ce qui fonctionne}
-  \begin{itemize}
-    \item<1-> Détection ML en \textbf{moins de 50 ms}
-    \item<2-> RAG sur \textbf{697 techniques} MITRE ATT\&CK
-    \item<3-> Explication LLM en \textbf{30--90 secondes}
-    \item<4-> Blocage avec \textbf{validation humaine} obligatoire
-    \item<5-> Interface temps réel via SSE (sans rechargement)
-    \item<6-> Tests automatisés backend + frontend
+  \begin{itemize}[<+->]
+    \item Détection ML en \textbf{moins de 50 ms}
+    \item RAG sur \textbf{697 techniques} MITRE ATT\&CK
+    \item Explication LLM en \textbf{30--90 s}
+    \item Blocage avec \textbf{validation humaine}
+    \item Interface temps réel (SSE)
+    \item Tests automatisés backend + frontend
   \end{itemize}
 \end{frame}
 
@@ -348,8 +361,8 @@
       \onslide<1->{
       \textbf{Limites}
       \begin{itemize}
-        \item Authentification côté frontend
-        \item LLM local : réponses en 30--90 s selon le matériel
+        \item Auth. côté frontend
+        \item LLM lent (30--90 s)
       \end{itemize}
       }
     \end{column}
@@ -357,9 +370,9 @@
       \onslide<2->{
       \textbf{Perspectives}
       \begin{itemize}
-        \item Authentification JWT + rôles
-        \item LLM plus rapide (GPU ou modèle distillé)
-        \item Déploiement multi-sites (Tchad / ANSICE)
+        \item Auth. JWT + rôles
+        \item LLM plus rapide
+        \item Déploiement Tchad / ANSICE
       \end{itemize}
       }
     \end{column}
@@ -370,9 +383,8 @@
 \begin{frame}{Conclusion}
   \onslide<1->{
   \begin{block}{En résumé}
-    CyberSentinel-LLM prouve qu'avec des outils \textbf{gratuits et locaux},
-    on peut \textbf{détecter, expliquer et aider à décider} ---
-    en gardant toujours \textbf{l'humain au centre}.
+    Avec des outils \textbf{gratuits et locaux} : détecter, expliquer,
+    aider à décider --- \textbf{l'humain au centre}.
   \end{block}
   }
 
@@ -390,8 +402,8 @@
     \end{column}
     \begin{column}{0.5\textwidth}
       \centering\vspace{0.5em}
-      {\large Une première brique vers des outils de cybersécurité
-      \textbf{accessibles} au contexte tchadien.}
+      {\large Une brique vers une cybersécurité
+      \textbf{accessible} au Tchad.}
     \end{column}
   \end{columns}
   }
