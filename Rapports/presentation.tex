@@ -16,14 +16,13 @@
 \usepackage{tcolorbox}
 \tcbuselibrary{skins}
 
-% ===================== COULEURS (palette claire, inspirée de la plateforme) =====================
-\definecolor{csblue}{RGB}{30,64,140}      % bleu profond (titres)
-\definecolor{csteal}{RGB}{13,148,136}     % teal (accent principal)
-\definecolor{csviolet}{RGB}{109,90,205}   % violet (accent secondaire)
-\definecolor{csbg}{RGB}{248,250,252}      % fond très clair
-\definecolor{cstext}{RGB}{30,41,59}       % texte gris-bleu foncé
-\definecolor{csgray}{RGB}{100,116,139}    % texte secondaire
-% Couleurs identiques à la page de garde du rapport
+% ===================== COULEURS =====================
+\definecolor{csblue}{RGB}{30,64,140}
+\definecolor{csteal}{RGB}{13,148,136}
+\definecolor{csviolet}{RGB}{109,90,205}
+\definecolor{csbg}{RGB}{248,250,252}
+\definecolor{cstext}{RGB}{30,41,59}
+\definecolor{csgray}{RGB}{100,116,139}
 \definecolor{darkblue}{RGB}{4,89,187}
 \definecolor{lightblue}{RGB}{220,235,255}
 \definecolor{gold}{RGB}{212,175,55}
@@ -62,7 +61,6 @@
 }
 \setbeamertemplate{section in toc}[sections numbered]
 
-
 % ===================== INFOS DOCUMENT =====================
 \title{CyberSentinel-LLM}
 \subtitle{Détection d'anomalies réseau par ML, RAG et LLM local}
@@ -77,14 +75,12 @@
 % ============================================================
 \begin{frame}[plain]
   \vspace{0.3cm}
-
   \begin{center}
     \includegraphics[height=1.4cm, keepaspectratio]{images/enastic_logo2.png}\\[3pt]
     {\large\textbf{PROJET DE FIN D'ÉTUDES}}\\[4pt]
     {\small En vue de l'obtention du \textbf{Diplôme de Licence en Informatique}}
   \end{center}
   \vspace{0.1em}
-
   \begin{center}
     \begin{tcolorbox}[
       enhanced, colback=darkblue, colframe=gold,
@@ -98,7 +94,6 @@
     \end{tcolorbox}
   \end{center}
   \vspace{0.1em}
-
   \begin{center}
   \begin{tabularx}{0.90\textwidth}{>{\centering\arraybackslash}X >{\centering\arraybackslash}X}
     \small\textbf{\underline{Présenté par} :} & \small\textbf{\underline{Directeur de mémoire} :} \\[5pt]
@@ -106,17 +101,13 @@
   \end{tabularx}
   \end{center}
   \vspace{0.8cm}
-
-  % Bordure EN DERNIER
   \begin{tikzpicture}[overlay, remember picture]
     \draw[darkblue, line width=2pt]
       ([xshift=0.22cm, yshift=-0.22cm]current page.north west)
-      rectangle
-      ([xshift=-0.22cm, yshift=0.22cm]current page.south east);
+      rectangle ([xshift=-0.22cm, yshift=0.22cm]current page.south east);
     \draw[gold, line width=0.8pt]
       ([xshift=0.40cm, yshift=-0.40cm]current page.north west)
-      rectangle
-      ([xshift=-0.40cm, yshift=0.40cm]current page.south east);
+      rectangle ([xshift=-0.40cm, yshift=0.40cm]current page.south east);
   \end{tikzpicture}
 \end{frame}
 
@@ -128,84 +119,56 @@
 % ============================================================
 \section{Contexte et problématique}
 
-\begin{frame}{Contexte : la cybersécurité au Tchad}
-  \begin{columns}[T]
-    \begin{column}{0.55\textwidth}
-      \begin{itemize}[<+->]
-        \item \textbf{2,74 M} d'internautes en 2025
-        \item Outils de cybersécurité \textbf{quasi inexistants}
-        \item Peu de SOC, peu d'experts locaux
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.45\textwidth}
-      \onslide<2->{
-      \begin{block}{10 jan. 2024}
-        Attaque DDoS : \textbf{tout Internet} coupé au Tchad.
-      \end{block}
-      }
-    \end{column}
-  \end{columns}
-  \vspace{0.8em}
-  \onslide<4->{\centering\alert{La cybersécurité n'est plus un luxe.}}
+\begin{frame}{Contexte}
+  \begin{itemize}[<+->]
+    \item 2,74 M d'internautes (2025)
+    \item Outils de cybersécurité limités
+    \item Peu d'experts locaux
+  \end{itemize}
 \end{frame}
 
-% ------------------------------------------------------------
-\begin{frame}{Le problème}
-  Les outils classiques (Snort, Suricata\ldots) : des \textbf{règles fixes}.
+\begin{frame}{Un exemple concret}
   \begin{center}
-  \begin{tikzpicture}
-    \node[draw=csblue, rounded corners, fill=csblue!8,
-          minimum width=9cm, minimum height=0.9cm, align=center, font=\small]
-      {``Si tu vois EXACTEMENT ce motif $\rightarrow$ alerte''};
-  \end{tikzpicture}
+    \onslide<1->{\large 10 janvier 2024}\\[6pt]
+    \onslide<2->{\Large\textbf{\textcolor{csviolet}{Tout Internet coupé au Tchad}}}\\[4pt]
+    \onslide<3->{\small attaque DDoS}
   \end{center}
+\end{frame}
 
+\begin{frame}{Le problème}
   \begin{itemize}[<+->]
-    \item \textcolor{csviolet}{\textbf{Limite 1}} : attaque \textbf{nouvelle} = invisible
-    \item \textcolor{csviolet}{\textbf{Limite 2}} : alertes \textbf{illisibles} pour un débutant
+    \item Règles fixes (Snort, Suricata)
+    \item Attaque inconnue $\rightarrow$ invisible
+    \item Alertes illisibles pour un débutant
   \end{itemize}
+\end{frame}
 
-  \onslide<+->{
-  \begin{block}{Notre question}
-    Détecter l'\textbf{inconnu}, l'\textbf{expliquer simplement}, garder l'\textbf{humain} au centre ?
-  \end{block}
-  }
+\begin{frame}{Objectif}
+  \begin{center}
+    \Large Détecter, expliquer et neutraliser les menaces réseau\\[6pt]
+    \onslide<2->{\textcolor{csteal}{\textbf{avec l'humain au centre}}}
+  \end{center}
 \end{frame}
 
 % ============================================================
 \section{Notre approche}
 
-\begin{frame}{L'idée : 3 cerveaux qui coopèrent}
+\begin{frame}{3 cerveaux qui coopèrent}
   \begin{center}
   \begin{tikzpicture}[
-      box/.style={draw, rounded corners, minimum width=3.2cm, minimum height=2cm,
+      box/.style={draw, rounded corners, minimum width=3.2cm, minimum height=1.6cm,
                    align=center, drop shadow, font=\small},
       arr/.style={-{Latex}, thick, csgray}
     ]
-    \node<1->[box, fill=csblue!12, draw=csblue] (ml) at (0,0)
-      {\textbf{Machine Learning}\\[2pt] IsolationForest + LOF\\[2pt]
-       \textit{\scriptsize repère ce qui est anormal}};
-
-    \node<2->[box, fill=csteal!15, draw=csteal] (rag) at (4.4,0)
-      {\textbf{RAG + MITRE}\\[2pt] 697 techniques\\[2pt]
-       \textit{\scriptsize retrouve la fiche}};
-
-    \node<3->[box, fill=csviolet!12, draw=csviolet] (llm) at (8.8,0)
-      {\textbf{LLM local}\\[2pt] Ollama (qwen2.5)\\[2pt]
-       \textit{\scriptsize explique en français}};
-
+    \node<1->[box, fill=csblue!12, draw=csblue] (ml) at (0,0) {\textbf{ML}\\IsolationForest + LOF};
+    \node<2->[box, fill=csteal!15, draw=csteal] (rag) at (4.4,0) {\textbf{RAG}\\MITRE ATT\&CK};
+    \node<3->[box, fill=csviolet!12, draw=csviolet] (llm) at (8.8,0) {\textbf{LLM local}\\Ollama};
     \draw<2->[arr] (ml) -- (rag);
     \draw<3->[arr] (rag) -- (llm);
   \end{tikzpicture}
   \end{center}
-
-  \vspace{0.8em}
-  \onslide<4->{
-  \begin{exampleblock}{Principe : Human-in-the-Loop}
-    L'IA \textbf{analyse, explique, recommande} ---
-    c'est l'\textbf{analyste humain} qui décide du blocage.
-  \end{exampleblock}
-  }
+  \vspace{1em}
+  \onslide<4->{\centering\alert{Human-in-the-Loop : l'humain décide}}
 \end{frame}
 
 % ============================================================
@@ -214,20 +177,14 @@
 \begin{frame}{Architecture --- 5 couches}
   \begin{center}
   \begin{tikzpicture}[
-      layer/.style={draw, rounded corners, minimum width=10cm, minimum height=0.8cm,
+      layer/.style={draw, rounded corners, minimum width=8cm, minimum height=0.8cm,
                      align=center, font=\small, drop shadow}
     ]
-    \node<1->[layer, fill=csblue!15, draw=csblue] (l5) at (0,3.6)
-      {\textbf{Interface (Next.js)} --- Dashboard, Alertes, Chat, Démo};
-    \node<2->[layer, fill=csblue!10, draw=csblue] (l4) at (0,2.7)
-      {\textbf{API (FastAPI)} --- routes, sécurité, temps réel (SSE)};
-    \node<3->[layer, fill=csteal!15, draw=csteal] (l3) at (0,1.8)
-      {\textbf{Détection ML} --- IsolationForest + LOF};
-    \node<4->[layer, fill=csteal!10, draw=csteal] (l2) at (0,0.9)
-      {\textbf{RAG + LLM} --- ChromaDB + Ollama};
-    \node<5->[layer, fill=csviolet!12, draw=csviolet] (l1) at (0,0)
-      {\textbf{Défense} --- liste noire, blocage, validation humaine};
-
+    \node<1->[layer, fill=csblue!15, draw=csblue] (l5) at (0,3.6) {Interface (Next.js / React)};
+    \node<2->[layer, fill=csblue!10, draw=csblue] (l4) at (0,2.7) {API (FastAPI) --- temps réel SSE};
+    \node<3->[layer, fill=csteal!15, draw=csteal] (l3) at (0,1.8) {Détection ML (IsolationForest + LOF)};
+    \node<4->[layer, fill=csteal!10, draw=csteal] (l2) at (0,0.9) {RAG + LLM (ChromaDB + Ollama)};
+    \node<5->[layer, fill=csviolet!12, draw=csviolet] (l1) at (0,0) {Défense --- blacklist, validation humaine};
     \draw<2->[-{Latex}, csgray] (l5.south) -- (l4.north);
     \draw<3->[-{Latex}, csgray] (l4.south) -- (l3.north);
     \draw<4->[-{Latex}, csgray] (l3.south) -- (l2.north);
@@ -236,37 +193,26 @@
   \end{center}
 \end{frame}
 
-% ------------------------------------------------------------
-\begin{frame}{Scénario complet : attaque SSH}
-  \small\textit{3h du matin --- 3 tentatives SSH échouées depuis une IP inconnue}
-  \vspace{0.5em}
+\begin{frame}{Exemple : attaque SSH}
   \begin{center}
   \begin{tikzpicture}[
-      stepbox/.style={draw, rounded corners, minimum width=2cm, minimum height=1.3cm,
+      stepbox/.style={draw, rounded corners, minimum width=2cm, minimum height=1.1cm,
                     align=center, font=\tiny, drop shadow},
       arr/.style={-{Latex}, thick, csgray}
     ]
     \node<1->[stepbox, fill=csblue!12, draw=csblue]   (a) at (0,0)   {Log reçu};
-    \node<2->[stepbox, fill=csteal!15, draw=csteal]   (b) at (2.5,0) {Score ML\\$0{,}87$};
-    \node<3->[stepbox, fill=csviolet!12, draw=csviolet](c) at (5,0)  {Défense\\``Bloquer ?''};
-    \node<4->[stepbox, fill=csteal!15, draw=csteal]   (d) at (7.5,0) {RAG\\T1110.001};
-    \node<5->[stepbox, fill=csblue!12, draw=csblue]   (e) at (10,0)  {LLM\\en français};
-
+    \node<2->[stepbox, fill=csteal!15, draw=csteal]   (b) at (2.5,0) {Score ML};
+    \node<3->[stepbox, fill=csviolet!12, draw=csviolet](c) at (5,0)  {Défense};
+    \node<4->[stepbox, fill=csteal!15, draw=csteal]   (d) at (7.5,0) {RAG};
+    \node<5->[stepbox, fill=csblue!12, draw=csblue]   (e) at (10,0)  {LLM};
     \draw<2->[arr] (a) -- (b);
     \draw<3->[arr] (b) -- (c);
     \draw<4->[arr] (c) -- (d);
     \draw<5->[arr] (d) -- (e);
   \end{tikzpicture}
   \end{center}
-
-  \vspace{0.6em}
-  \onslide<6->{
-  \begin{block}{Score de confiance final}
-    \centering
-    $0{,}4{\times}0{,}87 + 0{,}3{\times}0{,}82 + 0{,}3{\times}0{,}89 = \mathbf{0{,}861}$
-    \quad $\rightarrow$ \textbf{86\% --- blocage soumis à l'analyste}
-  \end{block}
-  }
+  \vspace{0.8em}
+  \onslide<6->{\centering \textbf{86\% de confiance} $\rightarrow$ l'analyste décide}
 \end{frame}
 
 % ============================================================
@@ -275,55 +221,30 @@
 \begin{frame}{Outils et technologies utilisés}
   \begin{center}
   \begin{tikzpicture}[logo/.style={align=center, font=\tiny}]
-    % Rangée 1
     \node<1->[logo] (l1) at (0,4)   {\includegraphics[width=1.5cm]{images/python.png}\\Python};
-    \node<2->[logo] (l2) at (3,4)   {\includegraphics[width=1.5cm]{images/fastapi.png}\\FastAPI};
-    \node<3->[logo] (l3) at (6,4)   {\includegraphics[width=1.5cm]{images/nextdotjs.png}\\Next.js};
-    \node<4->[logo] (l4) at (9,4)   {\includegraphics[width=1.5cm]{images/react.png}\\React};
-    % Rangée 2
-    \node<5->[logo] (l5) at (0,1.8) {\includegraphics[width=1.5cm]{images/sqlite.png}\\SQLite};
-    \node<6->[logo] (l6) at (3,1.8) {%
+    \node<1->[logo] (l2) at (3,4)   {\includegraphics[width=1.5cm]{images/fastapi.png}\\FastAPI};
+    \node<1->[logo] (l3) at (6,4)   {\includegraphics[width=1.5cm]{images/nextdotjs.png}\\Next.js};
+    \node<1->[logo] (l4) at (9,4)   {\includegraphics[width=1.5cm]{images/react.png}\\React};
+    \node<2->[logo] (l5) at (0,1.8) {\includegraphics[width=1.5cm]{images/sqlite.png}\\SQLite};
+    \node<2->[logo] (l6) at (3,1.8) {%
       \begin{tikzpicture}\node[draw=csteal, rounded corners, fill=csteal!12,
         minimum width=1.5cm, minimum height=1.5cm, font=\scriptsize, text=csblue]{ChromaDB};\end{tikzpicture}\\ChromaDB};
-    \node<7->[logo] (l7) at (6,1.8) {\includegraphics[width=1.5cm]{images/scikitlearn.png}\\scikit-learn};
-    \node<8->[logo] (l8) at (9,1.8) {\includegraphics[width=1.5cm]{images/ollama.png}\\Ollama};
-    % Rangée 3
-    \node<9->[logo] (l9) at (4.5,-0.4) {\includegraphics[width=1.5cm]{images/qwen.png}\\Qwen2.5};
+    \node<2->[logo] (l7) at (6,1.8) {\includegraphics[width=1.5cm]{images/scikitlearn.png}\\scikit-learn};
+    \node<2->[logo] (l8) at (9,1.8) {\includegraphics[width=1.5cm]{images/ollama.png}\\Ollama};
+    \node<3->[logo] (l9) at (4.5,-0.4) {\includegraphics[width=1.5cm]{images/qwen.png}\\Qwen2.5};
   \end{tikzpicture}
   \end{center}
 \end{frame}
-
-
 
 % ============================================================
 \section{Tests et résultats}
 
 \begin{frame}{Tests automatisés}
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \onslide<1->{
-      \textbf{Backend --- pytest}
-      \begin{itemize}
-        \item défense, blacklist, détection
-      \end{itemize}
-      }
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \onslide<2->{
-      \textbf{Frontend --- Vitest}
-      \begin{itemize}
-        \item auth (login, 2FA TOTP)
-      \end{itemize}
-      }
-    \end{column}
-  \end{columns}
-
-  \vspace{1em}
-  \onslide<3->{
-  \begin{block}{\centering Résultat}
-    \centering \textbf{Tous les tests passent}
-  \end{block}
-  }
+  \begin{itemize}[<+->]
+    \item Backend : pytest
+    \item Frontend : Vitest
+    \item \textcolor{csteal}{\textbf{Tous les tests passent}}
+  \end{itemize}
 \end{frame}
 
 % ============================================================
@@ -335,8 +256,7 @@
   \vspace{3.5em}
   {\Large\bfseries\color{white} Démonstration en direct}\\[1em]
   {\normalsize\color{white!70!csblue}
-   Génération d'une attaque $\rightarrow$ détection $\rightarrow$
-   explication $\rightarrow$ validation}
+   Attaque $\rightarrow$ détection $\rightarrow$ explication $\rightarrow$ validation}
 \end{frame}
 }
 
@@ -345,24 +265,21 @@
 
 \begin{frame}{Ce qui fonctionne}
   \begin{itemize}[<+->]
-    \item Détection ML en \textbf{moins de 50 ms}
-    \item RAG sur \textbf{697 techniques} MITRE ATT\&CK
-    \item Explication LLM en \textbf{30--90 s}
-    \item Blocage avec \textbf{validation humaine}
-    \item Interface temps réel (SSE)
-    \item Tests automatisés backend + frontend
+    \item ML en moins de 50 ms
+    \item 697 techniques MITRE ATT\&CK
+    \item Validation humaine obligatoire
+    \item Tests automatisés
   \end{itemize}
 \end{frame}
 
-% ------------------------------------------------------------
 \begin{frame}{Limites \& perspectives}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \onslide<1->{
       \textbf{Limites}
       \begin{itemize}
-        \item Auth. côté frontend
-        \item LLM lent (30--90 s)
+        \item Auth. frontend
+        \item LLM lent
       \end{itemize}
       }
     \end{column}
@@ -370,42 +287,29 @@
       \onslide<2->{
       \textbf{Perspectives}
       \begin{itemize}
-        \item Auth. JWT + rôles
-        \item LLM plus rapide
-        \item Déploiement Tchad / ANSICE
+        \item JWT + rôles
+        \item Déploiement Tchad
       \end{itemize}
       }
     \end{column}
   \end{columns}
 \end{frame}
 
-% ============================================================
 \begin{frame}{Conclusion}
-  \onslide<1->{
-  \begin{block}{En résumé}
-    Avec des outils \textbf{gratuits et locaux} : détecter, expliquer,
-    aider à décider --- \textbf{l'humain au centre}.
-  \end{block}
-  }
-
-  \vspace{0.8em}
+  \begin{center}
+    \Large Détecter. Expliquer. \textcolor{csteal}{\textbf{Décider avec l'humain.}}
+  \end{center}
+  \vspace{1em}
   \onslide<2->{
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \textbf{Contributions clés}
-      \begin{itemize}
-        \item ML non supervisé (IF + LOF)
-        \item RAG MITRE ATT\&CK local
-        \item LLM 100\% hors ligne
-        \item Human-in-the-Loop
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \centering\vspace{0.5em}
-      {\large Une brique vers une cybersécurité
-      \textbf{accessible} au Tchad.}
-    \end{column}
-  \end{columns}
+  \begin{center}
+  \begin{tikzpicture}[chip/.style={draw, rounded corners, fill=csblue!8, draw=csblue,
+                       font=\scriptsize, inner sep=4pt}]
+    \node[chip] at (0,0)   {ML non supervisé};
+    \node[chip] at (3.2,0) {RAG MITRE};
+    \node[chip] at (6,0)   {LLM local};
+    \node[chip] at (8.6,0) {Human-in-the-Loop};
+  \end{tikzpicture}
+  \end{center}
   }
 \end{frame}
 
