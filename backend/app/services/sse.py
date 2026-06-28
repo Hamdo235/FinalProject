@@ -1,14 +1,55 @@
 import asyncio
 import json
+import logging
+from collections.abc import Coroutine
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from datetime import datetime, UTC
-from typing import Set
+from typing import Optional, Set
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/stream", tags=["stream"])
 
 _subscribers: Set[asyncio.Queue] = set()
 _QUEUE_MAXSIZE = 256
+
+# Main event loop captured at startup so that synchronous request handlers
+# (which run in a threadpool without a running loop) can still publish events.
+_main_loop: Optional[asyncio.AbstractEventLoop] = None
+
+
+def set_main_loop(loop: asyncio.AbstractEventLoop) -> None:
+    """Register the application's main event loop (called during startup)."""
+    global _main_loop
+    _main_loop = loop
+
+
+def schedule_publish(coro: Coroutine) -> None:
+    """Schedule an SSE-publishing coroutine from a sync or async context.
+
+    Synchronous FastAPI endpoints run in a threadpool worker that has no
+    running event loop, so ``asyncio.create_task`` raises ``RuntimeError`` and
+    the coroutine is dropped (never awaited). This helper falls back to the
+    main loop captured at startup so events are published in every context.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop is not None:
+        loop.create_task(coro)
+        return
+
+    if _main_loop is not None and _main_loop.is_running():
+        asyncio.run_coroutine_threadsafe(coro, _main_loop)
+        return
+
+    # No loop available (e.g. unit-testing the handler directly): close the
+    # coroutine so it does not emit a "coroutine was never awaited" warning.
+    coro.close()
+    logger.debug("[SSE] No event loop available; event dropped.")
 
 
 def _safe_put(q: asyncio.Queue, event: dict) -> None:

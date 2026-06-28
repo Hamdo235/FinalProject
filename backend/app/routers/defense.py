@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, UTC
 from typing import Any, Dict, List, Optional
-import asyncio
 import ipaddress
 import logging
 
@@ -19,8 +18,8 @@ from ..services.defense import (
     get_active_block_for_ip,
 )
 from ..services import ip_blacklist
-from ..services.sse import publish_defense_changed
-from ..core.settings import settings
+from ..services.sse import publish_defense_changed, schedule_publish
+from ..core.security import require_admin_token
 
 logger = logging.getLogger(__name__)
 
@@ -50,15 +49,7 @@ _TTL_MAX = 24 * 60  # 24 hours
 
 
 def _require_admin_token(request: Request, body_token: Optional[str] = None) -> None:
-    expected = settings.admin_token
-    if not expected:
-        # Compatibilité dev: si aucun token n'est configuré, on n'impose pas le contrôle.
-        return
-    provided = request.headers.get("X-ADMIN-TOKEN") or (body_token or "")
-    if provided != expected:
-        client_ip = request.client.host if request and request.client else "unknown"
-        logger.warning("[DefenseAuth] Unauthorized access attempt from ip=%s", client_ip)
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    require_admin_token(request, body_token, source="DefenseAuth")
 
 
 @router.get("/actions", response_model=List[DefenseActionOut])
@@ -128,10 +119,7 @@ def approve_action(
                 action_id=item.id,
             )
         result = action_to_dict(item)
-        try:
-            asyncio.create_task(publish_defense_changed("approved", result))
-        except RuntimeError:
-            pass
+        schedule_publish(publish_defense_changed("approved", result))
         return {"ok": True, "action": result, "message": f"IP {item.ip} confirmée bloquée par {item.approved_by}", "iptables_command": result["iptables_command"], "iptables_unblock": result["iptables_unblock"]}
     now = _utcnow_naive()
     item.action = "block_temp"
@@ -156,10 +144,7 @@ def approve_action(
 
     result = action_to_dict(item)
     expire_str = item.expires_at.strftime("%H:%M:%S") if item.expires_at else "indéfini"
-    try:
-        asyncio.create_task(publish_defense_changed("approved", result))
-    except RuntimeError:
-        pass
+    schedule_publish(publish_defense_changed("approved", result))
     return {
         "ok": True,
         "action": result,
@@ -187,10 +172,7 @@ def revoke_action(action_id: int, db: Session = Depends(get_session), request: R
         ip_blacklist.remove_ip(item.ip)
 
     result = action_to_dict(item)
-    try:
-        asyncio.create_task(publish_defense_changed("revoked", result))
-    except RuntimeError:
-        pass
+    schedule_publish(publish_defense_changed("revoked", result))
     return {
         "ok": True,
         "action": result,
@@ -241,10 +223,7 @@ def manual_block(body: ManualBlockBody, db: Session = Depends(get_session), requ
     )
 
     result = action_to_dict(item)
-    try:
-        asyncio.create_task(publish_defense_changed("manual_block", result))
-    except RuntimeError:
-        pass
+    schedule_publish(publish_defense_changed("manual_block", result))
     return {
         "ok": True,
         "action": result,
@@ -277,12 +256,9 @@ def unblock_ip_direct(ip: str, db: Session = Depends(get_session), request: Requ
         item.revoked_at = _utcnow_naive()
         db.add(item)
         db.commit()
-    try:
-        asyncio.create_task(
-            publish_defense_changed("unblock", {"ip": ip, "id": item.id if item else None})
-        )
-    except RuntimeError:
-        pass
+    schedule_publish(
+        publish_defense_changed("unblock", {"ip": ip, "id": item.id if item else None})
+    )
     return {"ok": True, "message": f"IP {ip} débloquée.", "ip": ip}
 
 
@@ -371,10 +347,7 @@ Réponds UNIQUEMENT avec un objet JSON valide sans texte avant ni après :
                 action_id=item.id,
             )
         result = action_to_dict(item)
-        try:
-            asyncio.create_task(publish_defense_changed("auto_block", result))
-        except RuntimeError:
-            pass
+        schedule_publish(publish_defense_changed("auto_block", result))
         return {
             "ok": True,
             "decision": "block",
@@ -394,10 +367,7 @@ Réponds UNIQUEMENT avec un objet JSON valide sans texte avant ni après :
         if item.ip:
             ip_blacklist.remove_ip(item.ip)
         result = action_to_dict(item)
-        try:
-            asyncio.create_task(publish_defense_changed("auto_allow", result))
-        except RuntimeError:
-            pass
+        schedule_publish(publish_defense_changed("auto_allow", result))
         return {
             "ok": True,
             "decision": "allow",
