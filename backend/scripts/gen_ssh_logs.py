@@ -1,5 +1,7 @@
-import json, random, time, sys
-from datetime import datetime, timedelta
+import json
+import random
+import time
+from datetime import datetime
 
 IPS = ["192.168.1.10","203.0.113.5","198.51.100.42","8.8.8.8","1.1.1.1"]
 USERS = ["root","admin","user","test"]

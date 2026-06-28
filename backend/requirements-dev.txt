@@ -1,0 +1,4 @@
+# Development / CI dependencies (linting, etc.).
+# Runtime deps live in requirements.txt; pytest is already pinned there.
+-r requirements.txt
+ruff==0.15.20

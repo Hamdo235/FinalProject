@@ -1,0 +1,33 @@
+# Pre-commit hooks for CyberSentinel-LLM.
+# Install once:  pip install pre-commit && pre-commit install
+# Run on all files:  pre-commit run --all-files
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.(svg|min\.js|min\.css)$'
+      - id: end-of-file-fixer
+        exclude: '\.(svg|min\.js|min\.css)$'
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=2048"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.20
+    hooks:
+      - id: ruff
+        name: ruff (backend lint)
+        args: ["--fix"]
+        files: ^backend/.*\.py$
+
+  - repo: local
+    hooks:
+      - id: frontend-typecheck
+        name: frontend typecheck (tsc --noEmit)
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false

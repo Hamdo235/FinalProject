@@ -110,9 +110,12 @@ async def demo_generate(db: Session = Depends(get_session), request: Request = N
             if existing:
                 updated = False
                 if existing.country is None and country is not None:
-                    existing.country = country; updated = True
+                    existing.country = country
+                    updated = True
                 if (existing.lat is None or existing.lon is None) and (lat is not None and lon is not None):
-                    existing.lat = lat; existing.lon = lon; updated = True
+                    existing.lat = lat
+                    existing.lon = lon
+                    updated = True
                 if updated:
                     db.add(existing)
             else:

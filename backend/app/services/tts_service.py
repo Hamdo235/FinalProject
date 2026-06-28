@@ -100,8 +100,10 @@ def _synthesize_espeak(text: str, lang: str = "fr") -> bytes:
         logger.error("[TTS] espeak-ng erreur : %s", exc)
         return b""
     finally:
-        try: os.unlink(tmp)
-        except OSError: pass
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
 
 
 # ── Public API ────────────────────────────────────────────────────────────────

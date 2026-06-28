@@ -16,7 +16,7 @@ def _env_bool(name: str, default: bool) -> bool:
 class Settings(BaseModel):
     app_name: str = "CyberSentinel-LLM"
     debug: bool = _env_bool("DEBUG", True)
-    database_url: str = f"sqlite:///{DB_DIR / 'csllm.db'}"
+    database_url: str = os.getenv("DATABASE_URL", f"sqlite:///{DB_DIR / 'csllm.db'}")
     admin_token: str = os.getenv("ADMIN_TOKEN", "").strip()
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     ollama_url: str = os.getenv("OLLAMA_URL", os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
