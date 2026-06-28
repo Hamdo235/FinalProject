@@ -258,4 +258,3 @@ export function createEventStream(handlers: SSEHandlers): EventSource {
   es.onopen = () => handlers.onOpen?.();
   return es;
 }
-

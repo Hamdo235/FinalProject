@@ -11,7 +11,7 @@ Couvre :
 """
 import os
 from datetime import datetime, timedelta, UTC
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient

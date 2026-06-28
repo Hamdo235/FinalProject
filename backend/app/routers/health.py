@@ -3,7 +3,6 @@ import os
 from fastapi import APIRouter
 from datetime import datetime, UTC
 from ..db.session import get_session
-from sqlmodel import Session
 import httpx
 import asyncio
 import socket

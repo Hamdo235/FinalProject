@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlmodel import select
 from ..db.session import get_session
 from ..models.incident import Incident
 from ..models.llm_trace import LLMTrace

@@ -7,7 +7,6 @@ from sqlmodel import Session
 from ..models.chat import Conversation, ChatMessage
 from .llm_chat import OLLAMA_URL, MODEL  # reuse settings
 import httpx
-from datetime import datetime
 from fastapi.responses import StreamingResponse
 import json
 
@@ -161,7 +160,7 @@ async def stream_reply(conv_id: int, voice_mode: bool = False, session: Session 
                     json={"model": MODEL, "messages": messages_ollama, "stream": True, "options": ollama_opts},
                 ) as resp:
                     if resp.status_code != 200:
-                        yield f"event: error\ndata: Ollama indisponible\n\n"
+                        yield "event: error\ndata: Ollama indisponible\n\n"
                         return
                     async for line in resp.aiter_lines():
                         if not line:

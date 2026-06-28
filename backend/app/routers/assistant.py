@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import List, Dict
 from sqlmodel import Session, select
 from ..db.session import get_session
 from ..models.alert import Alert
@@ -10,7 +10,7 @@ from ..core.settings import settings
 import httpx
 from datetime import datetime, UTC
 
-router = APIRouter(prefix="/llm/assistant", tags=["LLM Assistant"]) 
+router = APIRouter(prefix="/llm/assistant", tags=["LLM Assistant"])
 
 class AssistantQuery(BaseModel):
     question: str

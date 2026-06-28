@@ -326,7 +326,8 @@ Réponds UNIQUEMENT avec un objet JSON valide sans texte avant ni après :
     llm_reasoning = "Décision automatique par défaut (LLM indisponible)."
 
     try:
-        import httpx, json as _json
+        import httpx
+        import json as _json
         from ..core.settings import settings as _s
         async with httpx.AsyncClient(timeout=20.0) as client:
             resp = await client.post(

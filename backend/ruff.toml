@@ -1,0 +1,18 @@
+# Ruff configuration for the CyberSentinel-LLM backend.
+target-version = "py311"
+line-length = 120
+
+[lint]
+# E (pycodestyle errors) + F (pyflakes). Conservative ruleset focused on real
+# issues (unused imports, undefined names, style errors) without large churn.
+select = ["E", "F"]
+ignore = [
+    # SQLAlchemy/SQLModel filters legitimately use `== True` / `== False`.
+    "E712",
+    # Long lines are common in prompt strings / French user-facing messages.
+    "E501",
+]
+
+[lint.per-file-ignores]
+# Module __init__ files re-export symbols.
+"**/__init__.py" = ["F401"]

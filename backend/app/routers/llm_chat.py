@@ -103,8 +103,8 @@ def _build_platform_context(db: Session) -> str:
     mode             = defense_mode()
     blocked          = ip_blacklist.count()
 
-    total_alerts_db = db.exec(select(func.count()).select_from(Alert)).scalar_one()
-    total_incs_db   = db.exec(select(func.count()).select_from(Incident)).scalar_one()
+    total_alerts_db = db.exec(select(func.count()).select_from(Alert)).one()
+    total_incs_db   = db.exec(select(func.count()).select_from(Incident)).one()
 
     active_blocks = db.exec(
         select(DefenseAction)
