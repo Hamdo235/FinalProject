@@ -121,3 +121,44 @@ def test_ingest_validates_field_lengths(client_dev):
     )
     # Pydantic rejette au niveau du body parsing (422)
     assert r.status_code in (400, 422)
+
+
+def test_defense_rejects_wrong_token(client_prod):
+    """Un mauvais token doit renvoyer 401 (comparaison constante-temps)."""
+    r = client_prod.post(
+        "/defense/unblock/1.2.3.4",
+        headers={"X-ADMIN-TOKEN": "mauvais-token"},
+    )
+    assert r.status_code == 401
+
+
+def test_defense_accepts_token_via_body(client_prod):
+    """Le token peut être fourni dans le corps de la requête."""
+    r = client_prod.post(
+        "/defense/block-manual",
+        json={"ip": "5.6.7.8", "ttl_minutes": 10, "token": "test-token-xyz"},
+    )
+    assert r.status_code == 200
+    assert r.json()["ok"] is True
+
+
+def test_ingest_requires_token_in_prod(client_prod):
+    """/ingest/logs doit exiger le token admin en production."""
+    payload = {"source": "ssh", "ip": "1.2.3.4"}
+    assert client_prod.post("/ingest/logs", json=payload).status_code == 401
+    r = client_prod.post(
+        "/ingest/logs",
+        json=payload,
+        headers={"X-ADMIN-TOKEN": "test-token-xyz"},
+    )
+    assert r.status_code == 200
+
+
+def test_require_admin_token_skipped_when_unset(monkeypatch):
+    """Sans ADMIN_TOKEN configuré, le contrôle est ignoré (mode dev)."""
+    from app.core import security
+    from app.core.settings import settings
+
+    monkeypatch.setattr(settings, "admin_token", "")
+    # Ne doit pas lever, même sans requête.
+    security.require_admin_token(None)

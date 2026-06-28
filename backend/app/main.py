@@ -123,6 +123,10 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("[Startup] Blacklist sync failed: %s", exc)
 
+    # Capture the running loop so synchronous handlers can publish SSE events.
+    from .services import sse as _sse
+    _sse.set_main_loop(asyncio.get_running_loop())
+
     asyncio.create_task(ip_blacklist.expire_loop(60))
     asyncio.create_task(expire_actions_loop(60))
 

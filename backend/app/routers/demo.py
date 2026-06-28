@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from sqlmodel import delete
 from ..db.session import get_session
@@ -11,11 +11,10 @@ from datetime import datetime, UTC
 import json
 import logging
 from ..services.geoip import lookup_ip
-import asyncio
-from ..services.sse import publish_alert_created
+from ..services.sse import publish_alert_created, schedule_publish
 from ..services.defense import decide_defense_action, create_defense_action, action_to_dict
 from ..services import ip_blacklist
-from ..core.settings import settings
+from ..core.security import require_admin_token
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/demo", tags=["demo"])
@@ -23,14 +22,7 @@ router = APIRouter(prefix="/demo", tags=["demo"])
 
 def _require_admin_token(request: Request | None) -> None:
     """Require X-ADMIN-TOKEN header if ADMIN_TOKEN is configured server-side."""
-    expected = settings.admin_token
-    if not expected:
-        return  # Dev mode: no token required
-    provided = request.headers.get("X-ADMIN-TOKEN") if request else None
-    if provided != expected:
-        client_ip = request.client.host if request and request.client else "unknown"
-        logger.warning("[DemoAuth] Unauthorized demo action from ip=%s", client_ip)
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    require_admin_token(request, source="DemoAuth")
 
 
 def _alert_payload(a: Alert) -> dict:
@@ -93,7 +85,7 @@ async def demo_generate(db: Session = Depends(get_session), request: Request = N
             if a and a.id:
                 payload = _alert_payload(a)
                 payload["defense"] = action_map.get(a.id)
-                asyncio.create_task(publish_alert_created(payload))
+                schedule_publish(publish_alert_created(payload))
     except Exception as exc:
         logger.debug("[Demo] SSE publish failed: %s", exc)
     # Best-effort GeoIP enrichment for the IPs we just inserted

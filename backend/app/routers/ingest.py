@@ -7,13 +7,12 @@ from ..models.alert import Alert
 from ..models.ip_enrichment import IPEnrichment
 from datetime import datetime, UTC
 import json
-import asyncio
 import logging
-from ..services.sse import publish_alert_created
+from ..services.sse import publish_alert_created, schedule_publish
 from ..services.geoip import lookup_ip
 from ..services.detection import score_with_isolation_forest
 from ..services.defense import decide_defense_action, create_defense_action, action_to_dict
-from ..core.settings import settings
+from ..core.security import require_admin_token
 
 router = APIRouter(prefix="/ingest", tags=["ingest"])
 logger = logging.getLogger(__name__)
@@ -72,13 +71,7 @@ async def ingest_logs(
     db: Session = Depends(get_session),
     request: Request = None,
 ):
-    expected = settings.admin_token
-    if expected:
-        provided = request.headers.get("X-ADMIN-TOKEN") if request else None
-        if provided != expected:
-            client_ip = request.client.host if request and request.client else "unknown"
-            logger.warning("[IngestAuth] Unauthorized ingest attempt from ip=%s", client_ip)
-            raise HTTPException(status_code=401, detail="Unauthorized")
+    require_admin_token(request, source="IngestAuth")
 
     items: List[LogRecord] = payload if isinstance(payload, list) else [payload]
     if len(items) > _MAX_BATCH_SIZE:
@@ -126,5 +119,5 @@ async def ingest_logs(
         if a.id is not None:
             sse_payload = _alert_payload(a)
             sse_payload["defense"] = action_map.get(a.id)
-            asyncio.create_task(publish_alert_created(sse_payload))
+            schedule_publish(publish_alert_created(sse_payload))
     return {"ingested": len(alerts)}
