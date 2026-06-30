@@ -100,7 +100,7 @@ def get_blocked_ips() -> List[Dict[str, Any]]:
 
 
 @router.post("/actions/{action_id}/approve")
-def approve_action(
+async def approve_action(
     action_id: int,
     body: ApproveBody = ApproveBody(),
     db: Session = Depends(get_session),
@@ -170,7 +170,7 @@ def approve_action(
 
 
 @router.post("/actions/{action_id}/revoke")
-def revoke_action(action_id: int, db: Session = Depends(get_session), request: Request = None):
+async def revoke_action(action_id: int, db: Session = Depends(get_session), request: Request = None):
     _require_admin_token(request)
     item = db.get(DefenseAction, action_id)
     if not item:
@@ -199,7 +199,7 @@ def revoke_action(action_id: int, db: Session = Depends(get_session), request: R
 
 
 @router.post("/block-manual")
-def manual_block(body: ManualBlockBody, db: Session = Depends(get_session), request: Request = None):
+async def manual_block(body: ManualBlockBody, db: Session = Depends(get_session), request: Request = None):
     """Blocage manuel d'une IP par l'analyste (sans alerte existante)."""
     _require_admin_token(request, body.token)
     try:
@@ -255,7 +255,7 @@ def manual_block(body: ManualBlockBody, db: Session = Depends(get_session), requ
 
 
 @router.post("/unblock/{ip}")
-def unblock_ip_direct(ip: str, db: Session = Depends(get_session), request: Request = None):
+async def unblock_ip_direct(ip: str, db: Session = Depends(get_session), request: Request = None):
     """Débloque une IP directement par son adresse."""
     _require_admin_token(request)
     try:

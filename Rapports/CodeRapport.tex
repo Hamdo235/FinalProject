@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{report}
 \usepackage[utf8]{inputenc}
-\usepackage[french]{babel}
+
 \usepackage[T1]{fontenc}
 \usepackage{times}
 \usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
@@ -39,14 +39,18 @@
 \usepackage{fancyhdr}
 \usepackage{emptypage}
 \usepackage{tikz}
-\usetikzlibrary{calc}
+\usetikzlibrary{calc,shapes.geometric,arrows.meta,positioning,fit}
 \usepackage{titlesec}
 \usepackage{titletoc}
 \usepackage[Glenn]{fncychap}
-\usepackage{soul}
-\usepackage[normalem]{ulem}
+
+
 \renewcommand{\arraystretch}{1.3}
 
+\newcommand{\umlclass}[4]{%
+  \node[draw=darkblue,fill=darkblue,text=white,font=\normalsize\bfseries,minimum width=5.0cm,minimum height=0.75cm,text centered,line width=1pt] (#1h) at #2 {#3};
+  \node[draw=darkblue,fill=white,anchor=north,inner sep=6pt,font=\small\ttfamily,text width=4.6cm,align=left,line width=1pt] (#1b) at (#1h.south) {#4};
+}
 \begin{document}
 \pagenumbering{Roman}
 \thispagestyle{empty}
@@ -70,7 +74,7 @@
 \vspace{0.3cm}
 
 \begin{center}
-  \hspace{2cm}\includegraphics[width=0.60\textwidth]{images/enastic_logo2.png}
+  \includegraphics[width=0.45\textwidth]{images/enastic_logo2.png}
 \end{center}
 
 \vspace{0.2cm}
@@ -93,6 +97,10 @@
 \vspace{0.4cm}
 
 \begin{center}
+  {\large\textbf{\underline{THÈME}}}
+\end{center}
+
+\begin{center}
   \begin{tcolorbox}[
     enhanced,
     colback=darkblue,
@@ -102,25 +110,31 @@
     width=\textwidth,
     halign=center
   ]
-    \vspace{0.2cm}
-    {\color{white}\large\textbf{\underline{THÈME}}}\\[6pt]
+    \vspace{0.3cm}
     {\color{white}\Large\textbf{CyberSentinel-LLM :}}\\[4pt]
-    {\color{white}\large Plateforme Cognitive de Cybersécurité Conversationnelle}\\[2pt]
-    {\color{white}\large pour la Détection Contextuelle et la}\\[2pt]
+    {\color{white}\large Plateforme pour la Détection Contextuelle et la}\\[2pt]
     {\color{white}\large Neutralisation Adaptive des Menaces Réseau}
-    \vspace{0.2cm}
+    \vspace{0.3cm}
   \end{tcolorbox}
 \end{center}
 
 \vspace{1cm}
 
 \begin{flushleft}
-  \textbf{\underline{Présenté par} :} \hspace{81mm} \textbf{\underline{Directeur de mémoire} :}\\[6pt]
+  \textbf{\underline{Présenté par} :} \hspace{81mm} \textbf{\underline{Encadrant} :}\\[6pt]
   M. YAKHOUB MAHAMAT HAMDO \hspace{40mm} Dr. MOUAZ MICKAIL\\
   \hspace{107mm} {\small\textit{Enseignant chercheur en IA}}
 \end{flushleft}
 
-\vspace{4cm}
+\vspace{3cm}
+
+\begin{flushleft}
+  \textbf{\underline{Jury} :}\\[6pt]
+  \textbf{Président} : \hspace{5mm} M. \underline{\hspace{4cm}}\\[4pt]
+  \textbf{Rapporteur} : \hspace{2mm} M. \underline{\hspace{4cm}}
+\end{flushleft}
+
+\vspace{1cm}
 
 \begin{center}
   \begin{tcolorbox}[
@@ -172,8 +186,7 @@ soutenance pour parachever leur cycle de Licence.\\
 
 C'est dans cette optique que le présent mémoire vient marquer la fin de notre
 cursus en Informatique à l'ENASTIC, sur le thème :
-\textbf{« CYBERSENTINEL-LLM : PLATEFORME COGNITIVE DE CYBERSÉCURITÉ
-CONVERSATIONNELLE POUR LA DÉTECTION CONTEXTUELLE ET LA NEUTRALISATION
+\textbf{« CYBERSENTINEL-LLM : PLATEFORME POUR LA DÉTECTION CONTEXTUELLE ET LA NEUTRALISATION
 ADAPTIVE DES MENACES RÉSEAU »}, dans le cadre de l'année universitaire
 2025--2026.\\
 
@@ -220,8 +233,7 @@ Je tiens à exprimer ma profonde gratitude à :
   \item[\ding{43}] L'équipe pédagogique de l'École Nationale Supérieure des
   Technologies de l'Information et de la Communication (ENASTIC), pour la
   qualité de la formation dispensée ;
-  \item[\ding{43}] Mon Directeur de mémoire, \textbf{Dr. MOUAZ MICKAIL},
-  Enseignant chercheur en Intelligence Artificielle, pour la qualité de son
+  \item[\ding{43}] Mon Directeur de mémoire, pour la qualité de son
   encadrement, sa disponibilité et ses précieux conseils tout au long de la
   réalisation de ce projet.
 \end{itemize}
@@ -308,9 +320,7 @@ Je tiens à exprimer ma profonde gratitude à :
 
 \subsection*{Contexte et justification}
 \begin{onehalfspace}
-La surface d'attaque des systèmes d'information s'accroît rapidement, portée
-par l'hétérogénéité des réseaux, l'essor des services numériques et
-l'augmentation des usages mobiles. Au Tchad, la digitalisation est en pleine
+Au Tchad, la digitalisation est en pleine
 croissance : en 2025, le pays compte \textbf{2,74 millions d'internautes}
 (13,2\% de la population de 20,8 millions) et \textbf{14,5 millions
 de connexions mobiles actives} (69,8\%). Des projets structurants sont en cours, tels que le Data
@@ -332,7 +342,7 @@ et audit de certification du Data Center National en février 2026).\\
 Dans ce contexte, automatiser la détection, fournir une assistance explicative
 aux analystes SOC et neutraliser adaptativement les menaces constituent des
 besoins prioritaires. C'est pour répondre à ce défi que le projet
-\textbf{CyberSentinel-LLM} a été conçu : une plateforme cognitive qui combine
+\textbf{CyberSentinel-LLM} a été proposé : une plateforme cognitive qui combine
 détection d'anomalies par Machine Learning, raisonnement contextuel par LLM
 enrichi via RAG sur la base MITRE ATT\&CK, et neutralisation adaptive par
 blocage applicatif à validation humaine.
@@ -369,16 +379,16 @@ l'explicabilité et la réactivité du triage d'alertes au sein d'un SOC.
 \end{itemize}
 \end{onehalfspace}
 
-\subsection*{Question centrale de la recherche}
+\subsection*{Question centrale}
 \begin{onehalfspace}
 Comment concevoir une plateforme cyberdéfensive conversationnelle exploitant
 le raisonnement contextuel d'un LLM enrichi par RAG tout en maintenant une
-précision opérationnelle, une robustesse adversariale, une confiance mesurable
+précision opérationnelle, une robustesse, une confiance mesurable
 et une capacité de neutralisation adaptive dans des environnements de menace
 dynamiques, avec une architecture simple et reproductible ?
 \end{onehalfspace}
 
-\subsection*{Hypothèses de la recherche}
+\subsection*{Hypothèses}
 \begin{onehalfspace}
 \begin{itemize}
   \item[\ding{43}] \textbf{H1 :} Un pipeline minimaliste basé sur des features
@@ -410,7 +420,7 @@ telle approche dans le contexte tchadien.
 %% ============================================================
 %% CHAPITRE 1
 %% ============================================================
-\chapter{État de l'Art et Généralités}
+\chapter{Généralités}
 
 \section*{Introduction}
 \phantomsection\addcontentsline{toc}{section}{Introduction}
@@ -419,7 +429,7 @@ La cybersécurité est devenue un enjeu stratégique majeur pour les organisatio
 à l'échelle mondiale. Face à la sophistication croissante des attaques
 informatiques, les systèmes de détection d'intrusions (IDS) et de prévention
 (IPS) constituent la première ligne de défense des infrastructures numériques.
-Ce chapitre présente un état de l'art sur ces systèmes, leurs limites, et
+Ce chapitre présente sur ces systèmes, leurs limites, et
 l'apport combiné du Machine Learning, des modèles de langage et des techniques
 RAG pour les renforcer.
 \end{onehalfspace}
@@ -490,7 +500,8 @@ moderne :
 
 \section{Apport du Machine Learning en détection d'anomalies}
 \begin{onehalfspace}
-Le Machine Learning apporte une réponse aux limites des approches classiques
+Le Machine Learning qui par définition est une branche de l'Intelligence Artificielle
+permettant d'apprendre à partir de données, apporte une réponse aux limites des approches classiques
 en permettant d'apprendre automatiquement le comportement normal d'un système
 et de détecter les déviations significatives. Deux algorithmes non supervisés
 sont particulièrement pertinents pour la détection d'anomalies :
@@ -562,7 +573,7 @@ via \textbf{Ollama} est utilisé localement, garantissant la confidentialité
 des données et l'indépendance vis-à-vis de services cloud externes.
 \end{onehalfspace}
 
-\section{Retrieval-Augmented Generation (RAG) pour la cybersécurité}
+\section{RAG pour la cybersécurité}
 \begin{onehalfspace}
 La technique \textbf{RAG (Retrieval-Augmented Generation)}, introduite par
 Lewis et al. \cite{lewis2020rag}, permet d'enrichir les réponses d'un LLM
@@ -597,7 +608,7 @@ d'embedding \textit{all-MiniLM-L6-v2} (384 dimensions, CPU-only), permettant
 une recherche sémantique locale sans dépendance cloud.
 \end{onehalfspace}
 
-\section*{Conclusion du Chapitre 1}
+\section*{Conclusion}
 \phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
 Ce chapitre a présenté l'évolution des systèmes de détection d'intrusions,
@@ -620,9 +631,9 @@ les besoins fonctionnels et non fonctionnels du système.
 \phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
 Ce chapitre présente l'analyse des besoins qui ont guidé la conception de
-\textbf{CyberSentinel-LLM}. Compte tenu du contexte tchadien — faibles
+\textbf{CyberSentinel-LLM}. Compte tenu du contexte tchadien (faibles
 ressources en cybersécurité, absence de SOC nationaux structurés, et
-dépendance à des solutions étrangères — la plateforme doit répondre à des
+dépendance à des solutions étrangères), la plateforme doit répondre à des
 exigences précises tout en restant déployable localement sur une machine
 modeste.
 \end{onehalfspace}
@@ -657,7 +668,65 @@ besoins opérationnels d'un analyste SOC confronté à des attaques réseau :
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.90\linewidth]{images/cybersentinel_use_case.png}
+\scalebox{0.72}{
+\begin{tikzpicture}[
+  font=\normalsize, >=Stealth,
+  usecase/.style={draw=darkblue,fill=lightblue,ellipse,text width=4.2cm,align=center,minimum height=1.1cm,line width=1pt,font=\normalsize},
+  ucright/.style={draw=darkblue!70,fill=darkblue!12,ellipse,text width=4.0cm,align=center,minimum height=1.1cm,line width=1pt,font=\normalsize},
+  arr/.style={->,line width=1pt,darkblue!80},
+  incl/.style={->,dashed,line width=0.8pt,darkblue!60},
+]
+\draw[draw=darkblue,line width=1.4pt,dashed,rounded corners=8pt] (-0.5,2.2) rectangle (14.5,-13.0);
+\node[font=\normalsize\bfseries\color{darkblue}] at (7.0,1.9) {\textbf{CyberSentinel-LLM}};
+% Acteur Analyste SOC
+\draw[fill=white,draw=darkblue,line width=1.2pt] (-4.2,-0.5) circle (0.42cm);
+\draw[darkblue,line width=1.2pt] (-4.2,-0.92) -- (-4.2,-2.05);
+\draw[darkblue,line width=1.2pt] (-4.7,-1.35) -- (-3.7,-1.35);
+\draw[darkblue,line width=1.2pt] (-4.2,-2.05) -- (-4.6,-2.75);
+\draw[darkblue,line width=1.2pt] (-4.2,-2.05) -- (-3.8,-2.75);
+\node[font=\normalsize\bfseries] at (-4.2,-3.25) {Analyste~SOC};
+% Acteur Détecteur ML
+\draw[fill=white,draw=darkblue,line width=1.2pt] (17.0,-6.0) circle (0.42cm);
+\draw[darkblue,line width=1.2pt] (17.0,-6.42) -- (17.0,-7.55);
+\draw[darkblue,line width=1.2pt] (16.5,-6.95) -- (17.5,-6.95);
+\draw[darkblue,line width=1.2pt] (17.0,-7.55) -- (16.6,-8.25);
+\draw[darkblue,line width=1.2pt] (17.0,-7.55) -- (17.4,-8.25);
+\node[font=\normalsize\bfseries] at (17.0,-8.75) {Détecteur~ML};
+% Use cases gauche
+\node[usecase] (uc1) at (4.0, 0.9) {Envoyer un log suspect};
+\node[usecase] (uc2) at (4.0,-1.1) {Voir les alertes en direct};
+\node[usecase] (uc3) at (4.0,-3.1) {Valider une alerte};
+\node[usecase] (uc4) at (4.0,-5.1) {Créer un incident};
+\node[usecase] (uc5) at (4.0,-7.1) {Demander une explication};
+\node[usecase] (uc6) at (4.0,-9.1) {Approuver une action défensive};
+\node[usecase] (uc7) at (4.0,-11.1) {Consulter les métriques};
+% Use cases droite
+\node[ucright] (us1) at (11.0, 0.9) {Analyser le comportement};
+\node[ucright] (us2) at (11.0,-1.1) {Notifier en temps réel};
+\node[ucright] (us3) at (11.0,-3.1) {Calculer la défense};
+\node[ucright] (us4) at (11.0,-7.1) {Générer une explication};
+\node[ucright] (us5) at (11.0,-9.1) {Recalibrer le modèle};
+% Flèches analyste
+\draw[arr] (-3.78,-1.35) -- (uc1.west);
+\draw[arr] (-3.78,-1.35) -- (uc2.west);
+\draw[arr] (-3.78,-1.35) -- (uc3.west);
+\draw[arr] (-3.78,-1.35) -- (uc4.west);
+\draw[arr] (-3.78,-1.35) -- (uc5.west);
+\draw[arr] (-3.78,-1.35) -- (uc6.west);
+\draw[arr] (-3.78,-1.35) -- (uc7.west);
+% include/extend
+\draw[incl] (uc1.east) -- node[above,font=\small,color=darkblue!80] {$\ll$include$\gg$} (us1.west);
+\draw[incl] (uc2.east) -- node[above,font=\small,color=darkblue!80] {$\ll$extend$\gg$}  (us2.west);
+\draw[incl] (uc3.east) -- node[above,font=\small,color=darkblue!80] {$\ll$include$\gg$} (us3.west);
+\draw[incl] (uc5.east) -- node[above,font=\small,color=darkblue!80] {$\ll$include$\gg$} (us4.west);
+\draw[incl] (uc6.east) -- node[above,font=\small,color=darkblue!80] {$\ll$include$\gg$} (us5.west);
+% Flèches ML
+\draw[arr] (16.58,-6.95) -- (us1.east);
+\draw[arr] (16.58,-6.95) -- (us2.east);
+\draw[arr] (16.58,-6.95) -- (us3.east);
+\draw[arr] (16.58,-6.95) -- (us5.east);
+\end{tikzpicture}
+}
 \caption{Diagramme de cas d'utilisation de CyberSentinel-LLM}
 \label{fig:usecase}
 \end{figure}
@@ -735,7 +804,7 @@ de performance et de sécurité du système :
 \end{itemize}
 \end{onehalfspace}
 
-\section*{Conclusion du Chapitre 2}
+\section*{Conclusion}
 \phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
 Ce chapitre a défini les cas d'usage, les exigences fonctionnelles et
@@ -788,7 +857,38 @@ L'architecture comprend cinq grandes couches :
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.90\linewidth]{images/cybersentinel_architecture.png}
+\scalebox{0.82}{
+\begin{tikzpicture}[
+  font=\normalsize,>=Stealth,
+  actor/.style={draw=darkblue,fill=lightblue,rounded corners=5pt,minimum width=3.5cm,minimum height=1.0cm,text centered,line width=1.2pt,font=\normalsize\bfseries},
+  layer/.style={draw=darkblue,fill=darkblue!8,rounded corners=4pt,minimum width=15cm,minimum height=1.1cm,text centered,line width=1pt,font=\normalsize},
+  sublayer/.style={draw=darkblue,fill=white,rounded corners=3pt,minimum width=3.2cm,minimum height=1.0cm,text centered,line width=0.9pt,font=\small},
+  redbox/.style={draw=red!70!black,fill=red!15,rounded corners=3pt,minimum width=3.2cm,minimum height=1.0cm,text centered,line width=0.9pt,font=\small},
+  arr/.style={->,line width=1.1pt,darkblue},
+  darr/.style={<->,line width=1.1pt,darkblue,dashed},
+]
+\node[font=\normalsize\bfseries\color{darkblue}] at (0,0) {Architecture globale --- CyberSentinel-LLM};
+\node[actor] (logs)     at (-5.0,-1.4) {Logs réseau};
+\node[actor] (analyste) at (0,   -1.4) {Analyste SOC};
+\node[actor] (tests)    at (5.0, -1.4) {Scénarios de test};
+\node[layer] (web)    at (0,-3.1) {\textbf{Interface web} \quad|\quad Tableau de bord $\cdot$ Alertes $\cdot$ Incidents $\cdot$ Chat $\cdot$ Métriques};
+\node[layer,fill=darkblue!15] (server) at (0,-4.8) {\textbf{Serveur applicatif} \quad|\quad Réception logs $\cdot$ Gestion alertes $\cdot$ Incidents $\cdot$ Défense $\cdot$ Métriques};
+\node[redbox]   (ml)  at (-5.5,-6.6) {\textbf{Détecteur ML}\\Score de danger};
+\node[sublayer] (db)  at (-1.8,-6.6) {\textbf{Base de données}\\Alertes $\cdot$ Incidents};
+\node[sublayer] (llm) at ( 1.8,-6.6) {\textbf{Assistant IA}\\Explications français};
+\node[sublayer] (geo) at ( 5.5,-6.6) {\textbf{Carte GeoIP}\\Localisation};
+\draw[arr] (logs)--(web); \draw[arr] (analyste)--(web); \draw[arr] (tests)--(web);
+\node[font=\small\itshape\color{darkblue}] at (-2.0,-3.9) {Alertes en direct};
+\node[font=\small\itshape\color{darkblue}] at ( 1.8,-3.9) {Requêtes};
+\draw[darr] (-1.8,-3.55) -- (-1.8,-4.45);
+\draw[arr]  ( 1.8,-4.45) -- ( 1.8,-3.55);
+\draw[arr] (server.south)+(-5.5,0) -- (ml.north);
+\draw[arr] (server.south)+(-1.8,0) -- (db.north);
+\draw[arr] (server.south)+( 1.8,0) -- (llm.north);
+\draw[arr] (server.south)+( 5.5,0) -- (geo.north);
+\node[font=\small\itshape\color{darkblue!70}] at (0,-7.6) {Principe clé : l'assistant IA n'agit jamais seul --- toute décision défensive nécessite une approbation humaine};
+\end{tikzpicture}
+}
 \caption{Architecture globale de CyberSentinel-LLM}
 \label{fig:architecture}
 \end{figure}
@@ -1003,7 +1103,28 @@ forment un sous-graphe indépendant.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.90\linewidth]{images/cybersentinel_class_diagram.png}
+\scalebox{0.78}{
+\begin{tikzpicture}[>=Stealth,rel/.style={->,line width=1.0pt,darkblue},relD/.style={->,dashed,line width=0.8pt,darkblue!70}]
+\umlclass{AL}{(0,0)}{Alert}{id : int\\ts : datetime\\source : str\\ip : str\\rule : str\\severity : str\\score : float\\status : str}
+\umlclass{IN}{(6.5,0)}{Incident}{id : int\\created\_at : datetime\\status : str\\summary : str\\risk : str\\confidence : float\\related\_alerts\_json}
+\umlclass{LT}{(13.0,0)}{LLMTrace}{id : int\\incident\_id : int (FK)\\prompt : str\\response : str\\confidence : float\\citations\_json : str}
+\umlclass{ALB}{(0,-7.0)}{AlertLabel}{alert\_id : int (FK)\\label : str\\noted\_at : datetime}
+\umlclass{DA}{(6.5,-7.0)}{DefenseAction}{id : int\\alert\_id : int (FK)\\ip : str\\action : str\\confidence : float\\expires\_at : datetime\\active : bool}
+\umlclass{CO}{(13.0,-5.8)}{Conversation}{id : int\\title : str\\created\_at : datetime}
+\umlclass{IP}{(0,-11.5)}{IPEnrichment}{ip : str (PK)\\country : str\\lat, lon : float\\asn : str}
+\umlclass{CM}{(13.0,-10.5)}{ChatMessage}{id : int\\conversation\_id (FK)\\role : str\\content : str}
+\draw[rel] (ALh.east) -- node[above,font=\small\bfseries] {N..M} (INh.west);
+\draw[rel] (INh.east) -- node[above,font=\small\bfseries] {1..*} (LTh.west);
+\draw[rel] (ALb.south) -- node[right,font=\small\bfseries,pos=0.45] {1..*} (ALBh.north);
+\draw[rel] (ALb.south)++(1.2,0) -- ++(0,-0.4) -| (DAh.north);
+\node[font=\small\bfseries,darkblue] at (3.8,-3.6) {1..*};
+\draw[relD] (ALBb.south) -- node[right,font=\small] {best-effort} (IPh.north);
+\draw[rel] (COb.south) -- node[right,font=\small\bfseries] {1..*} (CMh.north);
+\node[font=\normalsize\bfseries\color{darkblue}] at (6.0,-13.8) {Légende};
+\draw[rel]  (4.0,-14.4) -- ++(2.5,0) node[right,font=\normalsize] {Relation forte (FK)};
+\draw[relD] (4.0,-15.0) -- ++(2.5,0) node[right,font=\normalsize] {Relation logique (JSON)};
+\end{tikzpicture}
+}
 \caption{Diagramme de classes de CyberSentinel-LLM}
 \label{fig:classes}
 \end{figure}
@@ -1015,7 +1136,69 @@ La Figure~\ref{fig:sequence} illustre le flux complet d'une alerte depuis l'arri
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.90\linewidth]{images/sequence_simplifie_fr.png}
+\scalebox{0.62}{
+\begin{tikzpicture}[
+  font=\small,>=Stealth,
+  lifeline/.style={draw=darkblue!40,dashed,line width=0.5pt},
+  actorbox/.style={draw=darkblue,fill=darkblue,text=white,rounded corners=3pt,
+    minimum width=2.2cm,minimum height=0.6cm,text centered,
+    line width=0.7pt,font=\small\bfseries},
+  msg/.style={->,line width=0.8pt,darkblue},
+  ret/.style={->,dashed,line width=0.6pt,darkblue!60},
+  step/.style={draw=red,fill=red!20,rounded corners=3pt,
+    font=\scriptsize\itshape\bfseries,text=red,text centered,
+    minimum width=13.5cm,minimum height=0.4cm,inner sep=3pt,line width=1.2pt},
+]
+
+\node[actorbox] (A) at (0.0, 0) {Analyste SOC};
+\node[actorbox] (W) at (3.0, 0) {Plateforme web};
+\node[actorbox] (D) at (6.0, 0) {Détecteur};
+\node[actorbox] (B) at (9.0, 0) {Base données};
+\node[actorbox] (L) at (12.0,0) {Assistant IA};
+
+\draw[lifeline] (A.south) -- ++(0,-19.5);
+\draw[lifeline] (W.south) -- ++(0,-19.5);
+\draw[lifeline] (D.south) -- ++(0,-19.5);
+\draw[lifeline] (B.south) -- ++(0,-19.5);
+\draw[lifeline] (L.south) -- ++(0,-19.5);
+
+\draw[fill=lightblue,draw=darkblue,rounded corners=3pt,line width=1.2pt] (0.0,-1.4) rectangle (12.0,-0.6);
+\node[font=\small\itshape\bfseries,text=darkblue] at (6.0,-1.0) {1 — Log suspect arrive};
+\draw[msg] ($(A.south)+(0,-1.6)$) -- node[above,font=\small]{Connexion SSH échouée} ($(W.south)+(0,-1.6)$);
+
+\draw[fill=lightblue,draw=darkblue,rounded corners=3pt,line width=1.2pt] (0.0,-4.0) rectangle (12.0,-3.2);
+\node[font=\small\itshape\bfseries,text=darkblue] at (6.0,-3.6) {2 — Envoi au détecteur};
+\draw[msg] ($(W.south)+(0,-4.2)$) -- node[above,font=\small]{Analyser comportement}    ($(D.south)+(0,-4.2)$);
+\draw[ret] ($(D.south)+(0,-4.9)$) -- node[above,font=\small]{Danger : élevé (0.87)}    ($(W.south)+(0,-4.9)$);
+
+\draw[fill=lightblue,draw=darkblue,rounded corners=3pt,line width=1.2pt] (0.0,-6.6) rectangle (12.0,-5.8);
+\node[font=\small\itshape\bfseries,text=darkblue] at (6.0,-6.2) {3 — Enregistre alerte + décision};
+\draw[msg] ($(W.south)+(0,-6.8)$) -- node[above,font=\small]{Enregistrer alerte}        ($(B.south)+(0,-6.8)$);
+\draw[msg] ($(W.south)+(0,-7.5)$) -- node[above,font=\small]{Enregistrer décision}      ($(B.south)+(0,-7.5)$);
+
+\draw[fill=lightblue,draw=darkblue,rounded corners=3pt,line width=1.2pt] (0.0,-9.2) rectangle (12.0,-8.4);
+\node[font=\small\itshape\bfseries,text=darkblue] at (6.0,-8.8) {4 — Notification analyste};
+\draw[ret] ($(W.south)+(0,-9.4)$) -- node[above,font=\small]{Nouvelle alerte !}         ($(A.south)+(0,-9.4)$);
+
+\draw[fill=lightblue,draw=darkblue,rounded corners=3pt,line width=1.2pt] (0.0,-11.8) rectangle (12.0,-11.0);
+\node[font=\small\itshape\bfseries,text=darkblue] at (6.0,-11.4) {5 — Avis sur l'alerte};
+\draw[msg] ($(A.south)+(0,-12.0)$) -- node[above,font=\small]{Vraie attaque}             ($(W.south)+(0,-12.0)$);
+\draw[msg] ($(W.south)+(0,-12.7)$) -- node[above,font=\small]{Enregistrer avis}          ($(B.south)+(0,-12.7)$);
+
+\draw[fill=lightblue,draw=darkblue,rounded corners=3pt,line width=1.2pt] (0.0,-14.4) rectangle (12.0,-13.6);
+\node[font=\small\itshape\bfseries,text=darkblue] at (6.0,-14.0) {6 — Création incident};
+\draw[msg] ($(A.south)+(0,-14.6)$) -- node[above,font=\small]{Créer incident}            ($(W.south)+(0,-14.6)$);
+\draw[msg] ($(W.south)+(0,-15.3)$) -- node[above,font=\small]{Sauvegarder incident}      ($(B.south)+(0,-15.3)$);
+
+\draw[fill=lightblue,draw=darkblue,rounded corners=3pt,line width=1.2pt] (0.0,-17.0) rectangle (12.0,-16.2);
+\node[font=\small\itshape\bfseries,text=darkblue] at (6.0,-16.6) {7 — Demande explication};
+\draw[msg] ($(A.south)+(0,-17.2)$) -- node[above,font=\small]{Expliquer incident}        ($(W.south)+(0,-17.2)$);
+\draw[msg] ($(W.south)+(0,-17.9)$) -- node[above,font=\small]{Générer explication}       ($(L.south)+(0,-17.9)$);
+\draw[msg] ($(L.south)+(0,-18.6)$) -- node[above,font=\small]{Analyse + recommandations} ($(B.south)+(0,-18.6)$);
+\draw[ret] ($(W.south)+(0,-19.3)$) -- node[above,font=\small]{Explication affichée}      ($(A.south)+(0,-19.3)$);
+
+\end{tikzpicture}
+}
 \caption{Diagramme de séquence — flux d'une alerte jusqu'à la neutralisation}
 \label{fig:sequence}
 \end{figure}
@@ -1027,12 +1210,51 @@ La Figure~\ref{fig:activite} décrit le processus de traitement d'un log entrant
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.75\linewidth]{images/cybersentinel_activity.png}
-\caption{Diagramme d'activité — traitement d'un log entrant}
+\scalebox{0.80}{
+\begin{tikzpicture}[
+  font=\normalsize,>=Stealth,
+  node distance=1.2cm,
+  action/.style={draw=darkblue,fill=lightblue,rounded corners=6pt,minimum width=7.5cm,minimum height=0.85cm,text centered,line width=1pt,font=\normalsize},
+  decision/.style={draw=darkblue,fill=gold!35,diamond,aspect=4.2,minimum width=6.5cm,minimum height=0.85cm,text centered,line width=1pt,font=\normalsize},
+  actL/.style={draw=red!70!black,fill=red!10,rounded corners=6pt,minimum width=4.8cm,minimum height=1.2cm,text centered,line width=1pt,font=\normalsize,align=center},
+  actR/.style={draw=darkblue!80,fill=darkblue!15,rounded corners=6pt,minimum width=4.8cm,minimum height=1.2cm,text centered,line width=1pt,font=\normalsize,align=center},
+  actGold/.style={draw=gold!80!black,fill=gold!25,rounded corners=6pt,minimum width=7.5cm,minimum height=0.85cm,text centered,line width=1pt,font=\normalsize},
+  arr/.style={->,line width=1pt,darkblue},
+  lbl/.style={font=\normalsize\bfseries,fill=white,inner sep=2pt},
+]
+\node[circle,fill=darkblue,minimum size=0.7cm] (start) at (0,0) {};
+\node[action,   below=1.0cm of start] (a1) {Un log suspect arrive};
+\node[action,   below=1.0cm of a1]    (a2) {Le détecteur analyse le comportement};
+\node[decision, below=1.2cm of a2]    (d1) {Comportement suspect ?};
+\node[actL,left=3.2cm of d1]  (bL1) {Score faible\\ Sévérité : basse};
+\node[actR,right=3.2cm of d1] (bR1) {Score élevé\\ Sévérité : haute};
+\node[action,  below=3.2cm of d1]  (a3) {Alerte enregistrée et décision calculée};
+\node[action,  below=1.0cm of a3]  (a4) {Notification envoyée à l'analyste};
+\node[action,  below=1.0cm of a4]  (a5) {L'analyste valide l'alerte};
+\node[decision,below=1.2cm of a5]  (d2) {Créer un incident ?};
+\node[actL,left=3.2cm of d2]  (bL2) {Alerte archivée};
+\node[actR,right=3.2cm of d2] (bR2) {Incident créé};
+\node[actR,below=0.9cm of bR2] (bR3) {Assistant explique\\ en français};
+\node[actGold,below=3.5cm of d2] (a6) {Avis $\rightarrow$ calibration du détecteur};
+\node[circle,draw=darkblue,fill=white,line width=2.5pt,minimum size=0.7cm,below=1.0cm of a6,
+  path picture={\fill[darkblue] (path picture bounding box.center) circle(0.20cm);}] (stop) {};
+\draw[arr] (start)--(a1); \draw[arr] (a1)--(a2); \draw[arr] (a2)--(d1);
+\draw[arr] (d1.west) -- node[lbl,above] {Non} (bL1.east);
+\draw[arr] (d1.east) -- node[lbl,above] {Oui} (bR1.west);
+\draw[arr] (bL1.south) |- (a3.west); \draw[arr] (bR1.south) |- (a3.east);
+\draw[arr] (a3)--(a4); \draw[arr] (a4)--(a5); \draw[arr] (a5)--(d2);
+\draw[arr] (d2.west) -- node[lbl,above] {Non} (bL2.east);
+\draw[arr] (d2.east) -- node[lbl,above] {Oui} (bR2.west);
+\draw[arr] (bR2)--(bR3);
+\draw[arr] (bL2.south) |- (a6.west); \draw[arr] (bR3.south) |- (a6.east);
+\draw[arr] (a6)--(stop);
+\end{tikzpicture}
+}
+\caption{Diagramme d'activité --- traitement d'un log entrant}
 \label{fig:activite}
 \end{figure}
 
-\section*{Conclusion du Chapitre 3}
+\section*{Conclusion}
 \phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
 Ce chapitre a présenté l'architecture globale en cinq couches, la structure
@@ -1576,7 +1798,7 @@ l'interface SOC de \textbf{CyberSentinel-LLM}.
 \label{fig:screen_voice_mode}
 \end{figure}
 
-\section*{Conclusion du Chapitre 4}
+\section*{Conclusion}
 \phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
 Ce chapitre a détaillé l'implémentation des composantes clés de
@@ -1719,49 +1941,49 @@ Les tests réalisés sur le prototype ont permis de valider les points suivants 
 \hline
 \textbf{Fonctionnalité} & \textbf{Statut} & \textbf{Remarque} \\
 \hline
-Ingestion + scoring ML & \checkmark Complet & IF/LOF/hybride fonctionnels \\
+Ingestion + scoring ML & Complet & IF/LOF/hybride fonctionnels \\
 \hline
-RAG MITRE ATT\&CK (ChromaDB) & \checkmark Complet & 697 techniques indexées (STIX Enterprise) \\
+RAG MITRE ATT\&CK (ChromaDB) & Complet & 697 techniques indexées (STIX Enterprise) \\
 \hline
-Explication LLM structurée JSON & \checkmark Complet & Retry + fallback \\
+Explication LLM structurée JSON & Complet & Retry + fallback \\
 \hline
-Confiance pondérée (ML+RAG+LLM) & \checkmark Complet & Formule transparente \\
+Confiance pondérée (ML+RAG+LLM) & Complet & Formule transparente \\
 \hline
-SSE temps réel & \checkmark Complet & Multi-abonnés, backpressure \\
+SSE temps réel & Complet & Multi-abonnés, backpressure \\
 \hline
-Middleware blocage HTTP 403 & \checkmark Complet & Liste noire O(1) \\
+Middleware blocage HTTP 403 & Complet & Liste noire O(1) \\
 \hline
-Notification countdown 30s & \checkmark Complet & Human-in-the-Loop \\
+Notification countdown 30s & Complet & Human-in-the-Loop \\
 \hline
-Approbation \texttt{block\_temp} pending & \checkmark Complet & Choix explicite analyste \\
+Approbation \texttt{block\_temp} pending & Complet & Choix explicite analyste \\
 \hline
-Commandes iptables générées & \checkmark Complet & Affichage uniquement \\
+Commandes iptables générées & Complet & Affichage uniquement \\
 \hline
-Provider temps réel centralisé & \checkmark Complet & SSE + polling unifiés \\
+Provider temps réel centralisé & Complet & SSE + polling unifiés \\
 \hline
-Indicateur santé backend / SSE & \checkmark Complet & Sidebar dynamique \\
+Indicateur santé backend / SSE & Complet & Sidebar dynamique \\
 \hline
-Badge actions en attente & \checkmark Complet & Compteur pulsant Alertes \\
+Badge actions en attente & Complet & Compteur pulsant Alertes \\
 \hline
-Toasts \& confirmations modales & \checkmark Complet & Reset démo / DB protégés \\
+Toasts \& confirmations modales & Complet & Reset démo / DB protégés \\
 \hline
-Error Boundary global & \checkmark Complet & Récupération sans rechargement \\
+Error Boundary global & Complet & Récupération sans rechargement \\
 \hline
-Enrichissement GeoIP & \checkmark Partiel & Nécessite GeoLite2-City.mmdb \\
+Enrichissement GeoIP & Partiel & Nécessite GeoLite2-City.mmdb \\
 \hline
-Chat SOC + mode voix & \checkmark Partiel & STT/TTS si modèles présents \\
+Chat SOC + mode voix & Partiel & STT/TTS si modèles présents \\
 \hline
-Métriques ML (F1, etc.) & \checkmark Partiel & Nécessite labels humains \\
+Métriques ML (F1, etc.) & Partiel & Nécessite labels humains \\
 \hline
-Authentification 2FA TOTP & \checkmark Complet & QR code + TOTP, côté frontend \\
+Authentification 2FA TOTP & Complet & QR code + TOTP, côté frontend \\
 \hline
-Gestion des utilisateurs (CRUD) & \checkmark Complet & localStorage, rôles, mot de passe \\
+Gestion des utilisateurs (CRUD) & Complet & localStorage, rôles, mot de passe \\
 \hline
-Tests automatisés backend & \checkmark Complet & pytest : 6 fichiers de tests \\
+Tests automatisés backend & Complet & pytest : 6 fichiers de tests \\
 \hline
-Tests automatisés frontend & \checkmark Complet & Vitest : auth.test.ts \\
+Tests automatisés frontend & Complet & Vitest : auth.test.ts \\
 \hline
-Refactoring modulaire frontend & \checkmark Complet & Chat : $-$37\%, Settings : modulaire \\
+Refactoring modulaire frontend & Complet & Chat : $-$37\%, Settings : modulaire \\
 \hline
 Authentification RBAC backend & $\times$ Absent & JWT côté serveur non implémenté \\
 \hline
@@ -1832,7 +2054,7 @@ du backend et du frontend, avec une couverture croissante des composants critiqu
 \end{itemize}
 \end{onehalfspace}
 
-\section*{Conclusion du Chapitre 5}
+\section*{Conclusion}
 \phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
 Les tests réalisés confirment que \textbf{CyberSentinel-LLM} remplit ses
@@ -2012,7 +2234,38 @@ d'architecture globale détaillé à la section~3.1.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.90\linewidth]{images/cybersentinel_architecture.png}
+\scalebox{0.82}{
+\begin{tikzpicture}[
+  font=\normalsize,>=Stealth,
+  actor/.style={draw=darkblue,fill=lightblue,rounded corners=5pt,minimum width=3.5cm,minimum height=1.0cm,text centered,line width=1.2pt,font=\normalsize\bfseries},
+  layer/.style={draw=darkblue,fill=darkblue!8,rounded corners=4pt,minimum width=15cm,minimum height=1.1cm,text centered,line width=1pt,font=\normalsize},
+  sublayer/.style={draw=darkblue,fill=white,rounded corners=3pt,minimum width=3.2cm,minimum height=1.0cm,text centered,line width=0.9pt,font=\small},
+  redbox/.style={draw=red!70!black,fill=red!15,rounded corners=3pt,minimum width=3.2cm,minimum height=1.0cm,text centered,line width=0.9pt,font=\small},
+  arr/.style={->,line width=1.1pt,darkblue},
+  darr/.style={<->,line width=1.1pt,darkblue,dashed},
+]
+\node[font=\normalsize\bfseries\color{darkblue}] at (0,0) {Architecture globale --- CyberSentinel-LLM};
+\node[actor] (logs)     at (-5.0,-1.4) {Logs réseau};
+\node[actor] (analyste) at (0,   -1.4) {Analyste SOC};
+\node[actor] (tests)    at (5.0, -1.4) {Scénarios de test};
+\node[layer] (web)    at (0,-3.1) {\textbf{Interface web} \quad|\quad Tableau de bord $\cdot$ Alertes $\cdot$ Incidents $\cdot$ Chat $\cdot$ Métriques};
+\node[layer,fill=darkblue!15] (server) at (0,-4.8) {\textbf{Serveur applicatif} \quad|\quad Réception logs $\cdot$ Gestion alertes $\cdot$ Incidents $\cdot$ Défense $\cdot$ Métriques};
+\node[redbox]   (ml)  at (-5.5,-6.6) {\textbf{Détecteur ML}\\Score de danger};
+\node[sublayer] (db)  at (-1.8,-6.6) {\textbf{Base de données}\\Alertes $\cdot$ Incidents};
+\node[sublayer] (llm) at ( 1.8,-6.6) {\textbf{Assistant IA}\\Explications français};
+\node[sublayer] (geo) at ( 5.5,-6.6) {\textbf{Carte GeoIP}\\Localisation};
+\draw[arr] (logs)--(web); \draw[arr] (analyste)--(web); \draw[arr] (tests)--(web);
+\node[font=\small\itshape\color{darkblue}] at (-2.0,-3.9) {Alertes en direct};
+\node[font=\small\itshape\color{darkblue}] at ( 1.8,-3.9) {Requêtes};
+\draw[darr] (-1.8,-3.55) -- (-1.8,-4.45);
+\draw[arr]  ( 1.8,-4.45) -- ( 1.8,-3.55);
+\draw[arr] (server.south)+(-5.5,0) -- (ml.north);
+\draw[arr] (server.south)+(-1.8,0) -- (db.north);
+\draw[arr] (server.south)+( 1.8,0) -- (llm.north);
+\draw[arr] (server.south)+( 5.5,0) -- (geo.north);
+\node[font=\small\itshape\color{darkblue!70}] at (0,-7.6) {Principe clé : l'assistant IA n'agit jamais seul --- toute décision défensive nécessite une approbation humaine};
+\end{tikzpicture}
+}
 \caption{Architecture globale de CyberSentinel-LLM}
 \label{fig:annexe_architecture}
 \end{figure}

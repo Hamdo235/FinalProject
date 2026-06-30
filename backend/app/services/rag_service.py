@@ -283,14 +283,32 @@ def _maybe_lazy_initialize() -> None:
     initialize()
 
 
-def retrieve_context(alert_text: str, k: int = 3) -> str:
-    """
-    Recherche sémantique dans ChromaDB.
-    Retourne les k techniques MITRE les plus pertinentes formatées en texte.
+def _format_context(metadatas, documents) -> str:
+    lines = []
+    for i, (meta, doc) in enumerate(zip(metadatas, documents), start=1):
+        lines.append(
+            f"Technique MITRE pertinente {i}: {meta['id']} - {meta['name']}\n"
+            f"Description: {doc}\n"
+            f"Détection: {meta['detection']}\n"
+            f"Mitigation: {meta['mitigation']}\n"
+            f"Sévérité: {meta['severity']}"
+        )
+    return "\n---\n".join(lines) if lines else "Aucune technique MITRE trouvée."
+
+
+def _distance_to_similarity(distance: float) -> float:
+    # distance cosinus ∈ [0, 2] → similarité = 1 - (distance / 2)
+    return round(max(0.0, min(1.0, 1.0 - (distance / 2.0))), 4)
+
+
+def retrieve_context_and_score(alert_text: str, k: int = 3) -> tuple[str, float]:
+    """Contexte MITRE formaté + score de pertinence en UNE seule requête ChromaDB.
+
+    Évite de calculer deux fois l'embedding du même texte (opération coûteuse sur CPU).
     """
     _maybe_lazy_initialize()
     if not _is_initialized or _collection is None:
-        return "Contexte MITRE ATT&CK non disponible (RAG non initialisé)."
+        return "Contexte MITRE ATT&CK non disponible (RAG non initialisé).", 0.0
 
     try:
         results = _collection.query(
@@ -298,25 +316,23 @@ def retrieve_context(alert_text: str, k: int = 3) -> str:
             n_results=min(k, _collection.count()),
             include=["documents", "metadatas", "distances"],
         )
-
-        lines = []
         metadatas = results.get("metadatas", [[]])[0]
         documents = results.get("documents", [[]])[0]
-
-        for i, (meta, doc) in enumerate(zip(metadatas, documents), start=1):
-            lines.append(
-                f"Technique MITRE pertinente {i}: {meta['id']} - {meta['name']}\n"
-                f"Description: {doc}\n"
-                f"Détection: {meta['detection']}\n"
-                f"Mitigation: {meta['mitigation']}\n"
-                f"Sévérité: {meta['severity']}"
-            )
-
-        return "\n---\n".join(lines) if lines else "Aucune technique MITRE trouvée."
-
+        distances = results.get("distances", [[]])[0]
+        context = _format_context(metadatas, documents)
+        score = _distance_to_similarity(distances[0]) if distances else 0.0
+        return context, score
     except Exception as exc:
-        logger.error("[RAG] Erreur retrieve_context : %s", exc)
-        return "Erreur lors de la récupération du contexte MITRE."
+        logger.error("[RAG] Erreur retrieve_context_and_score : %s", exc)
+        return "Erreur lors de la récupération du contexte MITRE.", 0.0
+
+
+def retrieve_context(alert_text: str, k: int = 3) -> str:
+    """
+    Recherche sémantique dans ChromaDB.
+    Retourne les k techniques MITRE les plus pertinentes formatées en texte.
+    """
+    return retrieve_context_and_score(alert_text, k)[0]
 
 
 def get_rag_relevance_score(alert_text: str) -> float:

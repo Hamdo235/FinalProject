@@ -123,9 +123,8 @@ async def ollama_explain_incident(
       - confidence_final : score de confiance pondéré (float)
       - parsed_json : dictionnaire structuré de la réponse
     """
-    # 1. Récupérer le contexte RAG
-    rag_context = rag_service.retrieve_context(summary, k=3)
-    rag_score = rag_service.get_rag_relevance_score(summary)
+    # 1. Récupérer le contexte RAG + score en une seule requête (1 embedding au lieu de 2)
+    rag_context, rag_score = rag_service.retrieve_context_and_score(summary, k=3)
     logger.info("[LLM] RAG score: %.4f", rag_score)
 
     # 2. Construire le prompt enrichi
@@ -169,26 +168,6 @@ async def ollama_explain_incident(
 
     response_text = raw or json.dumps(parsed, ensure_ascii=False)
     return response_text, confidence_final, parsed
-
-
-async def ollama_chat(messages: list, stream: bool = False):
-    """
-    Chat générique avec Ollama.
-    """
-    payload = {
-        "model": MODEL,
-        "messages": messages,
-        "stream": stream,
-        "keep_alive": -1,
-        "options": {
-            "temperature": 0.3,
-            "num_ctx": 2048,
-        },
-    }
-    async with httpx.AsyncClient(timeout=180.0) as client:
-        r = await client.post(f"{OLLAMA_BASE}/api/chat", json=payload)
-        r.raise_for_status()
-        return r.json()
 
 
 async def warmup_ollama() -> None:

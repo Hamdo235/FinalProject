@@ -153,7 +153,7 @@ async def stream_reply(conv_id: int, voice_mode: bool = False, session: Session 
 
     async def event_generator():
         buf = []
-        async with httpx.AsyncClient(timeout=None) as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(connect=5.0, read=None, write=10.0, pool=5.0)) as client:
             try:
                 async with client.stream(
                     "POST",
