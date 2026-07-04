@@ -158,45 +158,43 @@
 \chapter*{Avant-propos}
 \phantomsection\addcontentsline{toc}{chapter}{Avant-propos}
 \begin{onehalfspace}
-L'École Nationale Supérieure des Technologies de l'Information et de la
-Communication (ENASTIC) est un établissement public d'enseignement, de
-recherche, d'innovation et de formation supérieure dans les domaines des
-communications électroniques. Elle est créée par l'Ordonnance
-\textbf{N°005/PR/2015} du 02 mars 2015, dotée de la personnalité juridique
-et de l'autonomie financière.\\
+Fondée par l'Ordonnance \textbf{N°005/PR/2015} du 02 mars 2015, l'École
+Nationale Supérieure des Technologies de l'Information et de la Communication
+(ENASTIC) est une institution publique dotée de la personnalité juridique et
+de l'autonomie financière, dont la vocation centrale est de former des cadres
+de haut niveau dans le secteur numérique.\\
 
-Placée sous la tutelle du Ministère des Postes et des Nouvelles Technologies
-de l'Information et de la Communication, et du Ministère de l'Enseignement
-Supérieur, de la Recherche et de l'Innovation pour l'organisation académique
-et pédagogique, l'ENASTIC a pour missions de :
+Opérant sous la double tutelle du Ministère des Postes et des Nouvelles
+Technologies de l'Information et de la Communication d'une part, et du
+Ministère de l'Enseignement Supérieur, de la Recherche et de l'Innovation
+d'autre part, l'ENASTIC poursuit trois grandes missions :
 
 \begin{itemize}
-  \item[\ding{43}] Assurer la formation initiale et continue des cadres dans
-  les domaines des Technologies de l'Information et de la Communication ;
-  \item[\ding{43}] Entreprendre la recherche appliquée d'intérêt général, en
-  vue de promouvoir l'innovation pour le développement socio-économique du
-  pays ;
-  \item[\ding{43}] Former des jeunes à la culture scientifique afin de les
-  rendre aptes à élaborer et à porter des projets structurants adossés aux TIC.
+  \item[\ding{43}] Dispenser une formation de qualité, initiale comme
+  continue, destinée aux futurs cadres du domaine des TIC ;
+  \item[\ding{43}] Conduire des travaux de recherche appliquée à vocation
+  nationale, contribuant au développement socio-économique du Tchad ;
+  \item[\ding{43}] Cultiver chez les étudiants un esprit scientifique et
+  entrepreneurial, les rendant capables de concevoir et de porter des projets
+  innovants à fort impact numérique.
 \end{itemize}
 
-Pour compléter leurs connaissances théoriques, les étudiants doivent préparer
-un Projet de Fin d'Études (PFE) afin de le présenter devant un jury de
-soutenance pour parachever leur cycle de Licence.\\
-
-C'est dans cette optique que le présent mémoire vient marquer la fin de notre
-cursus en Informatique à l'ENASTIC, sur le thème :
+La réalisation d'un Projet de Fin d'Études (PFE), soutenu devant un jury
+académique, constitue l'étape finale et obligatoire du cycle de Licence.
+C'est dans ce cadre que s'inscrit le présent mémoire, rédigé au titre de
+l'année universitaire 2025--2026, sous le thème :
 \textbf{« CYBERSENTINEL-LLM : PLATEFORME POUR LA DÉTECTION CONTEXTUELLE ET LA NEUTRALISATION
-ADAPTIVE DES MENACES RÉSEAU »}, dans le cadre de l'année universitaire
-2025--2026.\\
+ADAPTIVE DES MENACES RÉSEAU »}.\\
 
-Ce travail constitue une preuve de concept pédagogique combinant détection
-d'anomalies par Machine Learning, raisonnement contextuel par LLM enrichi
-de MITRE ATT\&CK via RAG, et neutralisation adaptive des menaces par blocage
-applicatif à validation humaine, afin d'aider les analystes SOC à interpréter,
-prioriser et neutraliser les incidents de sécurité. Le travail porte sur la
-conception, l'implémentation d'un prototype fonctionnel, et l'évaluation de
-ses capacités dans un contexte local (Tchad).
+Ce document décrit la conception et le développement d'un prototype
+fonctionnel croisant trois axes techniques complémentaires : la détection
+d'anomalies réseau par des algorithmes de Machine Learning non supervisés,
+le raisonnement contextuel d'un grand modèle de langage local enrichi par
+la base MITRE ATT\&CK via une approche RAG, et la neutralisation des menaces
+par blocage applicatif conditionné à une approbation humaine explicite. Le
+tout vise à outiller concrètement les analystes SOC dans leur tâche quotidienne
+d'interprétation, de priorisation et de traitement des incidents de sécurité,
+dans un contexte de ressources locales limitées comme celui du Tchad.
 \end{onehalfspace}
 \newpage
 
@@ -222,10 +220,10 @@ ses capacités dans un contexte local (Tchad).
 \chapter*{Remerciements}
 \phantomsection\addcontentsline{toc}{chapter}{Remerciements}
 \begin{onehalfspace}
-Le présent mémoire est le résultat d'un travail effectué avec l'aide et le
-soutien de nombreuses personnes, à qui j'adresse mes sincères remerciements.\\
+Ce mémoire n'aurait pas vu le jour sans le concours et l'appui de nombreuses
+personnes que je souhaite remercier ici de tout cœur.\\
 
-Je tiens à exprimer ma profonde gratitude à :
+Ma reconnaissance va tout particulièrement à :
 
 \begin{itemize}
   \item[\ding{43}] Ma famille et mes proches, pour leur soutien moral et
@@ -320,42 +318,49 @@ Je tiens à exprimer ma profonde gratitude à :
 
 \subsection*{Contexte et justification}
 \begin{onehalfspace}
-Au Tchad, la digitalisation est en pleine
-croissance : en 2025, le pays compte \textbf{2,74 millions d'internautes}
-(13,2\% de la population de 20,8 millions) et \textbf{14,5 millions
-de connexions mobiles actives} (69,8\%). Des projets structurants sont en cours, tels que le Data
-Center National en voie de certification, des projets de fibre optique vers
-le Niger, la Libye et l'Égypte, et l'objectif ambitieux d'atteindre 30\%
-de pénétration Internet d'ici 2030.\\
+Le Tchad s'engage depuis quelques années dans une transformation numérique
+de grande ampleur. En 2025, \textbf{2,74 millions d'internautes} représentent
+13,2\% des 20,8 millions d'habitants, tandis que \textbf{14,5 millions de
+connexions mobiles actives} attestent d'une connectivité en forte progression
+(69,8\%). Sur le plan infrastructurel, plusieurs chantiers stratégiques
+avancent en parallèle : certification en cours du Data Center National,
+déploiement de liaisons en fibre optique vers le Niger, la Libye et l'Égypte,
+et cap fixé à 30\% de pénétration Internet à l'horizon 2030.\\
 
-Cependant, cette digitalisation rapide s'accompagne de menaces croissantes.
-Le 10 janvier 2024, une attaque DDoS orchestrée par le groupe Anonymous Sudan
-a ciblé \textbf{Airtel Tchad}, le principal opérateur télécom du pays,
-causant une coupure internet nationale totale à impact massif. Les attaques SSH par force brute persistent régionalement sur les
-serveurs Linux, et les fraudes au Mobile Money explosent en Afrique centrale.
-Face à ces menaces, la maturité en cybersécurité du Tchad demeure limitée :
-peu d'outils SIEM ou SOC nationaux, dépendance à des audits étrangers, et un
-manque criant d'experts locaux malgré les efforts de l'ANSICE (30 cadres du secteur numérique formés
-en cybersécurité en 2025, lancement du Réseau national des RSSI en mai 2025,
-et audit de certification du Data Center National en février 2026).\\
+Mais cette ouverture numérique expose simultanément le pays à des risques
+jusqu'alors peu ressentis. Le 10 janvier 2024, une attaque DDoS attribuée au
+groupe Anonymous Sudan a frappé \textbf{Airtel Tchad}, le premier opérateur
+télécom national, provoquant une interruption totale d'Internet à l'échelle
+du territoire. Parallèlement, les tentatives de brute-force SSH sur les
+serveurs Linux se multiplient dans la région, et les escroqueries visant les
+plateformes Mobile Money s'intensifient en Afrique centrale. Or, la réponse
+institutionnelle peine encore à suivre le rythme : les outils de type SIEM ou
+SOC nationaux restent rares, les audits de sécurité sont majoritairement
+confiés à des prestataires étrangers, et le vivier d'experts locaux demeure
+insuffisant — malgré des avancées récentes de l'ANSICE, notamment la formation
+de 30 cadres en cybersécurité en 2025, le lancement du Réseau national des
+RSSI en mai 2025, et l'audit de certification du Data Center National en
+février 2026.\\
 
-Dans ce contexte, automatiser la détection, fournir une assistance explicative
-aux analystes SOC et neutraliser adaptativement les menaces constituent des
-besoins prioritaires. C'est pour répondre à ce défi que le projet
-\textbf{CyberSentinel-LLM} a été proposé : une plateforme cognitive qui combine
-détection d'anomalies par Machine Learning, raisonnement contextuel par LLM
-enrichi via RAG sur la base MITRE ATT\&CK, et neutralisation adaptive par
-blocage applicatif à validation humaine.
+C'est dans cet écart entre montée en charge numérique et fragilité défensive
+que s'inscrit \textbf{CyberSentinel-LLM} : une plateforme conçue pour
+automatiser la détection des comportements anormaux sur le réseau, assister
+l'analyste SOC par des explications contextuelles générées localement, et
+proposer des mesures de neutralisation soumises à validation humaine — sans
+dépendance à une infrastructure cloud.
 \end{onehalfspace}
 
 \subsection*{Objectif général}
 \begin{onehalfspace}
-Concevoir et réaliser une plateforme cognitive de cybersécurité conversationnelle,
-nommée \textbf{CyberSentinel-LLM}, qui combine détection d'anomalies (ML),
-raisonnement contextuel augmenté (RAG + MITRE ATT\&CK), assistance
-conversationnelle par LLM local et neutralisation adaptive des menaces par
-blocage applicatif à validation humaine, pour améliorer l'efficacité,
-l'explicabilité et la réactivité du triage d'alertes au sein d'un SOC.
+L'ambition centrale de ce projet est de bâtir une plateforme cyberdéfensive
+intelligente et conversationnelle — \textbf{CyberSentinel-LLM} — qui articule
+trois briques complémentaires : un moteur de détection d'anomalies fondé sur
+le Machine Learning non supervisé, un module de raisonnement contextuel
+s'appuyant sur le RAG et la base de connaissances MITRE ATT\&CK, et un
+assistant local propulsé par un LLM capable de générer des analyses
+structurées en langage naturel. L'ensemble vise à rendre le triage des
+alertes SOC plus rapide, plus lisible et plus fiable, tout en maintenant
+l'analyste humain au centre de chaque décision défensive.
 \end{onehalfspace}
 
 \subsection*{Objectifs spécifiques}
@@ -381,11 +386,11 @@ l'explicabilité et la réactivité du triage d'alertes au sein d'un SOC.
 
 \subsection*{Question centrale}
 \begin{onehalfspace}
-Comment concevoir une plateforme cyberdéfensive conversationnelle exploitant
-le raisonnement contextuel d'un LLM enrichi par RAG tout en maintenant une
-précision opérationnelle, une robustesse, une confiance mesurable
-et une capacité de neutralisation adaptive dans des environnements de menace
-dynamiques, avec une architecture simple et reproductible ?
+Dans quelle mesure est-il possible de concevoir, sur du matériel ordinaire
+et sans dépendance cloud, un système de cyberdéfense conversationnel combinant
+détection par ML, enrichissement contextuel par RAG et génération d'explications
+par LLM, tout en garantissant une confiance mesurable, une neutralisation
+contrôlée par l'humain et une reproductibilité complète de l'architecture ?
 \end{onehalfspace}
 
 \subsection*{Hypothèses}
@@ -407,12 +412,14 @@ dynamiques, avec une architecture simple et reproductible ?
 
 \subsection*{Positionnement du projet}
 \begin{onehalfspace}
-\textbf{CyberSentinel-LLM} se positionne comme une \textbf{plateforme cognitive
-de cybersécurité} (niveau Licence) : une démonstration technique et expérimentale
-destinée à valider la faisabilité d'un SOC augmenté par LLM avec capacité de
-neutralisation sur un périmètre restreint. Le projet ne prétend pas à une
-solution industrielle, mais pose les bases conceptuelles et techniques d'une
-telle approche dans le contexte tchadien.
+\textbf{CyberSentinel-LLM} se revendique avant tout comme une
+\textbf{plateforme cognitive de cybersécurité à vocation pédagogique} : son
+objectif est de prouver, à l'échelle d'un Projet de Fin d'Études de Licence,
+qu'un SOC augmenté par LLM et doté d'une capacité de neutralisation est
+techniquement réalisable sur un périmètre ciblé. Ce projet n'ambitionne pas
+de concurrencer des solutions industrielles, mais d'établir les fondements
+conceptuels et techniques d'une telle approche, ancrée dans les contraintes
+et les besoins réels du contexte tchadien.
 \end{onehalfspace}
 
 \newpage
@@ -425,33 +432,33 @@ telle approche dans le contexte tchadien.
 \section*{Introduction}
 \phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
-La cybersécurité est devenue un enjeu stratégique majeur pour les organisations
-à l'échelle mondiale. Face à la sophistication croissante des attaques
-informatiques, les systèmes de détection d'intrusions (IDS) et de prévention
-(IPS) constituent la première ligne de défense des infrastructures numériques.
-Ce chapitre présente sur ces systèmes, leurs limites, et
-l'apport combiné du Machine Learning, des modèles de langage et des techniques
-RAG pour les renforcer.
+Protéger une infrastructure numérique suppose d'abord de comprendre les outils
+disponibles pour détecter et contenir les intrusions. Ce chapitre pose les
+bases conceptuelles du projet en parcourant l'évolution des systèmes IDS/IPS,
+en exposant les lacunes que les approches traditionnelles laissent ouvertes,
+puis en introduisant les apports du Machine Learning, des grands modèles de
+langage et du RAG pour y répondre de façon complémentaire.
 \end{onehalfspace}
 
 \section{Présentation des IDS et IPS}
 \begin{onehalfspace}
-Un \textbf{système de détection d'intrusions (IDS)} est un outil de surveillance
-qui analyse le trafic réseau ou les journaux système afin d'identifier des
-activités suspectes ou malveillantes. Un \textbf{système de prévention
-d'intrusions (IPS)} va plus loin en bloquant automatiquement les menaces
-détectées. On distingue deux grandes approches :
+Un \textbf{IDS (Intrusion Detection System)} surveille en continu le trafic
+réseau ou les journaux d'événements pour y repérer des comportements suspects.
+Son cousin l'\textbf{IPS (Intrusion Prevention System)} va un cran plus loin
+en bloquant de façon proactive les flux jugés malveillants. Deux grandes
+familles de méthodes structurent ce domaine :
 
 \begin{itemize}
-  \item[\ding{43}] \textbf{Approches par signatures :} comparaison du trafic
-  observé avec une base de signatures d'attaques connues. Outils phares :
-  \textit{Snort} et \textit{Suricata}. Très efficaces contre les attaques
-  connues, mais incapables de détecter les menaces inconnues (zero-day) ;
-  \item[\ding{43}] \textbf{Approches comportementales / anomalies :}
-  établissement d'un profil de comportement normal du système, toute
-  déviation significative constituant une alerte. Plus adaptées à la
-  détection de nouvelles menaces, mais sujettes à un taux de faux
-  positifs élevé.
+  \item[\ding{43}] \textbf{Détection par signatures :} chaque trafic entrant
+  est confronté à un répertoire de signatures d'attaques répertoriées. Des
+  solutions comme \textit{Snort} ou \textit{Suricata} incarnent cette approche :
+  redoutablement efficaces face aux menaces connues, elles restent néanmoins
+  aveugles dès qu'une attaque sort des patterns enregistrés (attaques zero-day) ;
+  \item[\ding{43}] \textbf{Détection comportementale :} plutôt que de chercher
+  une signature, ces systèmes modélisent le comportement habituel du réseau et
+  lèvent une alerte à chaque écart significatif. Ils offrent une meilleure
+  couverture sur les menaces inédites, mais génèrent davantage de faux
+  positifs, ce qui peut surcharger les équipes d'analyse.
 \end{itemize}
 \end{onehalfspace}
 
@@ -478,49 +485,56 @@ Exemples d'outils & Snort, Suricata & IsolationForest, LOF \\
 
 \section{Limites des approches classiques}
 \begin{onehalfspace}
-Malgré leur efficacité sur les menaces connues, les IDS/IPS classiques
-présentent plusieurs limites importantes dans un contexte opérationnel
-moderne :
+Les solutions IDS/IPS conventionnelles se heurtent à quatre obstacles majeurs
+dans les environnements opérationnels actuels :
 
 \begin{itemize}
-  \item[\ding{43}] \textbf{Volume d'alertes saturant :} les SOC reçoivent
-  des milliers d'alertes quotidiennes, rendant le triage manuel
-  pratiquement impossible sans outillage ;
-  \item[\ding{43}] \textbf{Taux élevé de faux positifs :} une grande
-  proportion des alertes ne correspond pas à de vraies attaques,
-  épuisant les analystes et masquant les menaces réelles ;
-  \item[\ding{43}] \textbf{Manque d'explicabilité :} les outils
-  classiques signalent une anomalie sans en expliquer le contexte
-  ni proposer de piste d'investigation ;
-  \item[\ding{43}] \textbf{Fragmentation contextuelle :} les alertes
-  sont souvent isolées, sans corrélation automatique avec d'autres
-  événements permettant de reconstituer un scénario d'attaque complet.
+  \item[\ding{43}] \textbf{Inflation des alertes :} un SOC actif peut traiter
+  plusieurs milliers de notifications par jour. Sans outillage intelligent pour
+  les hiérarchiser, l'analyste se retrouve rapidement débordé et incapable
+  d'identifier ce qui mérite vraiment son attention ;
+  \item[\ding{43}] \textbf{Faux positifs chroniques :} une fraction significative
+  des alertes se révèle inoffensive après examen. Cette pollution quotidienne
+  érode la vigilance des équipes et risque de faire passer à la trappe des
+  événements critiques noyés dans la masse ;
+  \item[\ding{43}] \textbf{Absence d'explication :} un IDS classique signale
+  une anomalie, mais ne dit pas pourquoi elle est dangereuse ni comment
+  y répondre. L'analyste doit reconstruire seul le contexte de l'incident,
+  un exercice long et exigeant ;
+  \item[\ding{43}] \textbf{Isolement des événements :} les alertes sont traitées
+  individuellement, sans mécanisme natif pour les relier entre elles et
+  reconstituer une chaîne d'attaque cohérente — une limite dommageable face
+  aux campagnes adversariales multi-étapes.
 \end{itemize}
 \end{onehalfspace}
 
 \section{Apport du Machine Learning en détection d'anomalies}
 \begin{onehalfspace}
-Le Machine Learning qui par définition est une branche de l'Intelligence Artificielle
-permettant d'apprendre à partir de données, apporte une réponse aux limites des approches classiques
-en permettant d'apprendre automatiquement le comportement normal d'un système
-et de détecter les déviations significatives. Deux algorithmes non supervisés
-sont particulièrement pertinents pour la détection d'anomalies :
+Sous-domaine de l'Intelligence Artificielle, le Machine Learning donne à un
+programme la capacité d'identifier des régularités dans les données sans qu'on
+lui dicte explicitement les règles à appliquer. Appliqué à la cybersécurité,
+il permet de modéliser ce qu'est un trafic normal, puis de signaler tout
+comportement qui s'en éloigne. Deux algorithmes non supervisés se distinguent
+particulièrement pour cette tâche :
 
 \begin{itemize}
-  \item[\ding{43}] \textbf{Isolation Forest (IF) :} algorithme basé sur
-  l'isolation aléatoire des points. Les anomalies étant rares et distinctes,
-  elles sont isolées plus rapidement que les points normaux. Le score
-  d'anomalie est transformé via une fonction sigmoïde pour obtenir une
-  valeur normalisée entre 0 et 1 \cite{liu2008isolation} ;
-  \item[\ding{43}] \textbf{Local Outlier Factor (LOF) :} algorithme basé
-  sur la densité locale. Un point est considéré comme une anomalie si sa
-  densité locale est significativement inférieure à celle de ses voisins
+  \item[\ding{43}] \textbf{Isolation Forest (IF) :} cet algorithme construit
+  aléatoirement des arbres de décision et mesure le nombre de coupures
+  nécessaires pour isoler chaque observation. Une anomalie, de par sa rareté
+  et son éloignement des données habituelles, est isolée en très peu d'étapes.
+  Le score brut est ensuite normalisé via une sigmoïde pour obtenir une valeur
+  bornée entre 0 et 1 \cite{liu2008isolation} ;
+  \item[\ding{43}] \textbf{Local Outlier Factor (LOF) :} cet algorithme
+  évalue la densité du voisinage immédiat de chaque point et la compare à
+  celle de ses voisins. Un point entouré d'une zone peu dense alors que ses
+  voisins évoluent dans un espace compact est classé comme outlier
   \cite{breunig2000lof}.
 \end{itemize}
 
-Ces approches présentent néanmoins des limites : sensibilité au choix des
-features, fragilité face aux changements de domaine (\textit{domain-shift}),
-et nécessité d'un volume minimal de données d'entraînement.
+Ces méthodes comportent leurs propres contraintes : elles sont sensibles à la
+sélection des variables d'entrée, peuvent souffrir d'un glissement de domaine
+si les données d'entraînement ne représentent pas bien le trafic courant, et
+nécessitent un historique suffisant pour calibrer le modèle.
 \end{onehalfspace}
 
 \begin{table}[H]
@@ -548,76 +562,86 @@ Usage dans le projet & Score principal & Score secondaire \\
 
 \section{Apport des LLM et principe Human-in-the-Loop}
 \begin{onehalfspace}
-Les \textbf{Grands Modèles de Langage (LLM)} ouvrent de nouvelles perspectives
-pour l'assistance aux analystes SOC \cite{motlagh2024llm}. Contrairement aux
-IDS classiques, un LLM est capable de :
+L'émergence des \textbf{Grands Modèles de Langage (LLM)} ouvre un nouveau
+registre d'assistance pour les analystes SOC \cite{motlagh2024llm}. Là où un
+IDS se contente de signaler, un LLM peut aller beaucoup plus loin :
 
 \begin{itemize}
-  \item[\ding{43}] \textbf{Reformuler et contextualiser} une alerte technique
-  en langage naturel compréhensible ;
-  \item[\ding{43}] \textbf{Synthétiser} plusieurs événements corrélés pour
-  reconstituer un scénario d'attaque plausible ;
-  \item[\ding{43}] \textbf{Proposer des hypothèses et des actions}
-  d'investigation non-exécutives, laissant la décision finale à l'analyste
-  humain \cite{houssel2024explainable}.
+  \item[\ding{43}] \textbf{Traduire l'alerte en langage humain :} plutôt
+  qu'un code d'erreur ou une signature brute, l'analyste reçoit une
+  description intelligible de ce qui s'est passé et de ce que cela implique ;
+  \item[\ding{43}] \textbf{Tisser des liens entre événements :} le LLM peut
+  regrouper plusieurs alertes corrélées et reconstituer le déroulé probable
+  d'une attaque, aidant ainsi à transformer un bruit diffus en scénario
+  cohérent ;
+  \item[\ding{43}] \textbf{Suggérer des pistes d'action :} le modèle formule
+  des recommandations de remédiation, sans jamais les exécuter lui-même —
+  la décision reste entièrement entre les mains de l'analyste
+  \cite{houssel2024explainable}.
 \end{itemize}
 
-Le principe \textbf{Human-in-the-Loop} est fondamental dans ce contexte :
-le LLM n'agit jamais de façon autonome sur le système, mais guide et assiste
-l'analyste dans sa prise de décision. Cela limite les risques d'actions
-automatiques erronées tout en bénéficiant de la capacité de raisonnement
-contextuel du LLM.\\
+Ce dernier point illustre le principe fondateur du \textbf{Human-in-the-Loop} :
+le LLM est un outil d'aide à la décision, jamais un acteur autonome sur le
+système. Cette philosophie protège contre les actions défensives erronées
+déclenchées par une analyse incomplète ou une hallucination du modèle.\\
 
-Dans le cadre de \textbf{CyberSentinel-LLM}, le modèle \textit{qwen2.5:1.5b}
-via \textbf{Ollama} est utilisé localement, garantissant la confidentialité
-des données et l'indépendance vis-à-vis de services cloud externes.
+Dans \textbf{CyberSentinel-LLM}, ce rôle est tenu par le modèle
+\textit{qwen2.5:1.5b} déployé via \textbf{Ollama} en local, ce qui garantit
+la confidentialité des logs réseau traités et s'affranchit de toute
+dépendance à une API commerciale externe.
 \end{onehalfspace}
 
 \section{RAG pour la cybersécurité}
 \begin{onehalfspace}
-La technique \textbf{RAG (Retrieval-Augmented Generation)}, introduite par
-Lewis et al. \cite{lewis2020rag}, permet d'enrichir les réponses d'un LLM
-en lui fournissant un contexte externe pertinent récupéré dynamiquement depuis
-une base de connaissances.\\
+La méthode \textbf{RAG (Retrieval-Augmented Generation)}, formalisée par
+Lewis et al. \cite{lewis2020rag}, consiste à brancher un LLM sur une base
+de connaissances externe : avant de générer une réponse, le modèle récupère
+dynamiquement les fragments les plus pertinents et les intègre dans son
+raisonnement.\\
 
-Dans le contexte cybersécurité, le RAG présente plusieurs avantages majeurs :
+Appliqué à la cybersécurité, ce mécanisme apporte trois bénéfices concrets :
 
 \begin{itemize}
-  \item[\ding{43}] \textbf{Ancrage factuel :} le LLM ne génère plus de
-  réponses basées uniquement sur son entraînement général, mais sur des
-  références cybersécurité précises (MITRE ATT\&CK, CVE) ;
-  \item[\ding{43}] \textbf{Mise à jour sans réentraînement :} la base de
-  connaissances peut être enrichie de nouvelles techniques d'attaque sans
-  modifier le modèle ;
-  \item[\ding{43}] \textbf{Traçabilité :} chaque explication peut être
-  référencée à une technique MITRE précise, renforçant la confiance dans
-  l'analyse.
+  \item[\ding{43}] \textbf{Réponses ancrées dans des faits vérifiables :}
+  plutôt que de puiser uniquement dans ses données d'entraînement générales,
+  le LLM s'appuie sur des références spécialisées et actualisées, comme
+  MITRE ATT\&CK ou des bulletins CVE, ce qui réduit significativement
+  le risque d'hallucination ;
+  \item[\ding{43}] \textbf{Enrichissement incrémental de la base :} ajouter
+  de nouvelles techniques d'attaque ou de nouveaux indicateurs ne nécessite
+  pas de réentraîner le modèle — il suffit de mettre à jour la collection
+  vectorielle ;
+  \item[\ding{43}] \textbf{Traçabilité des analyses :} chaque explication
+  produite peut être rattachée à une technique MITRE précise, ce qui permet
+  à l'analyste de vérifier le raisonnement du système et d'en évaluer
+  la pertinence.
 \end{itemize}
 
-Le framework \textbf{MITRE ATT\&CK} (version 18, Enterprise) recense
-actuellement \textbf{216 techniques et 475 sous-techniques} \cite{mitre2024}.
-Il constitue la base de connaissances idéale pour ce RAG : il catalogue les
-tactiques, techniques et procédures (TTP) utilisées par les acteurs malveillants,
-avec pour chaque technique une description, des indicateurs de détection et des mesures
-d'atténuation.\\
+Le référentiel \textbf{MITRE ATT\&CK} (version Enterprise 18) recense
+\textbf{216 techniques et 475 sous-techniques} \cite{mitre2024}, documentant
+pour chacune les tactiques adversariales, les indicateurs de détection et
+les mesures d'atténuation recommandées. C'est la base de connaissances la
+plus complète et la plus utilisée par la communauté cybersécurité mondiale.\\
 
-Dans \textbf{CyberSentinel-LLM}, \textbf{697 techniques MITRE ATT\&CK}
-(version Enterprise, parsées depuis le bundle STIX officiel via
-\texttt{scripts/fetch\_mitre.py}) sont indexées dans ChromaDB avec le modèle
-d'embedding \textit{all-MiniLM-L6-v2} (384 dimensions, CPU-only), permettant
-une recherche sémantique locale sans dépendance cloud.
+Dans \textbf{CyberSentinel-LLM}, \textbf{697 entrées MITRE ATT\&CK Enterprise}
+— parsées depuis le bundle STIX officiel via \texttt{scripts/fetch\_mitre.py}
+— sont vectorisées avec le modèle d'embedding \textit{all-MiniLM-L6-v2}
+(384 dimensions, CPU uniquement) et stockées localement dans ChromaDB,
+rendant la recherche sémantique entièrement autonome.
 \end{onehalfspace}
 
 \section*{Conclusion}
 \phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
-Ce chapitre a présenté l'évolution des systèmes de détection d'intrusions,
-leurs limites, et l'apport combiné du Machine Learning, des LLM et du RAG
-pour renforcer les capacités des SOC. Ces éléments justifient l'approche
-adoptée dans \textbf{CyberSentinel-LLM} : pipeline ML pour la détection,
-RAG MITRE ATT\&CK pour le raisonnement contextuel, et blocage applicatif
-à validation humaine pour la neutralisation. Le chapitre suivant analysera
-les besoins fonctionnels et non fonctionnels du système.
+Ce tour d'horizon a permis de mesurer les apports mais aussi les fragilités
+des systèmes IDS/IPS conventionnels face aux cybermenaces actuelles. Il a
+également mis en lumière comment le Machine Learning, les LLM et le RAG
+peuvent combler ces lacunes de façon complémentaire. Ces fondements
+théoriques justifient pleinement les choix architecturaux de
+\textbf{CyberSentinel-LLM} : ML pour la détection précoce des anomalies,
+RAG MITRE ATT\&CK pour l'enrichissement contextuel, et validation humaine
+systématique avant toute action défensive. Le chapitre suivant traduit ces
+orientations en exigences concrètes et en cas d'usage opérationnels.
 \end{onehalfspace}
 
 \newpage
@@ -630,18 +654,21 @@ les besoins fonctionnels et non fonctionnels du système.
 \section*{Introduction}
 \phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
-Ce chapitre présente l'analyse des besoins qui ont guidé la conception de
-\textbf{CyberSentinel-LLM}. Compte tenu du contexte tchadien (faibles
-ressources en cybersécurité, absence de SOC nationaux structurés, et
-dépendance à des solutions étrangères), la plateforme doit répondre à des
-exigences précises tout en restant déployable localement sur une machine
-modeste.
+Avant d'écrire la première ligne de code, il faut savoir précisément ce
+que le système doit accomplir et dans quelles conditions il doit fonctionner.
+Ce chapitre synthétise ce travail d'analyse : face à un contexte tchadien
+caractérisé par un outillage SOC embryonnaire, une dépendance aux solutions
+étrangères et des contraintes matérielles réelles, \textbf{CyberSentinel-LLM}
+doit répondre à des exigences fonctionnelles et non fonctionnelles clairement
+articulées, tout en restant intégralement déployable sur une machine
+ordinaire.
 \end{onehalfspace}
 
 \section{Cas d'usage principaux}
 \begin{onehalfspace}
-Les cas d'usage de \textbf{CyberSentinel-LLM} ont été définis à partir des
-besoins opérationnels d'un analyste SOC confronté à des attaques réseau :
+Les fonctionnalités de \textbf{CyberSentinel-LLM} ont été définies en partant
+du quotidien concret d'un analyste SOC qui doit gérer des attaques réseau
+avec des ressources limitées. Sept grandes interactions ont été identifiées :
 
 \begin{itemize}
   \item[\ding{43}] \textbf{Détection automatique d'anomalies :} ingestion
@@ -733,12 +760,13 @@ besoins opérationnels d'un analyste SOC confronté à des attaques réseau :
 
 \section{Exigences fonctionnelles}
 \begin{onehalfspace}
-Les exigences fonctionnelles définissent les fonctionnalités que le système
-doit obligatoirement implémenter. Les treize exigences identifiées (EF01 à EF13),
-présentées dans le Tableau~\ref{tab:ef}, couvrent l'ensemble du cycle opérationnel
-de la plateforme : ingestion et scoring des logs, gestion des alertes et des incidents,
-recherche contextuelle par RAG MITRE ATT\&CK, explication structurée par LLM,
-neutralisation adaptive des menaces, reporting et authentification à double facteur.
+Treize exigences fonctionnelles ont été formalisées (EF01 à EF13) et
+rassemblées dans le Tableau~\ref{tab:ef}. Elles couvrent l'intégralité du
+cycle de traitement d'un incident : depuis l'ingestion et le scoring des logs
+réseau jusqu'à la neutralisation des menaces, en passant par la gestion des
+alertes et des incidents, la recherche sémantique dans MITRE ATT\&CK,
+la génération d'explications structurées par le LLM, le streaming temps réel
+et l'authentification à double facteur.
 \end{onehalfspace}
 
 \begin{table}[H]
@@ -780,8 +808,9 @@ EF13 & Métriques ML & Calculer et afficher precision/recall/F1/roc\_auc \\
 
 \section{Exigences non fonctionnelles}
 \begin{onehalfspace}
-Les exigences non fonctionnelles définissent les contraintes de qualité,
-de performance et de sécurité du système :
+Au-delà des fonctionnalités, la plateforme doit respecter des contraintes
+de qualité, de performance et de sécurité qui conditionnent sa viabilité
+dans le contexte tchadien :
 
 \begin{itemize}
   \item[\ding{43}] \textbf{Réplicabilité locale :} le système doit être
@@ -807,10 +836,12 @@ de performance et de sécurité du système :
 \section*{Conclusion}
 \phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
-Ce chapitre a défini les cas d'usage, les exigences fonctionnelles et
-non fonctionnelles de \textbf{CyberSentinel-LLM}. Ces spécifications
-guideront la conception architecturale et l'implémentation détaillée
-présentées dans les chapitres suivants.
+Ce chapitre a établi le référentiel des besoins de \textbf{CyberSentinel-LLM} :
+les cas d'usage qui reflètent la réalité d'un analyste SOC, les treize
+exigences fonctionnelles qui en découlent, et les contraintes non fonctionnelles
+qui borneront les choix d'implémentation. Ce cadre servira de boussole pour
+la conception architecturale et le développement détaillés dans les chapitres
+qui suivent.
 \end{onehalfspace}
 
 \newpage
@@ -823,20 +854,23 @@ présentées dans les chapitres suivants.
 \section*{Introduction}
 \phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
-Ce chapitre présente l'architecture globale de \textbf{CyberSentinel-LLM},
-la structure du code, la description détaillée des composants backend et
-frontend, ainsi que les diagrammes UML illustrant les flux et les interactions
-entre les différents modules du système.
+Après avoir défini ce que le système doit faire, il faut maintenant décrire
+comment il est construit. Ce chapitre expose l'architecture globale de
+\textbf{CyberSentinel-LLM}, l'organisation du code source, le rôle précis
+de chaque composant backend et frontend, ainsi que les diagrammes UML qui
+modélisent les données persistées et les flux d'interaction entre modules.
 \end{onehalfspace}
 
 \section{Architecture globale}
 \begin{onehalfspace}
-\textbf{CyberSentinel-LLM} repose sur une \textbf{architecture monolithique
-modulaire orientée API en cinq couches}. Ce choix architectural garantit la
-simplicité du déploiement local tout en permettant une séparation claire des
-responsabilités entre les composantes du système.\\
+Le système est structuré en une \textbf{architecture monolithique modulaire
+orientée API, organisée en cinq couches superposées}. Ce parti pris
+architectural simplifie le déploiement sur une machine locale unique tout
+en maintenant une séparation nette des responsabilités — chaque couche ayant
+un périmètre fonctionnel bien délimité et ne communiquant avec les autres
+que par des interfaces définies.\\
 
-L'architecture comprend cinq grandes couches :
+Ces cinq couches sont les suivantes :
 \begin{itemize}
   \item[\ding{43}] \textbf{Couche 1 — Frontend (UI) :} interface Next.js 16
   (App Router), 9 pages SOC (dashboard, alertes, incidents, demo, chat,
@@ -895,7 +929,8 @@ L'architecture comprend cinq grandes couches :
 
 \section{Arborescence du projet}
 \begin{onehalfspace}
-Le projet est organisé selon la structure suivante :
+Le dépôt du projet reflète fidèlement cette organisation en couches.
+Voici l'arborescence complète :
 \end{onehalfspace}
 
 \begin{tcolorbox}[colback=lightblue, colframe=darkblue, arc=5pt,
@@ -950,8 +985,8 @@ cybersentinel-llm/
 
 \section{Description des composants backend}
 \begin{onehalfspace}
-Le backend est organisé en modules distincts, chacun ayant une responsabilité
-clairement définie :
+Chaque fichier du répertoire \texttt{services/} encapsule une responsabilité
+technique précise et indépendante. Le tableau suivant en détaille le rôle :
 \end{onehalfspace}
 
 \begin{table}[H]
@@ -1000,8 +1035,8 @@ Conversation, ChatMessage, DefenseAction \\
 
 \section{Description du frontend}
 \begin{onehalfspace}
-Le frontend est développé avec \textbf{Next.js 16} (App Router) en mode
-dark cybersécurité et offre une interface SOC complète en 9 pages :
+L'interface utilisateur est construite avec \textbf{Next.js 16} (App Router)
+en thème sombre adapté au contexte SOC. Elle expose neuf pages fonctionnelles :
 
 \begin{itemize}
   \item[\ding{43}] \textbf{/dashboard :} vue temps réel avec 4 KPIs, timeline
@@ -1029,10 +1064,10 @@ dark cybersécurité et offre une interface SOC complète en 9 pages :
 
 \section{Refactoring frontend — Architecture modulaire}
 \begin{onehalfspace}
-Afin d'améliorer la maintenabilité et la lisibilité du code frontend, une
-refactorisation modulaire a été appliquée aux pages principales. L'objectif
-est de réduire la taille des fichiers monolithiques (plus de 1000 lignes)
-en extrayant des sous-composants réutilisables et des types partagés.
+À mesure que le frontend grossissait, certains fichiers ont dépassé le millier
+de lignes, rendant la navigation et les tests difficiles. Une refactorisation
+ciblée a été conduite pour extraire les sous-composants réutilisables et les
+types partagés, sans modifier le comportement observable de l'application.
 
 \subsection*{Refactoring de la page Chat}
 \begin{itemize}
@@ -1081,12 +1116,11 @@ en extrayant des sous-composants réutilisables et des types partagés.
 
 \section{Diagrammes UML}
 \begin{onehalfspace}
-Cette section présente les principaux diagrammes UML modélisant la
-structure statique et les flux dynamiques de \textbf{CyberSentinel-LLM} :
-le diagramme de classes décrivant le schéma de données, le diagramme de
-séquence illustrant le traitement d'une alerte de bout en bout, et le
-diagramme d'activité représentant la logique de décision du pipeline
-de détection.
+Trois diagrammes UML complètent la description architecturale : le diagramme
+de classes capture le schéma de persistance et les relations entre entités,
+le diagramme de séquence retrace le cycle de vie complet d'une alerte depuis
+son arrivée jusqu'à l'explication fournie à l'analyste, et le diagramme
+d'activité illustre la logique de branchement du pipeline de décision.
 \end{onehalfspace}
 
 \subsection{Diagramme de classes}
@@ -1257,10 +1291,11 @@ La Figure~\ref{fig:activite} décrit le processus de traitement d'un log entrant
 \section*{Conclusion}
 \phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
-Ce chapitre a présenté l'architecture globale en cinq couches, la structure
-du projet et les composants principaux de \textbf{CyberSentinel-LLM}. Les
-diagrammes UML illustrent les flux de données et les interactions entre les
-modules. Le chapitre suivant détaillera l'implémentation concrète de chaque composante.
+Ce chapitre a dressé un portrait complet de \textbf{CyberSentinel-LLM} vu
+de l'intérieur : son architecture en cinq couches, l'organisation de son code,
+le rôle de chacun de ses composants et les flux d'interaction modélisés en UML.
+La conception étant clairement posée, le chapitre suivant plonge dans les
+détails d'implémentation de chaque brique technique.
 \end{onehalfspace}
 
 \newpage
@@ -1273,16 +1308,19 @@ modules. Le chapitre suivant détaillera l'implémentation concrète de chaque c
 \section*{Introduction}
 \phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
-Ce chapitre présente les détails d'implémentation de \textbf{CyberSentinel-LLM}:
-le pipeline ML de détection d'anomalies, le module RAG MITRE ATT\&CK, le module
-LLM avec score de confiance pondéré, le système de neutralisation adaptive par
-blocage applicatif, la communication en temps réel par SSE, et les endpoints
-principaux de l'API.
+Ce chapitre ouvre le capot du système et documente les choix
+d'implémentation concrets : comment le pipeline ML calcule ses scores,
+comment le module RAG interroge la base MITRE ATT\&CK, comment le LLM
+construit ses analyses avec un score de confiance pondéré, comment la
+neutralisation s'enclenche sans jamais court-circuiter l'analyste, et
+comment le flux temps réel par SSE relie toutes ces briques à l'interface
+web.
 \end{onehalfspace}
 
 \section{Pipeline Machine Learning}
 \begin{onehalfspace}
-Le pipeline ML de \textbf{CyberSentinel-LLM} suit les étapes suivantes :
+Chaque log réseau ingéré traverse cinq étapes successives avant de
+déboucher sur une alerte classifiée :
 
 \begin{enumerate}
   \item \textbf{Extraction des features} depuis le log brut (5 features) ;
@@ -1360,9 +1398,10 @@ score = 0.2 + 0.5 \times is\_fail + \min(ip\_fail\_count, 5) \times 0.05
 
 \section{Module RAG — MITRE ATT\&CK}
 \begin{onehalfspace}
-Le module RAG constitue une contribution centrale de \textbf{CyberSentinel-LLM}.
-Il permet au LLM de raisonner sur des références cybersécurité précises plutôt
-que sur sa seule mémoire d'entraînement.
+Le module RAG est la pièce qui transforme un LLM généraliste en un assistant
+cybersécurité crédible : au lieu de se fier uniquement à ce qu'il a appris
+lors de son entraînement, le modèle consulte dynamiquement une base de
+connaissances spécialisée avant de formuler son analyse.
 
 \subsection*{Architecture ChromaDB}
 \begin{itemize}
@@ -1441,8 +1480,9 @@ similarity_{RAG} = \max\!\left(0,\, \min\!\left(1,\, 1 - \frac{distance}{2}\righ
 
 \section{Module LLM et Score de Confiance}
 \begin{onehalfspace}
-Le module LLM est au cœur de la valeur ajoutée de \textbf{CyberSentinel-LLM}.
-Il intègre le contexte RAG pour produire des explications fondées et traçables.
+C'est le module LLM qui concrétise la promesse centrale de
+\textbf{CyberSentinel-LLM} : transformer une alerte brute en une explication
+structurée, intelligible et traçable, grâce au contexte injecté par le RAG.
 
 \subsection*{Modèle utilisé}
 Modèle : \textit{qwen2.5:1.5b} via Ollama local (\texttt{http://localhost:11434}),
@@ -1524,9 +1564,11 @@ dans son JSON.
 
 \section{Système de Neutralisation Adaptive}
 \begin{onehalfspace}
-Le système de neutralisation adaptive constitue la contribution la plus
-innovante de \textbf{CyberSentinel-LLM} sur le plan opérationnel. Il
-implémente un IDS/IPS hybride à validation humaine.
+Détecter et expliquer ne suffit pas : la plateforme doit aussi pouvoir
+agir. Le système de neutralisation adaptive est la composante la plus
+originale de \textbf{CyberSentinel-LLM} sur le plan opérationnel, car il
+implémente un mécanisme IDS/IPS hybride où toute action bloquante est
+conditionnée à une décision humaine explicite.
 
 \subsection*{Les quatre modes de défense}
 \end{onehalfspace}
@@ -1619,14 +1661,14 @@ iptables -D INPUT -s {ip} -j DROP
 
 \section{Endpoints principaux de l'API}
 \begin{onehalfspace}
-L'API de \textbf{CyberSentinel-LLM} expose un ensemble d'endpoints REST
-organisés par domaine fonctionnel. Le Tableau~\ref{tab:endpoints} présente
-les routes principales regroupées en six domaines : ingestion des logs
-(\texttt{/ingest}), gestion des alertes et incidents (\texttt{/alerts},
-\texttt{/incidents}), interface conversationnelle et LLM (\texttt{/chat},
-\texttt{/llm}), neutralisation défensive (\texttt{/defense}), métriques
-de calibration ML (\texttt{/metrics}) et diffusion temps réel par
-Server-Sent Events (\texttt{/stream}).
+L'API de \textbf{CyberSentinel-LLM} expose ses fonctionnalités à travers
+un ensemble de routes REST regroupées en six domaines cohérents : ingestion
+des logs (\texttt{/ingest}), gestion des alertes et des incidents
+(\texttt{/alerts}, \texttt{/incidents}), interface conversationnelle et
+génération LLM (\texttt{/chat}, \texttt{/llm}), neutralisation défensive
+(\texttt{/defense}), calibration ML (\texttt{/metrics}), et diffusion
+d'événements en continu par Server-Sent Events (\texttt{/stream}).
+Le Tableau~\ref{tab:endpoints} en dresse le catalogue complet.
 \end{onehalfspace}
 
 \begin{table}[H]
@@ -1672,67 +1714,71 @@ POST & /validation/alerts/\{id\} & Labelliser une alerte \\
 
 \section{SSE et communication temps réel}
 \begin{onehalfspace}
-La communication temps réel est assurée par le mécanisme
-\textbf{Server-Sent Events (SSE)}. Le backend maintient une liste de
-queues \texttt{asyncio.Queue} — une par client connecté. À chaque nouvelle
-alerte ingérée, l'événement est publié via \texttt{publish\_alert\_created()}
-et diffusé à tous les abonnés. La gestion de backpressure limite chaque queue
-à 256 éléments.
+Le flux temps réel repose sur le protocole \textbf{Server-Sent Events (SSE)},
+qui permet au backend de pousser des événements vers le navigateur sans que
+le client ait à redemander constamment. Concrètement, le serveur maintient
+une collection de files \texttt{asyncio.Queue} — une par client actif.
+Dès qu'une nouvelle alerte est ingérée, \texttt{publish\_alert\_created()}
+la dépose dans chaque file et le flux SSE la retransmet à tous les abonnés
+connectés. Un plafond de 256 éléments par file prévient tout engorgement
+mémoire en cas de rafale d'événements.
 \end{onehalfspace}
 
 \section{Architecture frontend temps réel}
 \begin{onehalfspace}
-Côté frontend, l'ensemble des flux temps réel et du polling périodique est
-centralisé dans un \textbf{contexte React unique} (\texttt{RealtimeProvider}),
-de manière à éviter la multiplication des connexions \textbf{SSE} et des
-requêtes redondantes lorsque plusieurs pages consomment les mêmes données.
-Le provider expose quatre responsabilités~:
+Côté client, toute la logique de flux temps réel et de rafraîchissement
+périodique est centralisée dans un \textbf{contexte React unique} baptisé
+\texttt{RealtimeProvider}. Ce choix évite que chaque page ouvre sa propre
+connexion SSE ou déclenche ses propres requêtes de polling, ce qui
+multiplierait inutilement les connexions réseau. Le provider assume
+quatre responsabilités distinctes :
 
 \begin{itemize}
-  \item[\ding{43}] \textbf{Une connexion SSE unique} vers \texttt{/stream/alerts},
-  rediffusée aux abonnés via un système de \textit{publish/subscribe} interne
+  \item[\ding{43}] \textbf{Une connexion SSE partagée} vers \texttt{/stream/alerts},
+  redistribuée à tous les abonnés via un bus interne
   (\texttt{subscribeToAlerts}). Les pages \textit{Dashboard}, \textit{Alertes},
-  \textit{Démo} et le composant \texttt{AlertPulse} se branchent dessus sans
-  ouvrir leur propre \texttt{EventSource} ;
-  \item[\ding{43}] \textbf{Un polling unique} de \texttt{/defense/actions}
-  toutes les 5~secondes, qui alimente la liste des actions défensives en
-  attente d'approbation humaine ; cette liste pilote à la fois la
-  \texttt{BlockingNotification} et un badge pulsant sur l'item
-  \textit{Alertes} de la barre latérale ;
-  \item[\ding{43}] \textbf{Un polling de santé} \texttt{/health} toutes les
-  15~secondes, qui pilote l'indicateur \textit{Backend connecté / SSE actif}
-  visible en bas de la barre latérale ;
-  \item[\ding{43}] \textbf{Une API de notifications transitoires}
-  (\texttt{pushToast}) consommée par toutes les pages pour confirmer les
-  approbations, révocations et erreurs de manière non-bloquante.
+  \textit{Démo} et le composant \texttt{AlertPulse} s'y branchent sans
+  jamais instancier leur propre \texttt{EventSource} ;
+  \item[\ding{43}] \textbf{Un polling de défense} vers \texttt{/defense/actions}
+  toutes les 5~secondes, qui rafraîchit la liste des actions en attente
+  d'une décision humaine. Cette liste pilote simultanément la
+  \texttt{BlockingNotification} et un badge pulsant sur l'entrée
+  \textit{Alertes} de la barre de navigation ;
+  \item[\ding{43}] \textbf{Un polling de santé} vers \texttt{/health}
+  toutes les 15~secondes, qui renseigne l'indicateur
+  \textit{Backend connecté / SSE actif} affiché en pied de sidebar ;
+  \item[\ding{43}] \textbf{Une API de notifications éphémères}
+  (\texttt{pushToast}), consommée par l'ensemble des pages pour signaler
+  les confirmations de blocage, les révocations et les erreurs de manière
+  non bloquante.
 \end{itemize}
 
-L'arbre du shell applicatif suit donc le schéma~:
+L'arbre du shell applicatif suit le schéma :
 \texttt{ErrorBoundary > RealtimeProvider > \{Sidebar, Pages,
 BlockingNotification, ToastStack\}}.
 
-\textbf{Ergonomie Human-in-the-Loop renforcée.} Le bouton
-\textit{Approuver} est désormais disponible non seulement pour les actions
-\texttt{review}, mais aussi pour les actions \texttt{block\_temp} en attente
-d'approbation manuelle, ce qui rend explicite le choix de l'analyste avant
-toute mise en liste noire. Les opérations destructrices (réinitialisation de
-la démo, purge de la base) sont protégées par une boîte de dialogue de
-confirmation accessible (raccourcis Échap / Entrée). Pendant la phase
-d'analyse LLM (30 à 90~secondes sur CPU), un panneau dédié affiche
-l'avancement avec barre de progression et indicateur d'état pour informer
-l'analyste que le système n'est pas figé.
+\textbf{Ergonomie Human-in-the-Loop.} Le bouton \textit{Approuver} est
+désormais actif aussi bien pour les actions \texttt{review} que pour les
+actions \texttt{block\_temp} en attente, rendant visible et obligatoire le
+choix de l'analyste avant toute mise en liste noire. Les opérations
+irréversibles — réinitialisation de la démo, purge de la base — sont
+protégées par une boîte de dialogue modale (raccourcis Échap / Entrée).
+Durant la phase de génération LLM (30 à 90~secondes sur CPU), un panneau
+d'avancement avec barre de progression informe l'opérateur que le système
+travaille, évitant toute confusion avec un gel de l'interface.
 
-\textbf{Robustesse.} Un \texttt{ErrorBoundary} React enveloppe l'ensemble
-de l'arbre des composants : toute erreur non capturée affiche un écran de
-récupération (« Réessayer / Recharger ») au lieu d'un écran blanc, ce qui
-est essentiel pour une console SOC qui doit rester opérationnelle même en
-cas d'incident UI.
+\textbf{Résilience.} Un \texttt{ErrorBoundary} React enveloppe l'intégralité
+de l'arbre de composants : toute exception non interceptée déclenche un
+écran de récupération (« Réessayer / Recharger ») plutôt qu'un écran blanc,
+ce qui est indispensable pour une console SOC devant rester opérationnelle
+en toutes circonstances.
 \end{onehalfspace}
 
 \section{Interfaces utilisateur}
 \begin{onehalfspace}
-Les captures d'écran ci-dessous illustrent les principales pages de
-l'interface SOC de \textbf{CyberSentinel-LLM}.
+Les captures d'écran ci-après donnent à voir les principales pages de
+l'interface SOC de \textbf{CyberSentinel-LLM}, dans l'ordre du flux
+opérationnel typique d'un analyste.
 \end{onehalfspace}
 
 \begin{figure}[H]
@@ -1801,11 +1847,13 @@ l'interface SOC de \textbf{CyberSentinel-LLM}.
 \section*{Conclusion}
 \phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
-Ce chapitre a détaillé l'implémentation des composantes clés de
-\textbf{CyberSentinel-LLM} : pipeline ML, module RAG MITRE ATT\&CK,
-module LLM avec confiance pondérée, système de neutralisation adaptive
-par blocage applicatif, et API REST. Le chapitre suivant présentera les
-résultats des tests et l'évaluation du système.
+Ce chapitre a décortiqué le fonctionnement interne de chaque brique de
+\textbf{CyberSentinel-LLM} : les formules de scoring ML et leurs modes
+de fallback, la mécanique d'interrogation RAG et d'embedding vectoriel,
+le template de prompt et le calcul de confiance pondérée, le flux de
+neutralisation applicative avec notification humaine, et l'organisation
+des endpoints REST. Le chapitre suivant évalue concrètement les résultats
+obtenus lors des tests du prototype.
 \end{onehalfspace}
 
 \newpage
@@ -1818,16 +1866,18 @@ résultats des tests et l'évaluation du système.
 \section*{Introduction}
 \phantomsection\addcontentsline{toc}{section}{Introduction}
 \begin{onehalfspace}
-Ce chapitre présente les scénarios de démonstration, les mécanismes
-d'évaluation et les résultats obtenus lors des tests de
-\textbf{CyberSentinel-LLM}. L'objectif est de valider le bon fonctionnement
-du système dans son ensemble et d'identifier ses limites actuelles.
+Un prototype ne vaut que par ce qu'il produit lorsqu'on le fait tourner.
+Ce chapitre rend compte des tests conduits sur \textbf{CyberSentinel-LLM} :
+le scénario de démonstration reproductible conçu pour exercer le pipeline
+de bout en bout, les métriques retenues pour évaluer le module ML, et
+les résultats observés — avec leurs forces et leurs limites assumées.
 \end{onehalfspace}
 
 \section{Scénario de démonstration complet}
 \begin{onehalfspace}
-Un scénario de démonstration reproductible a été développé sur la page
-\texttt{/demo} pour valider le flux complet du système en 5 étapes :
+Pour vérifier la cohérence du système de bout en bout, un scénario de
+démonstration entièrement reproductible a été développé sur la page
+\texttt{/demo}. Il simule une intrusion réelle en cinq étapes enchaînées :
 
 \begin{enumerate}
   \item \textbf{Génération des logs} — \texttt{POST /demo/generate} :
@@ -1872,8 +1922,10 @@ Un scénario de démonstration reproductible a été développé sur la page
 
 \section{Mécanismes d'évaluation}
 \begin{onehalfspace}
-L'évaluation du module ML repose sur les labels humains collectés via
-le mécanisme de validation (\texttt{true\_attack} / \texttt{false\_positive}).
+La qualité du module de détection est mesurée à partir des labels que
+l'analyste attribue à chaque alerte (\texttt{true\_attack} ou
+\texttt{false\_positive}). Ces annotations alimentent le calcul des quatre
+métriques standard présentées dans le Tableau~\ref{tab:metrics}.
 \end{onehalfspace}
 
 \begin{table}[H]
@@ -1909,7 +1961,8 @@ Fiabilité globale de l'analyse \\
 
 \section{Résultats observés}
 \begin{onehalfspace}
-Les tests réalisés sur le prototype ont permis de valider les points suivants :
+L'exécution du scénario de démonstration et des tests unitaires a permis
+de valider les comportements suivants :
 \begin{itemize}
   \item[\ding{43}] \textbf{Pipeline ML :} scoring d'anomalie fonctionnel avec un
   temps de traitement inférieur à 50~ms par log en mode hybride
@@ -1994,8 +2047,9 @@ Blocage iptables automatique & $\times$ Absent & Affichage manuel uniquement \\
 
 \section{Tests automatisés}
 \begin{onehalfspace}
-Des tests automatisés ont été mis en place pour valider le bon fonctionnement
-du backend et du frontend, avec une couverture croissante des composants critiques.
+Pour sécuriser les composants critiques contre les régressions, une suite
+de tests automatisés a été mise en place côté backend avec pytest et côté
+frontend avec Vitest.
 
 \subsection*{Tests backend (pytest)}
 \begin{itemize}
@@ -2057,20 +2111,22 @@ du backend et du frontend, avec une couverture croissante des composants critiqu
 \section*{Conclusion}
 \phantomsection\addcontentsline{toc}{section}{Conclusion}
 \begin{onehalfspace}
-Les tests réalisés confirment que \textbf{CyberSentinel-LLM} remplit ses
-objectifs : démontrer la faisabilité d'un pipeline ML + RAG + LLM pour
-l'assistance SOC avec neutralisation adaptive, un scénario de démo
-reproductible et des métriques d'évaluation mesurables.\\
+Les résultats de cette campagne de tests valident l'hypothèse centrale du
+projet : il est techniquement réalisable de coupler un pipeline ML non
+supervisé, un moteur RAG MITRE ATT\&CK et un LLM local pour produire un
+assistant SOC opérationnel, avec des métriques mesurables et un scénario
+de démonstration reproductible.\\
 
-La mise en place de tests automatisés backend (pytest) et frontend (Vitest)
-renforce la robustesse du système, avec une couverture croissante des
-composants critiques : logique de défense, liste noire IP, authentification
-et 2FA. Le refactoring modulaire du frontend (chat et settings) améliore
-la maintenabilité du code en réduisant la taille des fichiers monolithiques
-et en extrayant des sous-composants réutilisables.\\
+La couverture de tests automatisés — pytest sur la logique de défense et
+la liste noire IP, Vitest sur l'authentification et le 2FA — constitue un
+filet de sécurité qui protège les fonctionnalités critiques contre les
+régressions futures. Le refactoring modulaire du frontend contribue quant
+à lui à rendre le code plus lisible et plus facile à maintenir sur la durée.\\
 
-Les limites identifiées — authentification backend absente, blocage iptables
-manuel — constituent des pistes d'amélioration pour des travaux futurs.
+Deux lacunes demeurent cependant : l'authentification JWT côté serveur
+n'a pas été implémentée, et les commandes iptables sont affichées sans être
+exécutées automatiquement. Ces points constituent les premières pistes de
+travail pour la suite du projet.
 \end{onehalfspace}
 
 \newpage
@@ -2081,58 +2137,62 @@ manuel — constituent des pistes d'amélioration pour des travaux futurs.
 \chapter*{Conclusion Générale et Perspectives}
 \phantomsection\addcontentsline{toc}{chapter}{Conclusion Générale et Perspectives}
 \begin{onehalfspace}
-Ce mémoire a présenté la conception et l'implémentation de
-\textbf{CyberSentinel-LLM}, une plateforme cognitive de cybersécurité
-conversationnelle combinant détection d'anomalies par Machine Learning,
-raisonnement contextuel enrichi par RAG MITRE ATT\&CK, explication
-structurée par LLM local et neutralisation adaptive des menaces par
-blocage applicatif à validation humaine.\\
+Ce mémoire a documenté, de la première esquisse de conception jusqu'aux
+résultats de tests, le développement de \textbf{CyberSentinel-LLM} : une
+plateforme cognitive de cybersécurité qui articule détection d'anomalies
+par Machine Learning, enrichissement contextuel par RAG sur MITRE ATT\&CK,
+explication en langage naturel via un LLM local, et neutralisation soumise
+à validation humaine.\\
 
-Le projet a permis de démontrer la viabilité technique de cette approche
-en cinq couches : un pipeline ML (IsolationForest + LOF + heuristique), un
-module RAG indexant 697 techniques MITRE ATT\&CK dans ChromaDB, un LLM local
-(Ollama/qwen2.5) produisant des analyses JSON structurées avec score de
-confiance pondéré ($0.4 \times ML + 0.3 \times RAG + 0.3 \times LLM$),
-un système de neutralisation adaptive avec middleware HTTP 403 et notification
-countdown à validation humaine, et une interface Next.js dark mode en 9 pages.\\
+Le prototype réalisé démontre concrètement qu'il est possible, sur du
+matériel standard et sans cloud, de construire une chaîne de traitement
+complète en cinq couches : un pipeline ML hybride (IsolationForest + LOF +
+heuristique), une base vectorielle ChromaDB indexant 697 techniques MITRE,
+un modèle Qwen2.5 déployé via Ollama qui génère des analyses JSON avec
+un score de confiance pondéré ($0.4 \times ML + 0.3 \times RAG + 0.3 \times LLM$),
+un mécanisme de blocage applicatif middleware avec countdown et approbation
+humaine obligatoire, et une interface Next.js 9 pages en mode sombre.\\
 
-Le principe \textbf{Human-in-the-Loop} a été maintenu tout au long du système :
-le LLM n'intervient jamais de manière autonome dans les décisions défensives,
-et tout blocage requiert une approbation explicite de l'analyste.\\
+Le fil conducteur \textbf{Human-in-the-Loop} n'a jamais été sacrifié :
+le LLM n'exécute aucune action autonome sur le système, et chaque mesure
+défensive ne s'active qu'après un choix explicite de l'opérateur.\\
 
-Dans le contexte tchadien, où la cybersécurité est encore en construction,
-ce type de plateforme représente une contribution pertinente : accessible
-localement, indépendante de services cloud, et adaptée à des équipes SOC
-en formation.\\
+Dans un Tchad où les équipes SOC sont en construction et les ressources
+limitées, \textbf{CyberSentinel-LLM} apporte une réponse pragmatique :
+déployable sur une machine ordinaire, indépendant de toute infrastructure
+externe, et conçu pour assister des analystes même peu expérimentés.\\
 
-Le projet intègre également une authentification 2FA TOTP (QR code, compatible
-Google Authenticator/Authy) et une gestion des utilisateurs côté frontend,
-ainsi qu'une suite de tests automatisés (pytest backend, Vitest frontend)
-couvrant la logique de défense, la liste noire IP et les fonctions
-d'authentification.\\
+Sur le plan de la robustesse, le projet embarque une authentification 2FA
+TOTP compatible avec les applications standard, ainsi qu'une suite de
+tests automatisés pytest et Vitest couvrant la défense, la liste noire IP
+et l'authentification frontend.\\
 
-\textbf{Limites identifiées :} architecture monolithique locale, authentification
-JWT côté serveur absente (gestion des sessions en localStorage), blocage
-iptables affiché mais non exécuté automatiquement, et features ML limitées
-au domaine SSH.\\
+\textbf{Limites identifiées :} l'architecture monolithique limite la montée
+en charge, l'authentification JWT côté serveur est absente (les sessions
+sont gérées en localStorage), les commandes iptables ne sont pas exécutées
+automatiquement, et le périmètre ML se cantonne actuellement aux logs SSH.\\
 
-\textbf{Perspectives :}
+\textbf{Pistes d'évolution :}
 \begin{itemize}
-  \item[\ding{43}] Entraînement supervisé multi-classes pour couvrir
-  davantage de familles d'attaques (DDoS, injection, ransomware) ;
-  \item[\ding{43}] Enrichissement de la base RAG avec les CVE récentes
-  et les bulletins ANSSI pour couvrir les menaces spécifiques à l'Afrique
-  centrale (la base MITRE ATT\&CK Enterprise, 697 techniques, est déjà
-  intégralement indexée dans cette version) ;
-  \item[\ding{43}] Intégration d'une exécution automatique des règles
-  iptables après approbation humaine, via des scripts système sécurisés ;
-  \item[\ding{43}] Séparation en microservices et intégration d'un
-  broker événementiel (Redis/Kafka) pour la montée en charge ;
-  \item[\ding{43}] Implémentation d'une authentification et d'une
-  gestion des rôles backend (RBAC/JWT) ;
-  \item[\ding{43}] Adaptation aux besoins spécifiques du contexte
-  tchadien : souveraineté numérique, formation des analystes locaux
-  et intégration avec les initiatives de l'ANSICE.
+  \item[\ding{43}] Passage à un entraînement supervisé multi-classes pour
+  couvrir un spectre plus large de familles d'attaques : DDoS, injection SQL,
+  ransomware et mouvements latéraux ;
+  \item[\ding{43}] Élargissement de la base RAG aux CVE récentes et aux
+  bulletins de l'ANSSI, afin de mieux adresser les menaces qui ciblent
+  spécifiquement la région Afrique centrale (la base MITRE ATT\&CK Enterprise
+  à 697 techniques est déjà intégralement indexée dans la version actuelle) ;
+  \item[\ding{43}] Exécution automatique des règles iptables après
+  validation humaine, via des scripts système isolés et journalisés, pour
+  franchir le dernier kilomètre entre l'affichage et l'action réseau réelle ;
+  \item[\ding{43}] Découpage en microservices indépendants et introduction
+  d'un broker d'événements (Redis ou Kafka) pour permettre la montée en
+  charge horizontale du pipeline de détection ;
+  \item[\ding{43}] Implémentation d'une authentification JWT côté serveur
+  et d'un contrôle d'accès basé sur les rôles (RBAC) pour sécuriser les
+  opérations critiques au niveau backend ;
+  \item[\ding{43}] Ancrage dans le terrain tchadien : déploiement pilote dans
+  un environnement opérationnel réel, formation des analystes locaux, et
+  collaboration avec les programmes de montée en compétences de l'ANSICE.
 \end{itemize}
 \end{onehalfspace}
 
@@ -2228,8 +2288,9 @@ Certification Électronique du Tchad.
 \section*{Annexe A : Architecture globale du système}
 \phantomsection\addcontentsline{toc}{section}{Annexe A : Architecture globale}
 \begin{onehalfspace}
-Cette annexe reprend, à des fins de référence rapide, le schéma
-d'architecture globale détaillé à la section~3.1.
+Cette annexe reproduit, pour consultation rapide, le schéma d'architecture
+globale présenté et commenté à la section~3.1. Il synthétise en un coup
+d'œil les cinq couches du système et les flux qui les relient.
 \end{onehalfspace}
 
 \begin{figure}[H]
@@ -2275,7 +2336,11 @@ d'architecture globale détaillé à la section~3.1.
 \section*{Annexe B : Exemples de payloads API}
 \phantomsection\addcontentsline{toc}{section}{Annexe B : Exemples de payloads API}
 
-\textbf{POST /ingest/logs — Requête et réponse :}
+Les deux échanges HTTP ci-dessous illustrent le format exact des données
+manipulées par les endpoints les plus critiques : l'ingestion d'un log réseau
+et l'approbation d'un blocage défensif.
+
+\textbf{POST /ingest/logs — Corps de requête et réponse générée :}
 
 \begin{tcolorbox}[colback=lightblue, colframe=darkblue, arc=5pt]
 \begin{small}
@@ -2304,7 +2369,7 @@ d'architecture globale détaillé à la section~3.1.
 \end{small}
 \end{tcolorbox}
 
-\textbf{POST /defense/actions/\{id\}/approve — Réponse avec iptables :}
+\textbf{POST /defense/actions/\{id\}/approve — Réponse incluant les commandes iptables :}
 
 \begin{tcolorbox}[colback=lightblue, colframe=darkblue, arc=5pt]
 \begin{small}
@@ -2325,16 +2390,21 @@ d'architecture globale détaillé à la section~3.1.
 \section*{Annexe C : Guide d'installation et d'exécution}
 \phantomsection\addcontentsline{toc}{section}{Annexe C : Guide d'installation}
 
-\textbf{Prérequis :}
+Ce guide décrit la procédure minimale pour déployer et démarrer
+\textbf{CyberSentinel-LLM} sur une machine locale. L'ensemble du système
+fonctionne sans connexion cloud une fois les dépendances installées.
+
+\textbf{Prérequis système :}
 \begin{itemize}
-  \item[\ding{43}] Python 3.10+ avec pip
-  \item[\ding{43}] Node.js 18+ avec npm
+  \item[\ding{43}] Python 3.10 ou supérieur avec pip
+  \item[\ding{43}] Node.js 18 ou supérieur avec npm
   \item[\ding{43}] Ollama installé avec le modèle qwen2.5:1.5b
-  (\texttt{ollama pull qwen2.5:1.5b})
-  \item[\ding{43}] GeoLite2-City.mmdb (optionnel, pour GeoIP)
+  récupéré via la commande \texttt{ollama pull qwen2.5:1.5b}
+  \item[\ding{43}] GeoLite2-City.mmdb (facultatif — requis uniquement
+  pour la géolocalisation des IPs)
 \end{itemize}
 
-\textbf{Lancement du backend :}
+\textbf{Démarrage du backend (API FastAPI) :}
 \begin{tcolorbox}[colback=lightblue, colframe=darkblue, arc=5pt]
 \begin{small}
 \begin{verbatim}
@@ -2348,7 +2418,7 @@ bash start.sh
 \end{small}
 \end{tcolorbox}
 
-\textbf{Lancement du frontend :}
+\textbf{Démarrage du frontend (interface Next.js) :}
 \begin{tcolorbox}[colback=lightblue, colframe=darkblue, arc=5pt]
 \begin{small}
 \begin{verbatim}
