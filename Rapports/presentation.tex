@@ -193,27 +193,6 @@
   \end{center}
 \end{frame}
 
-\begin{frame}{Exemple : attaque SSH}
-  \begin{center}
-  \begin{tikzpicture}[
-      stepbox/.style={draw, rounded corners, minimum width=2cm, minimum height=1.1cm,
-                    align=center, font=\tiny, drop shadow},
-      arr/.style={-{Latex}, thick, csgray}
-    ]
-    \node<1->[stepbox, fill=csblue!12, draw=csblue]   (a) at (0,0)   {Log reçu};
-    \node<2->[stepbox, fill=csteal!15, draw=csteal]   (b) at (2.5,0) {Score ML};
-    \node<3->[stepbox, fill=csviolet!12, draw=csviolet](c) at (5,0)  {Défense};
-    \node<4->[stepbox, fill=csteal!15, draw=csteal]   (d) at (7.5,0) {RAG};
-    \node<5->[stepbox, fill=csblue!12, draw=csblue]   (e) at (10,0)  {LLM};
-    \draw<2->[arr] (a) -- (b);
-    \draw<3->[arr] (b) -- (c);
-    \draw<4->[arr] (c) -- (d);
-    \draw<5->[arr] (d) -- (e);
-  \end{tikzpicture}
-  \end{center}
-  \vspace{0.8em}
-  \onslide<6->{\centering \textbf{86\% de confiance} $\rightarrow$ l'analyste décide}
-\end{frame}
 
 % ============================================================
 \section{Outils et technologies}
@@ -236,16 +215,6 @@
   \end{center}
 \end{frame}
 
-% ============================================================
-\section{Tests et résultats}
-
-\begin{frame}{Tests automatisés}
-  \begin{itemize}[<+->]
-    \item Backend : pytest
-    \item Frontend : Vitest
-    \item \textcolor{csteal}{\textbf{Tous les tests passent}}
-  \end{itemize}
-\end{frame}
 
 % ============================================================
 \section{Démonstration}
