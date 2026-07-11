@@ -13,6 +13,8 @@ MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
 
 PROMPT_TEMPLATE = """Tu es un expert SOC (Security Operations Center) spécialisé en cybersécurité.
 
+IMPORTANT : Tu dois répondre UNIQUEMENT en français. Toutes les explications et recommandations doivent être en français.
+
 Contexte MITRE ATT&CK récupéré automatiquement :
 {rag_context}
 
@@ -28,12 +30,14 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ni après :
   "mitre_technique": "<ID technique ex: T1110.001>",
   "mitre_name": "<nom de la technique MITRE>",
   "explanation": "<explication claire en français, 2-3 phrases>",
-  "recommended_actions": ["<action 1>", "<action 2>", "<action 3>"],
+  "recommended_actions": ["<action 1 en français>", "<action 2 en français>", "<action 3 en français>"],
   "confidence_score": <float entre 0.0 et 1.0>,
-  "confidence_justification": "<pourquoi ce score de confiance>"
+  "confidence_justification": "<pourquoi ce score de confiance en français>"
 }}"""
 
 PROMPT_FALLBACK = """Tu es un expert SOC. Analyse cet incident et réponds en JSON uniquement.
+
+IMPORTANT : Tu dois répondre UNIQUEMENT en français.
 
 Incident : {incident_summary}
 
