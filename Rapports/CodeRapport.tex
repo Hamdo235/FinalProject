@@ -44,6 +44,19 @@
 \usepackage{titletoc}
 \usepackage[Glenn]{fncychap}
 
+%% ============================================================
+%% FRANCISATION DES TITRES AUTOMATIQUES
+%% (sans babel, pour éviter de changer la césure/typographie
+%%  déjà calée dans tout le document)
+%% ============================================================
+\renewcommand{\contentsname}{Table des matières}
+\renewcommand{\listfigurename}{Liste des figures}
+\renewcommand{\listtablename}{Liste des tableaux}
+\renewcommand{\tablename}{Tableau}
+\renewcommand{\bibname}{Bibliographie}
+\makeatletter
+\renewcommand{\@chapapp}{Chapitre}
+\makeatother
 
 \renewcommand{\arraystretch}{1.3}
 
@@ -239,21 +252,34 @@ Ma reconnaissance va tout particulièrement à :
 \newpage
 
 %% ============================================================
-%% TABLE DES MATIÈRES
+%% ABSTRACT
 %% ============================================================
+\chapter*{Abstract}
+\phantomsection\addcontentsline{toc}{chapter}{Abstract}
+\begin{onehalfspace}
+This project introduces \textbf{CyberSentinel-LLM}, a cognitive cybersecurity platform built for the contextual detection and adaptive neutralization of network threats within resource-constrained settings such as Chad. The system rests on three complementary pillars: unsupervised machine learning for anomaly detection (Isolation Forest and Local Outlier Factor), a Retrieval-Augmented Generation (RAG) layer grounded in the MITRE ATT\&CK knowledge base for contextual reasoning, and a locally hosted large language model (served through Ollama) that turns raw technical alerts into human-readable explanations. A Human-in-the-Loop principle keeps every defensive action — monitoring, review, or temporary blocking — subject to explicit analyst approval, so human oversight is never bypassed by automation. On the technical side, the platform combines a Python/FastAPI backend with an SQLite database, a Next.js/React frontend styled with Tailwind CSS, a ChromaDB vector store, and scikit-learn models, all running entirely on CPU with no dedicated GPU. The resulting prototype shows that pairing unsupervised ML, knowledge-augmented LLMs, and human validation can meaningfully strengthen a Security Operations Center's (SOC) ability to interpret, prioritize, and respond to security incidents, particularly where local expertise and resources are scarce.
+
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} cybersecurity, anomaly detection, unsupervised learning, Isolation Forest, Local Outlier Factor, RAG, MITRE ATT\&CK, large language model, Human-in-the-Loop, SOC.
+\end{onehalfspace}
+\newpage
+
+%% ============================================================
+%% TABLE DES MATIÈRES
+%% =============================================================
 \tableofcontents
 \newpage
 
 %% ============================================================
 %% LISTE DES FIGURES
-%% ============================================================
+%% =============================================================
 \listoffigures
 \phantomsection\addcontentsline{toc}{chapter}{Liste des figures}
 \newpage
 
 %% ============================================================
 %% LISTE DES TABLEAUX
-%% ============================================================
+%% =============================================================
 \listoftables
 \phantomsection\addcontentsline{toc}{chapter}{Liste des tableaux}
 \newpage
